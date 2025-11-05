@@ -1,0 +1,148 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { NotificationItem } from "./NotificationItem";
+import { useNotifications, useMarkAllAsRead, useClearReadNotifications } from "@/hooks/use-notifications";
+import { CheckCheck, Trash2, Bell } from "lucide-react";
+
+export function NotificationList() {
+  const [readFilter, setReadFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+
+  // Fetch notifications
+  const { data, isLoading } = useNotifications({
+    read: readFilter === "all" ? undefined : readFilter === "read",
+    type: typeFilter === "all" ? undefined : typeFilter,
+    limit: 50,
+  });
+
+  const markAllAsReadMutation = useMarkAllAsRead();
+  const clearReadMutation = useClearReadNotifications();
+
+  const notifications = data?.data || [];
+  const unreadCount = data?.unreadCount || 0;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-9 w-32" />
+        </div>
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-24" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold">Notifications</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            {unreadCount > 0 ? (
+              <>
+                You have <span className="font-medium text-blue-600">{unreadCount}</span> unread{" "}
+                {unreadCount === 1 ? "notification" : "notifications"}
+              </>
+            ) : (
+              "You're all caught up!"
+            )}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {unreadCount > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => markAllAsReadMutation.mutate()}
+              disabled={markAllAsReadMutation.isPending}
+            >
+              <CheckCheck className="h-4 w-4 mr-2" />
+              Mark all read
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => clearReadMutation.mutate()}
+            disabled={clearReadMutation.isPending}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Clear read
+          </Button>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        {/* Read Filter */}
+        <Select value={readFilter} onValueChange={setReadFilter}>
+          <SelectTrigger className="w-full sm:w-40">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="unread">
+              Unread {unreadCount > 0 && `(${unreadCount})`}
+            </SelectItem>
+            <SelectItem value="read">Read</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Type Filter */}
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue placeholder="Filter by type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="ticket_assigned">Ticket Assigned</SelectItem>
+            <SelectItem value="ticket_resolved">Ticket Resolved</SelectItem>
+            <SelectItem value="ticket_updated">Ticket Updated</SelectItem>
+            <SelectItem value="system">System</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Notification List */}
+      {notifications.length === 0 ? (
+        <div className="text-center py-12">
+          <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <p className="text-lg text-muted-foreground">No notifications</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            {readFilter === "unread"
+              ? "You don't have any unread notifications"
+              : "You don't have any notifications yet"}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {notifications.map((notification) => (
+            <NotificationItem
+              key={notification.id}
+              notification={notification}
+              showActions={true}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,237 @@
+/**
+ * LOGIN PAGE
+ * 
+ * Authentication page for users to sign in with email and password.
+ * 
+ * Features:
+ * - Email/password form with validation (react-hook-form + zod)
+ * - Firebase Authentication integration
+ * - Error handling with toast notifications
+ * - Loading states
+ * - Auto-redirect to dashboard on successful login
+ * - Redirects authenticated users away from login page
+ * 
+ * @module app/(auth)/login/page
+ */
+
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { Loader2 } from "lucide-react";
+import { auth } from "@/firebase/client";
+import { useAuth } from "@/lib/store";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
+// ==============================================================================
+// VALIDATION SCHEMA
+// ==============================================================================
+
+/**
+ * Login form validation schema
+ */
+const loginSchema = z.object({
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(6, "Password must be at least 6 characters"),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
+
+// ==============================================================================
+// LOGIN PAGE COMPONENT
+// ==============================================================================
+
+/**
+ * Login Page Component
+ * 
+ * Handles user authentication and redirects to dashboard on success.
+ */
+export default function LoginPage() {
+  const router = useRouter();
+  const { user, isAuthLoading } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!isAuthLoading && user) {
+      router.replace("/dashboard");
+    }
+  }, [user, isAuthLoading, router]);
+
+  // Initialize form with react-hook-form and zod validation
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  /**
+   * Handle form submission
+   */
+  const onSubmit = async (data: LoginFormData) => {
+    try {
+      // Sign in with Firebase Auth
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        data.email,
+        data.password
+      );
+
+      // Success toast
+      toast.success("Login successful!", {
+        description: `Welcome back, ${userCredential.user.email}`,
+      });
+
+      // Redirect to dashboard
+      router.push("/dashboard");
+    } catch (error: any) {
+      // Handle Firebase Auth errors
+      console.error("Login error:", error);
+
+      let errorMessage = "Failed to sign in. Please try again.";
+
+      // Provide user-friendly error messages
+      if (error.code === "auth/user-not-found") {
+        errorMessage = "No account found with this email address.";
+      } else if (error.code === "auth/wrong-password") {
+        errorMessage = "Incorrect password. Please try again.";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "Invalid email address format.";
+      } else if (error.code === "auth/user-disabled") {
+        errorMessage = "This account has been disabled.";
+      } else if (error.code === "auth/too-many-requests") {
+        errorMessage = "Too many failed attempts. Please try again later.";
+      } else if (error.code === "auth/network-request-failed") {
+        errorMessage = "Network error. Please check your connection.";
+      } else if (error.code === "auth/invalid-credential") {
+        errorMessage = "Invalid email or password. Please try again.";
+      }
+
+      toast.error("Login Failed", {
+        description: errorMessage,
+      });
+    }
+  };
+
+  // Show loading state while checking auth
+  if (isAuthLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Don't show login form if already authenticated
+  if (user) {
+    return null;
+  }
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center">
+            {process.env.NEXT_PUBLIC_APP_NAME || "ServiceFirst"}
+          </CardTitle>
+          <CardDescription className="text-center">
+            Sign in to your account to continue
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {/* Email Field */}
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="your.email@example.com"
+                autoComplete="email"
+                autoFocus
+                disabled={isSubmitting}
+                {...register("email")}
+                className={errors.email ? "border-destructive" : ""}
+              />
+              {errors.email && (
+                <p className="text-sm text-destructive">
+                  {errors.email.message}
+                </p>
+              )}
+            </div>
+
+            {/* Password Field */}
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                autoComplete="current-password"
+                disabled={isSubmitting}
+                {...register("password")}
+                className={errors.password ? "border-destructive" : ""}
+              />
+              {errors.password && (
+                <p className="text-sm text-destructive">
+                  {errors.password.message}
+                </p>
+              )}
+            </div>
+
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                "Sign In"
+              )}
+            </Button>
+          </form>
+
+          {/* Development Helper */}
+          {process.env.NODE_ENV === "development" && (
+            <div className="mt-6 border-t border-border pt-6">
+              <p className="text-xs text-muted-foreground text-center">
+                Development Mode: Use seeded admin credentials
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

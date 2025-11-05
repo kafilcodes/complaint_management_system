@@ -1,0 +1,315 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useCreateTicket } from "@/hooks/use-tickets";
+import { BRANDS, CATEGORIES } from "@/lib/configuration";
+import { Loader2, ArrowLeft } from "lucide-react";
+import type { TicketCreateInput } from "@/lib/types";
+
+// Form validation schema
+const ticketFormSchema = z.object({
+  customerName: z.string().min(2, "Customer name must be at least 2 characters"),
+  customerPhone: z.string().min(10, "Phone number must be at least 10 digits"),
+  address: z.string().min(5, "Address is required"),
+  pincode: z.string().min(5, "Pincode must be at least 5 characters"),
+  productName: z.string().min(2, "Product name is required"),
+  productModel: z.string().min(1, "Product model is required"),
+  purchaseDate: z.string().min(1, "Purchase date is required"),
+  brand: z.string().min(1, "Brand is required"),
+  issueDescription: z.string().min(10, "Issue description must be at least 10 characters"),
+  comments: z.string().optional(),
+});
+
+type TicketFormValues = z.infer<typeof ticketFormSchema>;
+
+export default function CreateTicketPage() {
+  const router = useRouter();
+  const createTicket = useCreateTicket();
+
+  const form = useForm<TicketFormValues>({
+    resolver: zodResolver(ticketFormSchema),
+    defaultValues: {
+      customerName: "",
+      customerPhone: "",
+      address: "",
+      pincode: "",
+      productName: "",
+      productModel: "",
+      purchaseDate: "",
+      brand: "",
+      issueDescription: "",
+      comments: "",
+    },
+  });
+
+  async function onSubmit(values: TicketFormValues) {
+    try {
+      const ticketData: TicketCreateInput = {
+        ...values,
+        purchaseDate: new Date(values.purchaseDate),
+      };
+
+      await createTicket.mutateAsync(ticketData);
+      
+      // Navigate to tickets page on success
+      router.push("/tickets");
+    } catch (error) {
+      // Error handling is done in the hook
+      console.error("Error creating ticket:", error);
+    }
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => router.back()}
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold">Create New Ticket</h1>
+          <p className="text-muted-foreground mt-2">
+            Fill in the details to create a new service ticket
+          </p>
+        </div>
+      </div>
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Customer Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Customer Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="customerName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Customer Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="John Doe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="customerPhone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="+1234567890" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="123 Main St, City, State" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="pincode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Pincode</FormLabel>
+                    <FormControl>
+                      <Input placeholder="12345" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Product Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Product Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="brand"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Brand</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a brand" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {BRANDS.map((brand) => (
+                          <SelectItem key={brand.value} value={brand.value}>
+                            {brand.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="productName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Product Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Point of Sale System" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="productModel"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Product Model</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., POS-2024-X" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="purchaseDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Purchase Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Issue Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Issue Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="issueDescription"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Issue Description</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Describe the issue in detail..."
+                        rows={4}
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Provide a detailed description of the problem
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="comments"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Additional Comments (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Any additional information..."
+                        rows={3}
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Actions */}
+          <div className="flex gap-4 justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
+              disabled={createTicket.isPending}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={createTicket.isPending}>
+              {createTicket.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Create Ticket
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </div>
+  );
+}
