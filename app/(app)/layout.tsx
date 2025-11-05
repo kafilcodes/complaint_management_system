@@ -2,8 +2,9 @@
  * PROTECTED APP LAYOUT
  * 
  * This layout wraps all protected routes (dashboard, tickets, etc.).
- * It includes the Header and Sidebar components and provides a
- * consistent structure for the authenticated app.
+ * It implements a responsive navigation system:
+ * - Desktop (md+): Collapsible Sidebar
+ * - Mobile (<md): Floating Dock at bottom
  * 
  * Route Structure:
  * app/(app)/
@@ -21,16 +22,17 @@
  * @module app/(app)/layout
  */
 
-import type { Metadata } from "next";
-import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
+"use client";
 
-export const metadata: Metadata = {
-  title: {
-    template: `%s | ${process.env.NEXT_PUBLIC_APP_NAME || "ServiceFirst"}`,
-    default: process.env.NEXT_PUBLIC_APP_NAME || "ServiceFirst",
-  },
-};
+import * as React from "react";
+import { AppSidebar } from "@/components/layout/AppSidebar";
+import { AppFloatingDock } from "@/components/layout/AppFloatingDock";
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -39,32 +41,62 @@ interface AppLayoutProps {
 /**
  * Protected App Layout
  * 
- * Provides the main structure for authenticated pages:
- * - Header (top navigation bar)
- * - Sidebar (left navigation menu)
- * - Main content area
+ * Provides adaptive navigation:
+ * - Desktop: Collapsible sidebar (can collapse to icons)
+ * - Mobile: Floating dock at bottom
  * 
- * This layout is mobile-first and responsive.
+ * Features:
+ * - Keyboard shortcut (Cmd/Ctrl+B) to toggle sidebar
+ * - Persistent sidebar state (saved in cookie)
+ * - Mobile-first responsive design
+ * - Proper spacing with 4/8-point grid system
  */
 export default function AppLayout({ children }: AppLayoutProps) {
   return (
-    <div className="relative flex min-h-screen flex-col">
-      {/* Header - Fixed at top */}
-      <Header />
+    <SidebarProvider>
+      {/* Desktop Sidebar (hidden on mobile) */}
+      <AppSidebar />
 
-      {/* Main Content Area with Sidebar */}
-      <div className="flex flex-1">
-        {/* Sidebar - Slide-out on mobile, fixed on desktop */}
-        <Sidebar />
+      {/* Main Content Area */}
+      <SidebarInset>
+        {/* Header with Sidebar Toggle */}
+        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+          <div className="flex items-center gap-2">
+            {/* Sidebar Toggle Button (desktop only) */}
+            <SidebarTrigger className="-ml-1 hidden md:flex" />
+            <Separator
+              orientation="vertical"
+              className="mr-2 hidden h-4 md:block"
+            />
+          </div>
+
+          {/* Header content can be added here */}
+          <div className="flex flex-1 items-center justify-between">
+            <div className="flex items-center gap-2">
+              {/* App name on mobile (since sidebar is hidden) */}
+              <h1 className="text-lg font-semibold md:hidden">
+                {process.env.NEXT_PUBLIC_APP_NAME || "ServiceFirst"}
+              </h1>
+            </div>
+
+            {/* Future: Add notification bell, theme toggle, etc. */}
+            <div className="flex items-center gap-2">
+              {/* Placeholder for future header actions */}
+            </div>
+          </div>
+        </header>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto">
+        <main className="flex flex-1 flex-col gap-4 p-4 md:gap-6 md:p-6">
           {/* Content Container - respects 4/8-point grid */}
-          <div className="container mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
+          <div className="mx-auto w-full max-w-7xl pb-20 md:pb-0">
             {children}
           </div>
         </main>
-      </div>
-    </div>
+      </SidebarInset>
+
+      {/* Mobile Floating Dock (hidden on desktop) */}
+      <AppFloatingDock />
+    </SidebarProvider>
   );
 }
