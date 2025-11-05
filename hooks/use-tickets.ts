@@ -7,6 +7,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-client";
+import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api-client";
 import type {
   Ticket,
   TicketCreateInput,
@@ -34,14 +35,7 @@ export function useTickets(filters?: {
       if (filters?.assignedTo) params.append("assignedTo", filters.assignedTo);
       if (filters?.limit) params.append("limit", filters.limit.toString());
 
-      const response = await fetch(`/api/tickets?${params}`);
-      
-      if (!response.ok) {
-        const error: ApiErrorResponse = await response.json();
-        throw new Error(error.error || "Failed to fetch tickets");
-      }
-
-      const data: ApiSuccessResponse<Ticket[]> = await response.json();
+      const data: ApiSuccessResponse<Ticket[]> = await apiGet(`/api/tickets?${params}`);
       return data.data || [];
     },
   });
@@ -55,15 +49,7 @@ export function useTicket(ticketId: string | undefined) {
     queryKey: queryKeys.tickets.detail(ticketId || ""),
     queryFn: async () => {
       if (!ticketId) throw new Error("Ticket ID is required");
-
-      const response = await fetch(`/api/tickets/${ticketId}`);
-      
-      if (!response.ok) {
-        const error: ApiErrorResponse = await response.json();
-        throw new Error(error.error || "Failed to fetch ticket");
-      }
-
-      const data: ApiSuccessResponse<Ticket> = await response.json();
+      const data: ApiSuccessResponse<Ticket> = await apiGet(`/api/tickets/${ticketId}`);
       return data.data;
     },
     enabled: !!ticketId,
@@ -78,18 +64,7 @@ export function useCreateTicket() {
 
   return useMutation({
     mutationFn: async (ticketData: TicketCreateInput) => {
-      const response = await fetch("/api/tickets", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(ticketData),
-      });
-
-      if (!response.ok) {
-        const error: ApiErrorResponse = await response.json();
-        throw new Error(error.error || "Failed to create ticket");
-      }
-
-      const data: ApiSuccessResponse<Ticket> = await response.json();
+      const data: ApiSuccessResponse<Ticket> = await apiPost("/api/tickets", ticketData);
       return data.data;
     },
     onSuccess: (newTicket) => {

@@ -25,6 +25,8 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { AppFloatingDock } from "@/components/layout/AppFloatingDock";
 import {
@@ -33,6 +35,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/lib/store";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -46,12 +49,37 @@ interface AppLayoutProps {
  * - Mobile: Floating dock at bottom
  * 
  * Features:
+ * - Auth guard: redirects to login if not authenticated
  * - Keyboard shortcut (Cmd/Ctrl+B) to toggle sidebar
  * - Persistent sidebar state (saved in cookie)
  * - Mobile-first responsive design
  * - Proper spacing with 4/8-point grid system
  */
 export default function AppLayout({ children }: AppLayoutProps) {
+  const router = useRouter();
+  const { user, isAuthLoading } = useAuth();
+
+  // Redirect to login if not authenticated
+  React.useEffect(() => {
+    if (!isAuthLoading && !user) {
+      router.replace("/login");
+    }
+  }, [user, isAuthLoading, router]);
+
+  // Show loading spinner while checking auth
+  if (isAuthLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Don't render anything if not authenticated (will redirect)
+  if (!user) {
+    return null;
+  }
+
   return (
     <SidebarProvider>
       {/* Desktop Sidebar (hidden on mobile) */}
