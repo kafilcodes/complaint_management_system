@@ -38,37 +38,30 @@ import { Separator } from "@/components/ui/separator";
 import { auth } from "@/firebase/client";
 import { signOut } from "firebase/auth";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/store";
 
 /**
  * App Sidebar Props
  */
-interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  /** Optional user data override for testing */
-  user?: {
-    name: string;
-    email: string;
-    role: "admin" | "full_developer_admin" | "employee" | "user";
-    avatar?: string;
-  };
-}
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {}
 
 /**
  * Main Application Sidebar Component
  */
-export function AppSidebar({ user, ...props }: AppSidebarProps) {
+export function AppSidebar({ ...props }: AppSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { state } = useSidebar();
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
 
-  // TODO: Replace with actual user data from auth context/store
-  // For now, using placeholder data
-  const currentUser = user || {
-    name: "Developer Admin",
-    email: "admin@gmail.com",
-    role: "full_developer_admin" as const,
-    avatar: undefined,
-  };
+  // Get current user from Zustand store (populated by AuthProvider)
+  const { user: currentUser } = useAuth();
+
+  // If no user is logged in, don't render the sidebar
+  // (this shouldn't happen as layout is protected, but adding as safety)
+  if (!currentUser) {
+    return null;
+  }
 
   // Get visible navigation items based on user role
   const visibleNavItems = React.useMemo(
@@ -188,9 +181,6 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
         {/* User Info */}
         <div className="flex items-center gap-2 px-2 py-1">
           <Avatar className="h-8 w-8 rounded-lg">
-            {currentUser.avatar && (
-              <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-            )}
             <AvatarFallback className="rounded-lg">
               {userInitials}
             </AvatarFallback>

@@ -85,7 +85,7 @@ export const NAV_ITEMS: NavItem[] = [
  * @returns Filtered array of navigation items that the user can access
  */
 export function getVisibleNavItems(
-  userRole: "admin" | "full_developer_admin" | "employee" | "user"
+  userRole: string
 ): NavItem[] {
   return NAV_ITEMS.filter((item) => {
     // If no required role, item is visible to everyone
