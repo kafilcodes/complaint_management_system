@@ -16,19 +16,19 @@
 
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Image from "next/image";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { Loader2 } from "lucide-react";
+import { Loader2, Mail, Lock, Eye, EyeOff, LogIn } from "lucide-react";
 import { auth } from "@/firebase/client";
 import { useAuth } from "@/lib/store";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { IconInput } from "@/components/common/IconInput";
 import { Label } from "@/components/ui/label";
 import {
   Card,
@@ -70,6 +70,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const router = useRouter();
   const { user, isAuthLoading } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -159,9 +160,9 @@ export default function LoginPage() {
       {/* Mobile: Single column stacked layout */}
       <div className="container mx-auto flex flex-col md:flex-row md:items-center md:justify-between p-4 md:p-8 lg:p-12 gap-8 md:gap-12">
         
-        {/* Left Column: Graphic (hidden on mobile) */}
+        {/* Left Column: Graphic (hidden on mobile) - Reduced size by ~35% */}
         <div className="hidden md:flex md:flex-1 items-center justify-center">
-          <div className="relative w-full max-w-lg aspect-square">
+          <div className="relative w-full max-w-sm aspect-square">
             <Image
               src="/sign_in.svg"
               alt="Sign in illustration"
@@ -174,9 +175,9 @@ export default function LoginPage() {
 
         {/* Right Column: Login Form */}
         <div className="flex-1 flex flex-col items-center justify-center max-w-md mx-auto w-full">
-          {/* Logo (visible on mobile above graphic, on desktop above form) */}
+          {/* Logo (visible on mobile above graphic, on desktop above form) - INCREASED SIZE */}
           <div className="mb-8 flex flex-col items-center gap-4">
-            <div className="relative h-16 w-16 md:h-20 md:w-20">
+            <div className="relative h-24 w-24 md:h-32 md:w-32">
               <Image
                 src="/logo.png"
                 alt="ServiceFirst Logo"
@@ -190,8 +191,8 @@ export default function LoginPage() {
             </h1>
           </div>
 
-          {/* Mobile Graphic (visible only on mobile, smaller) */}
-          <div className="md:hidden mb-8 w-full max-w-xs mx-auto">
+          {/* Mobile Graphic (visible only on mobile) - Reduced by ~35% */}
+          <div className="md:hidden mb-8 w-full max-w-[208px] mx-auto">
             <div className="relative w-full aspect-square">
               <Image
                 src="/sign_in.svg"
@@ -215,12 +216,13 @@ export default function LoginPage() {
 
             <CardContent>
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                {/* Email Field */}
+                {/* Email Field with Icon */}
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input
+                  <IconInput
                     id="email"
                     type="email"
+                    icon={Mail}
                     placeholder="your.email@example.com"
                     autoComplete="email"
                     autoFocus
@@ -235,17 +237,37 @@ export default function LoginPage() {
                   )}
                 </div>
 
-                {/* Password Field */}
+                {/* Password Field with Icon and Show/Hide Toggle */}
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input
+                  <IconInput
                     id="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
+                    icon={Lock}
                     placeholder="Enter your password"
                     autoComplete="current-password"
                     disabled={isSubmitting}
                     {...register("password")}
                     className={errors.password ? "border-destructive" : ""}
+                    rightElement={
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => setShowPassword(!showPassword)}
+                        tabIndex={-1}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                        <span className="sr-only">
+                          {showPassword ? "Hide password" : "Show password"}
+                        </span>
+                      </Button>
+                    }
                   />
                   {errors.password && (
                     <p className="text-sm text-destructive">
@@ -254,7 +276,7 @@ export default function LoginPage() {
                   )}
                 </div>
 
-                {/* Submit Button */}
+                {/* Submit Button with Icon */}
                 <Button
                   type="submit"
                   className="w-full h-11"
@@ -266,7 +288,10 @@ export default function LoginPage() {
                       Signing in...
                     </>
                   ) : (
-                    "Sign In"
+                    <>
+                      <LogIn className="mr-2 h-5 w-5" />
+                      Sign In
+                    </>
                   )}
                 </Button>
               </form>

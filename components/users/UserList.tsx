@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
+import { Timestamp } from "firebase/firestore";
 import {
   MoreHorizontal,
   UserCheck,
@@ -11,7 +12,10 @@ import {
   Search,
   Filter,
 } from "lucide-react";
-import { useUsers, useToggleUserStatus } from "@/hooks/use-users";
+import { useRealtimeUsers } from "@/hooks/useRealtimeUsers";
+import { apiPut } from "@/lib/api-client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -56,42 +60,77 @@ interface UserListProps {
   onDelete: (userId: string) => void;
 }
 
-const roleLabels = {
-  user: "User",
-  it_technician: "Technician",
-  it_admin: "IT Admin",
+const roleLabels: Record<string, string> = {
   full_developer_admin: "Full Admin",
+  it_admin: "IT Admin",
+  it_technician: "Technician",
+  store_manager: "Store Manager",
+  store_employee: "Store Employee",
 };
 
-const roleColors = {
-  user: "default",
-  it_technician: "blue",
-  it_admin: "purple",
+const roleColors: Record<string, string> = {
   full_developer_admin: "red",
-} as const;
+  it_admin: "purple",
+  it_technician: "blue",
+  store_manager: "green",
+  store_employee: "default",
+};
+
+// Helper to convert Timestamp or Date to Date object
+const toDate = (value: Date | Timestamp | string | undefined): Date | null => {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+  if (value instanceof Timestamp) return value.toDate();
+  if (typeof value === 'string') return new Date(value);
+  return null;
+};
 
 export function UserList({ onEdit, onDelete }: UserListProps) {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [toggleUserId, setToggleUserId] = useState<string | null>(null);
-  const [toggleDisabled, setToggleDisabled] = useState(false);
+  const [toggleIsActive, setToggleIsActive] = useState(true);
 
-  // Fetch users with filters
-  const { data: users, isLoading } = useUsers({
+  const queryClient = useQueryClient();
+
+  // Fetch users with real-time updates
+  const { data: users = [], isLoading } = useRealtimeUsers({
     search: search || undefined,
     role: roleFilter !== "all" ? roleFilter : undefined,
   });
 
-  const toggleStatus = useToggleUserStatus(toggleUserId || "");
+  // Toggle user status mutation
+  const toggleStatus = useMutation({
+    mutationFn: async (isActive: boolean) => {
+      if (!toggleUserId) throw new Error("No user selected");
+      return await apiPut(`/api/users/${toggleUserId}`, { isActive });
+    },
+    onSuccess: (data) => {
+      const user = data.data;
+      toast.success(
+        user.isActive ? "User activated" : "User deactivated",
+        {
+          description: `${user.name} has been ${user.isActive ? "activated" : "deactivated"}`,
+        }
+      );
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      setToggleUserId(null);
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to update user status", {
+        description: error.message,
+      });
+    },
+  });
 
-  const handleToggleStatus = (userId: string, currentDisabled: boolean) => {
+  const handleToggleStatus = (userId: string, currentIsActive: boolean) => {
     setToggleUserId(userId);
-    setToggleDisabled(!currentDisabled);
+    setToggleIsActive(!currentIsActive);
   };
 
   const confirmToggleStatus = () => {
     if (toggleUserId) {
-      toggleStatus.mutate(toggleDisabled);
+      toggleStatus.mutate(toggleIsActive);
       setToggleUserId(null);
     }
   };
@@ -193,8 +232,8 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {user.disabled ? (
-                        <Badge variant="destructive">Disabled</Badge>
+                      {!user.isActive ? (
+                        <Badge variant="destructive">Inactive</Badge>
                       ) : (
                         <Badge variant="outline" className="text-green-600">
                           Active
@@ -202,16 +241,18 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
                       )}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {user.lastLogin
-                        ? formatDistanceToNow(new Date(user.lastLogin), {
-                            addSuffix: true,
-                          })
+                      {user.updatedAt
+                        ? (() => {
+                            const date = toDate(user.updatedAt);
+                            return date ? formatDistanceToNow(date, { addSuffix: true }) : "Never";
+                          })()
                         : "Never"}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {formatDistanceToNow(new Date(user.createdAt), {
-                        addSuffix: true,
-                      })}
+                      {(() => {
+                        const date = toDate(user.createdAt);
+                        return date ? formatDistanceToNow(date, { addSuffix: true }) : "Unknown";
+                      })()}
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
@@ -230,18 +271,18 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() =>
-                              handleToggleStatus(user.id, user.disabled || false)
+                              handleToggleStatus(user.id, user.isActive)
                             }
                           >
-                            {user.disabled ? (
+                            {user.isActive ? (
                               <>
-                                <UserCheck className="mr-2 h-4 w-4" />
-                                Enable User
+                                <UserX className="mr-2 h-4 w-4" />
+                                Deactivate User
                               </>
                             ) : (
                               <>
-                                <UserX className="mr-2 h-4 w-4" />
-                                Disable User
+                                <UserCheck className="mr-2 h-4 w-4" />
+                                Activate User
                               </>
                             )}
                           </DropdownMenuItem>
@@ -279,18 +320,18 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {toggleDisabled ? "Disable User" : "Enable User"}
+              {toggleIsActive ? "Activate User" : "Deactivate User"}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {toggleDisabled
-                ? "This user will not be able to sign in. Their data will remain intact."
-                : "This user will be able to sign in again."}
+              {toggleIsActive
+                ? "This user will be able to sign in again."
+                : "This user will not be able to sign in. Their data will remain intact."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={confirmToggleStatus}>
-              {toggleDisabled ? "Disable" : "Enable"}
+              {toggleIsActive ? "Activate" : "Deactivate"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

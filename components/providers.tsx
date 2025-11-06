@@ -47,10 +47,10 @@ export function Providers({ children }: ProvidersProps) {
         >
           {children}
           
-          {/* Sonner Toast Notifications */}
+          {/* Sonner Toast Notifications - Task 04 Enhanced */}
           <Toaster
             position="top-right"
-            expand={false}
+            expand={true}
             richColors
             closeButton
             duration={4000}

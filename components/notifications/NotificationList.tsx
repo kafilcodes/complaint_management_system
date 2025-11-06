@@ -12,7 +12,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { NotificationItem } from "./NotificationItem";
-import { useNotifications, useMarkAllAsRead, useClearReadNotifications } from "@/hooks/use-notifications";
+import {
+  useRealtimeNotifications,
+  useUnreadNotificationsCount,
+  useMarkAllNotificationsAsRead,
+  useDeleteReadNotifications,
+} from "@/hooks/useRealtimeNotifications";
 import { CheckCheck, Trash2, Bell } from "lucide-react";
 import { EmptyState } from "@/components/common/EmptyState";
 
@@ -20,18 +25,18 @@ export function NotificationList() {
   const [readFilter, setReadFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
 
-  // Fetch notifications
-  const { data, isLoading } = useNotifications({
+  // Fetch notifications with real-time updates
+  const { data: notifications = [], isLoading } = useRealtimeNotifications({
     read: readFilter === "all" ? undefined : readFilter === "read",
     type: typeFilter === "all" ? undefined : typeFilter,
     limit: 50,
   });
 
-  const markAllAsReadMutation = useMarkAllAsRead();
-  const clearReadMutation = useClearReadNotifications();
+  // Get unread count
+  const { data: unreadCount = 0 } = useUnreadNotificationsCount();
 
-  const notifications = data?.data || [];
-  const unreadCount = data?.unreadCount || 0;
+  const markAllAsReadMutation = useMarkAllNotificationsAsRead();
+  const clearReadMutation = useDeleteReadNotifications();
 
   if (isLoading) {
     return (

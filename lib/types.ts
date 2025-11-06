@@ -169,17 +169,18 @@ export interface TicketWithUsers extends Ticket {
 export interface Notification {
   id: string;
   userId: string; // UID of recipient
-  createdAt: Timestamp;
+  createdAt: Timestamp | Date | string;
   read: boolean;
   
   // Notification Content
   title: string;
   message: string;
-  link: string; // Relative path (e.g., /tickets/abc-123)
+  link?: string; // Relative path (e.g., /tickets/abc-123)
   
   // Optional metadata
   ticketId?: string;
-  type?: "ticket_assigned" | "ticket_updated" | "ticket_closed" | "system";
+  type: "ticket_assigned" | "ticket_resolved" | "ticket_updated" | "system";
+  updatedAt?: Timestamp | Date | string;
 }
 
 // ==============================================================================

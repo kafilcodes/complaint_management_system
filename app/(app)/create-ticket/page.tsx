@@ -316,9 +316,9 @@ export default function CreateTicketPage() {
       </Form>
     </div>
 
-    {/* Right Column: Info Graphic (Desktop only) */}
+    {/* Right Column: Info Graphic (Desktop only) - Reduced by ~35% for better LCP */}
     <div className="hidden lg:flex lg:w-96 items-start justify-center sticky top-6">
-      <div className="relative w-full max-w-sm aspect-square">
+      <div className="relative w-full max-w-[250px] aspect-square">
         <Image
           src="/create_tickets.svg"
           alt="Create ticket illustration"

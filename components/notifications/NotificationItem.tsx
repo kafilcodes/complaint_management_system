@@ -13,8 +13,8 @@ import {
   ExternalLink 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useMarkAsRead, useDeleteNotification } from "@/hooks/use-notifications";
-import type { Notification } from "@/app/api/notifications/route";
+import { useMarkNotificationAsRead, useDeleteNotification } from "@/hooks/useRealtimeNotifications";
+import type { Notification } from "@/lib/types";
 
 interface NotificationItemProps {
   notification: Notification;
@@ -36,7 +36,7 @@ const notificationColors = {
 };
 
 export function NotificationItem({ notification, showActions = true }: NotificationItemProps) {
-  const markAsReadMutation = useMarkAsRead();
+  const markAsReadMutation = useMarkNotificationAsRead();
   const deleteNotificationMutation = useDeleteNotification();
 
   const Icon = notificationIcons[notification.type] || Bell;

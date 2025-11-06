@@ -40,6 +40,7 @@ import { auth } from "@/firebase/client";
 import { signOut } from "firebase/auth";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/store";
+import { ThemeToggle } from "@/components/common/ThemeToggle";
 
 /**
  * App Sidebar Props
@@ -113,13 +114,13 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
   }, [currentUser.role]);
 
   return (
-    <Sidebar collapsible="icon" {...props} className="border-r-0">
+    <Sidebar collapsible="icon" {...props} className="border-r-0 overflow-hidden">
       {/* ========================================
           SIDEBAR HEADER
           Shows app logo and name
       ======================================== */}
       <SidebarHeader className="border-b-0">
-        <div className="flex items-center gap-3 px-4 py-4">
+        <div className="flex items-center gap-3 px-4 py-4 group-data-[collapsible=icon]:justify-center">
           {/* Logo with proper aspect ratio */}
           <div className="relative h-10 w-10 flex-shrink-0 group-data-[collapsible=icon]:h-12 group-data-[collapsible=icon]:w-12">
             <Image
@@ -178,7 +179,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
       ======================================== */}
       <SidebarFooter className="border-t-0 mt-auto px-4 pb-4">
         {/* User Info */}
-        <div className="flex items-center gap-3 px-2 py-3 rounded-lg bg-accent/50">
+        <div className="flex items-center gap-3 px-2 py-3 rounded-lg bg-accent/50 group-data-[collapsible=icon]:justify-center">
           <Avatar className="h-10 w-10 rounded-lg">
             <AvatarFallback className="rounded-lg bg-primary text-primary-foreground">
               {userInitials}
@@ -194,26 +195,31 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
           </div>
         </div>
 
-        {/* Logout Button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "w-full justify-start gap-3 h-11 mt-2",
-            "group-data-[collapsible=icon]:justify-center"
-          )}
-          onClick={handleLogout}
-          disabled={isLoggingOut}
-        >
-          {isLoggingOut ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : (
-            <LogOut className="h-5 w-5" />
-          )}
-          <span className="text-base group-data-[collapsible=icon]:hidden">
-            Logout
-          </span>
-        </Button>
+        {/* Theme Toggle and Logout */}
+        <div className="flex items-center gap-2 mt-2">
+          <div className="flex-shrink-0">
+            <ThemeToggle />
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn(
+              "flex-1 justify-start gap-3 h-11",
+              "group-data-[collapsible=icon]:flex-initial group-data-[collapsible=icon]:justify-center"
+            )}
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+          >
+            {isLoggingOut ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <LogOut className="h-5 w-5" />
+            )}
+            <span className="text-base group-data-[collapsible=icon]:hidden">
+              Logout
+            </span>
+          </Button>
+        </div>
       </SidebarFooter>
 
       {/* Sidebar Rail (hover area for expanding collapsed sidebar) */}

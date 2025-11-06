@@ -51,11 +51,11 @@ export function EmptyState({
         className
       )}
     >
-      {/* Image */}
+      {/* Image - Reduced by ~35% for better LCP */}
       <div
         className={cn(
           "relative w-full h-auto mb-6 md:mb-8",
-          "max-w-xs md:max-w-sm lg:max-w-md",
+          "max-w-[208px] md:max-w-[250px] lg:max-w-[291px]",
           imageClassName
         )}
       >
@@ -66,7 +66,7 @@ export function EmptyState({
             fill
             className="object-contain"
             priority={false}
-            sizes="(max-width: 768px) 320px, (max-width: 1024px) 448px, 512px"
+            sizes="(max-width: 768px) 208px, (max-width: 1024px) 250px, 291px"
           />
         </div>
       </div>
