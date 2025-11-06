@@ -14,6 +14,7 @@ import {
 import { NotificationItem } from "./NotificationItem";
 import { useNotifications, useMarkAllAsRead, useClearReadNotifications } from "@/hooks/use-notifications";
 import { CheckCheck, Trash2, Bell } from "lucide-react";
+import { EmptyState } from "@/components/common/EmptyState";
 
 export function NotificationList() {
   const [readFilter, setReadFilter] = useState<string>("all");
@@ -123,15 +124,15 @@ export function NotificationList() {
 
       {/* Notification List */}
       {notifications.length === 0 ? (
-        <div className="text-center py-12">
-          <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-lg text-muted-foreground">No notifications</p>
-          <p className="text-sm text-muted-foreground mt-2">
-            {readFilter === "unread"
-              ? "You don't have any unread notifications"
-              : "You don't have any notifications yet"}
-          </p>
-        </div>
+        <EmptyState
+          imageUrl="/no_notifications.svg"
+          title="No Notifications"
+          description={
+            readFilter === "unread"
+              ? "You're all caught up! No unread notifications at the moment."
+              : "You'll be notified here when tickets are assigned to you or when there are important updates."
+          }
+        />
       ) : (
         <div className="space-y-3">
           {notifications.map((notification) => (

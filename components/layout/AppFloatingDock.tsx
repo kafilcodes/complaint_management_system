@@ -19,15 +19,14 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { NAV_ITEMS, getVisibleNavItems, type NavItem } from "@/app/config/navConfig";
+import { getVisibleNavItems } from "@/app/config/navConfig";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/store";
 
 /**
  * App Floating Dock Props
  */
 interface AppFloatingDockProps {
-  /** Optional user role override for testing */
-  userRole?: "admin" | "full_developer_admin" | "employee" | "user";
   /** Optional className for custom styling */
   className?: string;
 }
@@ -38,23 +37,23 @@ interface AppFloatingDockProps {
  * A bottom-fixed navigation bar optimized for mobile devices.
  * Only the first 5-6 items are shown to prevent overflow.
  */
-export function AppFloatingDock({ 
-  userRole = "full_developer_admin",
-  className 
-}: AppFloatingDockProps) {
+export function AppFloatingDock({ className }: AppFloatingDockProps) {
   const pathname = usePathname();
+  const { user: currentUser } = useAuth();
 
   // Get visible navigation items based on user role
   const visibleNavItems = React.useMemo(
-    () => getVisibleNavItems(userRole),
-    [userRole]
+    () => currentUser ? getVisibleNavItems(currentUser.role) : [],
+    [currentUser]
   );
 
-  // Limit to first 6 items to prevent mobile overflow
+  // Limit to first 5 items to prevent mobile overflow (better UX)
   const dockItems = React.useMemo(
-    () => visibleNavItems.slice(0, 6),
+    () => visibleNavItems.slice(0, 5),
     [visibleNavItems]
   );
+
+  if (!currentUser) return null;
 
   return (
     <nav
@@ -71,16 +70,17 @@ export function AppFloatingDock({
     >
       {/* Dock Container */}
       <div className={cn(
-        // Floating card appearance
-        "bg-background/80 backdrop-blur-lg",
-        "border border-border",
-        "rounded-2xl shadow-lg",
+        // Floating card appearance with clean design
+        "bg-background/95 backdrop-blur-lg",
+        "rounded-2xl",
         // Flexbox layout
         "flex items-center justify-around",
         // Padding and sizing
-        "h-16 px-2",
+        "h-16 px-1",
         // Animation
-        "animate-in slide-in-from-bottom-4 duration-300"
+        "animate-in slide-in-from-bottom-4 duration-300",
+        // Shadow for depth
+        "shadow-lg"
       )}>
         {dockItems.map((item) => {
           const isActive = pathname === item.href;
@@ -92,30 +92,24 @@ export function AppFloatingDock({
               href={item.href}
               className={cn(
                 // Base styles
-                "flex flex-col items-center justify-center gap-1",
-                "h-12 w-12 rounded-xl",
+                "flex flex-col items-center justify-center",
+                "h-14 w-14 rounded-xl",
                 // Transitions
                 "transition-all duration-200",
-                // Active state
-                isActive ? [
-                  "bg-primary text-primary-foreground",
-                  "scale-105",
-                ] : [
-                  "text-muted-foreground hover:text-foreground",
-                  "hover:bg-accent",
-                ],
+                // Hover state (not active)
+                !isActive && "hover:bg-accent/50",
                 // Touch optimization
                 "active:scale-95",
                 // Accessibility
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               )}
               aria-label={item.label}
               aria-current={isActive ? "page" : undefined}
             >
               <Icon 
                 className={cn(
-                  "h-5 w-5 transition-transform",
-                  isActive && "scale-110"
+                  "h-6 w-6 transition-colors",
+                  isActive ? "text-primary" : "text-muted-foreground"
                 )} 
                 strokeWidth={isActive ? 2.5 : 2}
               />

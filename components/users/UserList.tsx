@@ -15,6 +15,7 @@ import { useUsers, useToggleUserStatus } from "@/hooks/use-users";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/common/EmptyState";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -153,8 +154,17 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
             <TableBody>
               {!users || users.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground">
-                    No users found
+                  <TableCell colSpan={7} className="p-0">
+                    <EmptyState
+                      imageUrl="/no_users.svg"
+                      title="No Users Found"
+                      description={
+                        search || roleFilter !== "all"
+                          ? "Try adjusting your search or filter criteria."
+                          : "Users you create will appear here. Start by adding your first team member."
+                      }
+                      className="py-8"
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

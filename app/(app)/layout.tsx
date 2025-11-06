@@ -88,14 +88,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
       {/* Main Content Area */}
       <SidebarInset>
         {/* Header with Sidebar Toggle */}
-        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2">
             {/* Sidebar Toggle Button (desktop only) */}
             <SidebarTrigger className="-ml-1 hidden md:flex" />
-            <Separator
-              orientation="vertical"
-              className="mr-2 hidden h-4 md:block"
-            />
           </div>
 
           {/* Header content can be added here */}

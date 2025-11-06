@@ -5,10 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, Clock, User } from "lucide-react";
+import { ArrowRight, Clock, User, Plus } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { TICKET_STATUSES, getLabelByValue, getColorByValue } from "@/lib/configuration";
 import { cn } from "@/lib/utils";
+import { EmptyState } from "@/components/common/EmptyState";
 
 interface RecentTicket {
   id: string;
@@ -47,9 +48,19 @@ export function RecentTickets({ tickets, isLoading }: RecentTicketsProps) {
           <CardTitle>Recent Tickets</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
-            <p>No recent tickets</p>
-          </div>
+          <EmptyState
+            imageUrl="/create_tickets.svg"
+            title="No Recent Tickets"
+            description="Create a new ticket to see it appear here. Track and manage all your service requests in one place."
+            cta={
+              <Button asChild>
+                <Link href="/create-ticket">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Ticket
+                </Link>
+              </Button>
+            }
+          />
         </CardContent>
       </Card>
     );

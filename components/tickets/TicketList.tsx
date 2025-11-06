@@ -7,6 +7,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { TicketCard } from "./TicketCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -18,9 +19,10 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, Grid, List as ListIcon } from "lucide-react";
+import { Search, Filter, Grid, List as ListIcon, Plus } from "lucide-react";
 import type { Ticket } from "@/lib/types";
 import { TICKET_STATUSES, BRANDS } from "@/lib/configuration";
+import { EmptyState } from "@/components/common/EmptyState";
 
 interface TicketListProps {
   tickets: Ticket[];
@@ -143,12 +145,25 @@ export function TicketList({
 
       {/* Tickets Grid/List */}
       {filteredTickets.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-lg text-muted-foreground">No tickets found</p>
-          <p className="text-sm text-muted-foreground mt-2">
-            Try adjusting your filters or search query
-          </p>
-        </div>
+        <EmptyState
+          imageUrl="/no_tickets.svg"
+          title={tickets.length === 0 ? "No Tickets Yet" : "No Tickets Found"}
+          description={
+            tickets.length === 0
+              ? "Get started by creating your first service ticket. Track issues, assign technicians, and manage resolutions all in one place."
+              : "Try adjusting your filters or search query to find what you're looking for."
+          }
+          cta={
+            tickets.length === 0 ? (
+              <Button asChild>
+                <Link href="/create-ticket">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Your First Ticket
+                </Link>
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
         <div
           className={

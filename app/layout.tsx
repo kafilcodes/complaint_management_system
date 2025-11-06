@@ -65,9 +65,16 @@ export const metadata: Metadata = {
     siteName: process.env.NEXT_PUBLIC_APP_NAME || "CMS",
   },
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
-    apple: "/icons/apple-touch-icon.png",
+    icon: [
+      { url: "/logo.png", sizes: "any" },
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
+    ],
+    shortcut: "/logo.png",
+    apple: [
+      { url: "/logo.png", sizes: "180x180", type: "image/png" },
+      { url: "/ios/180.png", sizes: "180x180", type: "image/png" },
+    ],
   },
   manifest: "/manifest.json",
   appleWebApp: {

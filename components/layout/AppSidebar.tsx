@@ -16,6 +16,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { LogOut, Loader2 } from "lucide-react";
 
@@ -112,43 +113,42 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
   }, [currentUser.role]);
 
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar collapsible="icon" {...props} className="border-r-0">
       {/* ========================================
           SIDEBAR HEADER
           Shows app logo and name
       ======================================== */}
-      <SidebarHeader>
-        <div className="flex items-center gap-2 px-2 py-2">
-          {/* Logo */}
-          <div 
-            className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground"
-            aria-label="App Logo"
-          >
-            <span className="text-base font-bold">
-              {process.env.NEXT_PUBLIC_APP_NAME?.[0] || "S"}
-            </span>
+      <SidebarHeader className="border-b-0">
+        <div className="flex items-center gap-3 px-4 py-4">
+          {/* Logo with proper aspect ratio */}
+          <div className="relative h-10 w-10 flex-shrink-0 group-data-[collapsible=icon]:h-12 group-data-[collapsible=icon]:w-12">
+            <Image
+              src="/logo.png"
+              alt="ServiceFirst Logo"
+              fill
+              className="object-contain"
+              priority
+            />
           </div>
           
           {/* App Name (hidden when collapsed) */}
-          <div className="flex flex-1 flex-col text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-            <span className="truncate font-semibold">
+          <div className="flex flex-1 flex-col text-left leading-tight group-data-[collapsible=icon]:hidden">
+            <span className="truncate font-semibold text-base">
               {process.env.NEXT_PUBLIC_APP_NAME || "ServiceFirst"}
             </span>
-            <span className="truncate text-xs text-muted-foreground">
+            <span className="truncate text-sm text-muted-foreground">
               Management System
             </span>
           </div>
         </div>
       </SidebarHeader>
 
-      <Separator className="mx-2" />
-
       {/* ========================================
           SIDEBAR CONTENT
           Main navigation items
       ======================================== */}
-      <SidebarContent>
-        <SidebarMenu>
+      <SidebarContent className="px-2">
+        <SidebarMenu className="gap-1">
           {visibleNavItems.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
@@ -159,10 +159,11 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                   asChild
                   isActive={isActive}
                   tooltip={item.label}
+                  className="h-11"
                 >
-                  <Link href={item.href}>
-                    <Icon className="h-4 w-4" />
-                    <span>{item.label}</span>
+                  <Link href={item.href} className="flex items-center gap-3">
+                    <Icon className="h-6 w-6 flex-shrink-0" />
+                    <span className="text-base">{item.label}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -175,20 +176,18 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
           SIDEBAR FOOTER
           User info and logout button
       ======================================== */}
-      <SidebarFooter>
-        <Separator className="mx-2 mb-2" />
-        
+      <SidebarFooter className="border-t-0 mt-auto px-4 pb-4">
         {/* User Info */}
-        <div className="flex items-center gap-2 px-2 py-1">
-          <Avatar className="h-8 w-8 rounded-lg">
-            <AvatarFallback className="rounded-lg">
+        <div className="flex items-center gap-3 px-2 py-3 rounded-lg bg-accent/50">
+          <Avatar className="h-10 w-10 rounded-lg">
+            <AvatarFallback className="rounded-lg bg-primary text-primary-foreground">
               {userInitials}
             </AvatarFallback>
           </Avatar>
 
           {/* User details (hidden when collapsed) */}
-          <div className="flex flex-1 flex-col text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-            <span className="truncate font-medium">{currentUser.name}</span>
+          <div className="flex flex-1 flex-col text-left leading-tight group-data-[collapsible=icon]:hidden">
+            <span className="truncate font-medium text-sm">{currentUser.name}</span>
             <span className="truncate text-xs text-muted-foreground">
               {roleDisplay}
             </span>
@@ -196,27 +195,25 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
         </div>
 
         {/* Logout Button */}
-        <div className="px-2 pb-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              "w-full justify-start gap-2",
-              "group-data-[collapsible=icon]:justify-center"
-            )}
-            onClick={handleLogout}
-            disabled={isLoggingOut}
-          >
-            {isLoggingOut ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <LogOut className="h-4 w-4" />
-            )}
-            <span className="group-data-[collapsible=icon]:hidden">
-              Logout
-            </span>
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "w-full justify-start gap-3 h-11 mt-2",
+            "group-data-[collapsible=icon]:justify-center"
+          )}
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+        >
+          {isLoggingOut ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <LogOut className="h-5 w-5" />
+          )}
+          <span className="text-base group-data-[collapsible=icon]:hidden">
+            Logout
+          </span>
+        </Button>
       </SidebarFooter>
 
       {/* Sidebar Rail (hover area for expanding collapsed sidebar) */}

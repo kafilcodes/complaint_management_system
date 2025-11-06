@@ -21,6 +21,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import Image from "next/image";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { Loader2 } from "lucide-react";
 import { auth } from "@/firebase/client";
@@ -153,85 +154,135 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
-            {process.env.NEXT_PUBLIC_APP_NAME || "ServiceFirst"}
-          </CardTitle>
-          <CardDescription className="text-center">
-            Sign in to your account to continue
-          </CardDescription>
-        </CardHeader>
+    <div className="flex min-h-screen">
+      {/* Desktop: Two-column layout with graphic on left */}
+      {/* Mobile: Single column stacked layout */}
+      <div className="container mx-auto flex flex-col md:flex-row md:items-center md:justify-between p-4 md:p-8 lg:p-12 gap-8 md:gap-12">
+        
+        {/* Left Column: Graphic (hidden on mobile) */}
+        <div className="hidden md:flex md:flex-1 items-center justify-center">
+          <div className="relative w-full max-w-lg aspect-square">
+            <Image
+              src="/sign_in.svg"
+              alt="Sign in illustration"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+        </div>
 
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Email Field */}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="your.email@example.com"
-                autoComplete="email"
-                autoFocus
-                disabled={isSubmitting}
-                {...register("email")}
-                className={errors.email ? "border-destructive" : ""}
+        {/* Right Column: Login Form */}
+        <div className="flex-1 flex flex-col items-center justify-center max-w-md mx-auto w-full">
+          {/* Logo (visible on mobile above graphic, on desktop above form) */}
+          <div className="mb-8 flex flex-col items-center gap-4">
+            <div className="relative h-16 w-16 md:h-20 md:w-20">
+              <Image
+                src="/logo.png"
+                alt="ServiceFirst Logo"
+                fill
+                className="object-contain"
+                priority
               />
-              {errors.email && (
-                <p className="text-sm text-destructive">
-                  {errors.email.message}
-                </p>
-              )}
             </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-center">
+              {process.env.NEXT_PUBLIC_APP_NAME || "ServiceFirst"}
+            </h1>
+          </div>
 
-            {/* Password Field */}
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                autoComplete="current-password"
-                disabled={isSubmitting}
-                {...register("password")}
-                className={errors.password ? "border-destructive" : ""}
+          {/* Mobile Graphic (visible only on mobile, smaller) */}
+          <div className="md:hidden mb-8 w-full max-w-xs mx-auto">
+            <div className="relative w-full aspect-square">
+              <Image
+                src="/sign_in.svg"
+                alt="Sign in illustration"
+                fill
+                className="object-contain"
               />
-              {errors.password && (
-                <p className="text-sm text-destructive">
-                  {errors.password.message}
-                </p>
-              )}
             </div>
+          </div>
 
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                "Sign In"
+          {/* Login Card */}
+          <Card className="w-full border-0 shadow-none md:border md:shadow-sm">
+            <CardHeader className="space-y-1 text-center">
+              <CardTitle className="text-xl md:text-2xl">
+                Welcome Back
+              </CardTitle>
+              <CardDescription>
+                Sign in to your account to continue
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent>
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                {/* Email Field */}
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    autoComplete="email"
+                    autoFocus
+                    disabled={isSubmitting}
+                    {...register("email")}
+                    className={errors.email ? "border-destructive" : ""}
+                  />
+                  {errors.email && (
+                    <p className="text-sm text-destructive">
+                      {errors.email.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Password Field */}
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    autoComplete="current-password"
+                    disabled={isSubmitting}
+                    {...register("password")}
+                    className={errors.password ? "border-destructive" : ""}
+                  />
+                  {errors.password && (
+                    <p className="text-sm text-destructive">
+                      {errors.password.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Submit Button */}
+                <Button
+                  type="submit"
+                  className="w-full h-11"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    "Sign In"
+                  )}
+                </Button>
+              </form>
+
+              {/* Development Helper */}
+              {process.env.NODE_ENV === "development" && (
+                <div className="mt-6 pt-6 border-t border-border">
+                  <p className="text-xs text-muted-foreground text-center">
+                    Development Mode: Use seeded admin credentials
+                  </p>
+                </div>
               )}
-            </Button>
-          </form>
-
-          {/* Development Helper */}
-          {process.env.NODE_ENV === "development" && (
-            <div className="mt-6 border-t border-border pt-6">
-              <p className="text-xs text-muted-foreground text-center">
-                Development Mode: Use seeded admin credentials
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }
