@@ -24,6 +24,7 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
+import { CommandMenu } from "@/components/common/CommandMenu";
 
 interface ProvidersProps {
   children: ReactNode;
@@ -46,6 +47,9 @@ export function Providers({ children }: ProvidersProps) {
           disableTransitionOnChange
         >
           {children}
+          
+          {/* Global Command Menu (Cmd+K / Ctrl+K) */}
+          <CommandMenu />
           
           {/* Sonner Toast Notifications - Task 04 Enhanced */}
           <Toaster
