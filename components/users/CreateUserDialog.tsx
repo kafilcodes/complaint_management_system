@@ -39,6 +39,10 @@ const createUserSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   role: z.enum(["user", "it_technician", "it_admin", "full_developer_admin"]),
   phone: z.string().optional(),
+  mobile: z.string().optional(),
+  address: z.string().optional(),
+  aadhar: z.string().optional(),
+  alternateNo: z.string().optional(),
 });
 
 type CreateUserFormData = z.infer<typeof createUserSchema>;
@@ -62,6 +66,10 @@ export function CreateUserDialog({
       password: "",
       role: "user",
       phone: "",
+      mobile: "",
+      address: "",
+      aadhar: "",
+      alternateNo: "",
     },
   });
 
@@ -176,6 +184,62 @@ export function CreateUserDialog({
                   <FormLabel>Phone (Optional)</FormLabel>
                   <FormControl>
                     <Input placeholder="+1 (555) 000-0000" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="mobile"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Mobile (Optional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter mobile number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Address (Optional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter address" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="aadhar"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Aadhar (Optional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter Aadhar number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="alternateNo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Alternate Number (Optional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter alternate contact" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

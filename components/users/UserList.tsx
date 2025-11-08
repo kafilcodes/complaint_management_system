@@ -13,6 +13,7 @@ import {
   Filter,
 } from "lucide-react";
 import { useRealtimeUsers } from "@/hooks/useRealtimeUsers";
+import { useStore } from "@/lib/store";
 import { apiPut } from "@/lib/api-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -92,12 +93,16 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
   const [toggleIsActive, setToggleIsActive] = useState(true);
 
   const queryClient = useQueryClient();
+  const currentUser = useStore((state) => state.user);
 
   // Fetch users with real-time updates
-  const { data: users = [], isLoading } = useRealtimeUsers({
+  const { data: allUsers = [], isLoading } = useRealtimeUsers({
     search: search || undefined,
     role: roleFilter !== "all" ? roleFilter : undefined,
   });
+
+  // Filter out the current admin user from the list
+  const users = allUsers.filter((user) => user.id !== currentUser?.id);
 
   // Toggle user status mutation
   const toggleStatus = useMutation({

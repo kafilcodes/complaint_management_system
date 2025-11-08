@@ -21,7 +21,9 @@ import {
   Calendar,
   Clock,
   CheckCircle,
+  Share2,
 } from "lucide-react";
+import { toast } from "sonner";
 import { formatDateTime, getRelativeTime } from "@/firebase/firestore-helpers";
 import { TICKET_STATUSES, BRANDS, getLabelByValue, getColorByValue } from "@/lib/configuration";
 import { cn } from "@/lib/utils";
@@ -64,6 +66,61 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
     router.push("/tickets");
   };
 
+  const handleShare = async () => {
+    if (!ticket) return;
+
+    const shareText = `
+🎫 Ticket #${ticket.id}
+
+📦 Product: ${ticket.productName}${ticket.productModel ? ` (${ticket.productModel})` : ''}
+🏢 Brand: ${brandLabel}
+📋 Status: ${getLabelByValue(TICKET_STATUSES, ticket.status)}
+
+👤 Customer: ${ticket.customerName}
+📞 Phone: ${ticket.customerPhone}
+${ticket.address ? `📍 Address: ${ticket.address}${ticket.pincode ? ` - ${ticket.pincode}` : ''}` : ''}
+
+❗ Issue Description:
+${ticket.issueDescription}
+
+🗓️ Created: ${formatDateTime(ticket.createdAt)}
+${ticket.assignedTo ? `👨‍🔧 Assigned to technician` : '⚠️ Unassigned'}
+    `.trim();
+
+    // Try Web Share API first (mobile-friendly)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Ticket #${ticket.id} - ${ticket.productName}`,
+          text: shareText,
+        });
+        toast.success("Shared successfully!");
+        return;
+      } catch (err) {
+        // User cancelled or error occurred
+        if ((err as Error).name !== "AbortError") {
+          console.error("Share failed:", err);
+        } else {
+          return; // User cancelled, don't show fallback
+        }
+      }
+    }
+
+    // Fallback: Show WhatsApp/Email options
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+    const emailUrl = `mailto:?subject=${encodeURIComponent(`Ticket #${ticket.id} - ${ticket.productName}`)}&body=${encodeURIComponent(shareText)}`;
+
+    // Simple dialog for desktop users
+    const useWhatsApp = confirm("Share ticket via:\n\nOK = WhatsApp\nCancel = Email");
+    if (useWhatsApp) {
+      window.open(whatsappUrl, "_blank");
+      toast.success("Opening WhatsApp...");
+    } else {
+      window.location.href = emailUrl;
+      toast.success("Opening email client...");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -103,6 +160,14 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
           <h1 className="text-3xl font-bold">{ticket.productName}</h1>
           <p className="text-muted-foreground mt-1">Ticket ID: {ticket.id}</p>
         </div>
+        <Button
+          variant="outline"
+          onClick={handleShare}
+          className="gap-2"
+        >
+          <Share2 className="h-4 w-4" />
+          <span className="hidden sm:inline">Share</span>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

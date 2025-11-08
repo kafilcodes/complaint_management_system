@@ -15,7 +15,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/firebase/client";
-import { BRANDS } from "@/lib/configuration";
+import { TICKET_BRANDS } from "@/configuration";
 
 // ==============================================================================
 // QUERY KEYS
@@ -34,6 +34,20 @@ const configKeys = {
 export interface BrandConfig {
   value: string;
   label: string;
+}
+
+// ==============================================================================
+// HELPERS
+// ==============================================================================
+
+/**
+ * Convert TICKET_BRANDS array to BrandConfig format
+ */
+function getBrandsFromConfig(): BrandConfig[] {
+  return TICKET_BRANDS.map((brand) => ({
+    value: brand.toLowerCase().replace(/\s+/g, "_").replace(/[()]/g, ""),
+    label: brand,
+  }));
 }
 
 // ==============================================================================
@@ -68,7 +82,7 @@ export function useBrandList() {
           console.warn(
             "[useBrandList] No brands document in Firestore, using local config"
           );
-          return BRANDS as unknown as BrandConfig[];
+          return getBrandsFromConfig();
         }
 
         const data = brandsSnapshot.data();
@@ -78,14 +92,14 @@ export function useBrandList() {
           console.warn(
             "[useBrandList] Invalid brandList format, using local config"
           );
-          return BRANDS as unknown as BrandConfig[];
+          return getBrandsFromConfig();
         }
 
         return brandList;
       } catch (error) {
         console.error("[useBrandList] Firestore error, using local config:", error);
         // Fallback to hardcoded config on error
-        return BRANDS as unknown as BrandConfig[];
+        return getBrandsFromConfig();
       }
     },
     staleTime: 1000 * 60 * 60 * 24, // 24 hours (data is fresh for a day)
