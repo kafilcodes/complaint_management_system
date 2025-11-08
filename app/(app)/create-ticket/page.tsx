@@ -29,7 +29,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCreateTicket } from "@/hooks/useTicketData";
 import { useBrandList } from "@/hooks/useConfig";
-import { useRealtimeUsers } from "@/hooks/useRealtimeUsers";
+import { useUsers } from "@/hooks/useUsers";
 import { Loader2, ArrowLeft, Wrench } from "lucide-react";
 import type { TicketCreateInput } from "@/lib/types";
 
@@ -59,8 +59,8 @@ export default function CreateTicketPage() {
   const { data: brands = [], isLoading: brandsLoading } = useBrandList();
   
   // Fetch technicians for assignee combobox
-  const { data: allUsers = [], isLoading: usersLoading } = useRealtimeUsers();
-  const technicians = allUsers.filter((user) => user.role === "it_technician");
+  const { data: allUsers = [], isLoading: usersLoading } = useUsers({ role: "it_technician" });
+  const technicians = allUsers;
 
   const form = useForm<TicketFormValues>({
     resolver: zodResolver(ticketFormSchema),

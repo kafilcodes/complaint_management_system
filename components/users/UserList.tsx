@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Timestamp } from "firebase/firestore";
+import { User } from "@/lib/types";
 import {
   MoreHorizontal,
   UserCheck,
@@ -12,7 +13,10 @@ import {
   Search,
   Filter,
 } from "lucide-react";
-import { useRealtimeUsers } from "@/hooks/useRealtimeUsers";
+import { EditUserDialog } from "./EditUserDialog";
+import { DeleteUserDialog } from "./DeleteUserDialog";
+import { useUsers } from "@/hooks/useUsers";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useStore } from "@/lib/store";
 import { apiPut } from "@/lib/api-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -96,13 +100,30 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
   const currentUser = useStore((state) => state.user);
 
   // Fetch users with real-time updates
-  const { data: allUsers = [], isLoading } = useRealtimeUsers({
-    search: search || undefined,
-    role: roleFilter !== "all" ? roleFilter : undefined,
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  // Debounce search term
+  const debouncedSearch = useDebounce(search, 500);
+
+  // Fetch users via API
+  const { data: allUsers = [], isLoading } = useUsers({
+    role: roleFilter === "all" ? undefined : (roleFilter as "admin" | "full_developer_admin" | "it_technician" | "customer"),
   });
 
   // Filter out the current admin user from the list
-  const users = allUsers.filter((user) => user.id !== currentUser?.id);
+  const users = allUsers
+    .filter((user) => user.id !== currentUser?.id)
+    .filter((user) => {
+      if (!debouncedSearch) return true;
+      const searchLower = debouncedSearch.toLowerCase();
+      return (
+        user.name.toLowerCase().includes(searchLower) ||
+        user.email.toLowerCase().includes(searchLower) ||
+        user.role.toLowerCase().includes(searchLower)
+      );
+    });
 
   // Toggle user status mutation
   const toggleStatus = useMutation({

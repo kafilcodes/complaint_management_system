@@ -16,9 +16,21 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Moon, Shield, Wrench, User as UserIcon, Loader2, Save } from "lucide-react";
+import { 
+  Moon, 
+  Shield, 
+  Wrench, 
+  User as UserIcon, 
+  Loader2, 
+  Save,
+  Phone,
+  MapPin,
+  CreditCard,
+  PhoneCall
+} from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
+import { IconInput } from "@/components/common/IconInput";
 import { useAuth } from "@/lib/store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -43,10 +55,25 @@ import type { UserRole } from "@/lib/types";
 
 const profileFormSchema = z.object({
   // Mutable fields (user can edit)
-  mobile: z.string().optional(),
-  address: z.string().optional(),
+  mobile: z
+    .string()
+    .optional()
+    .refine(
+      (val) => !val || /^(\+91)?[6-9]\d{9}$/.test(val),
+      "Must be a valid 10-digit Indian mobile number (e.g., 9876543210 or +919876543210)"
+    ),
+  address: z
+    .string()
+    .max(100, "Address must be 100 characters or less")
+    .optional(),
   aadhar: z.string().optional(),
-  alternateNo: z.string().optional(),
+  alternateNo: z
+    .string()
+    .optional()
+    .refine(
+      (val) => !val || /^(\+91)?[6-9]\d{9}$/.test(val),
+      "Must be a valid 10-digit Indian mobile number"
+    ),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -254,13 +281,14 @@ export default function ProfilePage() {
                     <FormItem>
                       <FormLabel>Mobile Number (WhatsApp)</FormLabel>
                       <FormControl>
-                        <Input 
+                        <IconInput 
+                          icon={Phone}
                           placeholder="+91 98765 43210" 
                           {...field} 
                         />
                       </FormControl>
                       <FormDescription>
-                        Your primary contact number
+                        Your primary contact number (10 digits)
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -274,7 +302,8 @@ export default function ProfilePage() {
                     <FormItem>
                       <FormLabel>Alternate Number (Optional)</FormLabel>
                       <FormControl>
-                        <Input 
+                        <IconInput 
+                          icon={PhoneCall}
                           placeholder="+91 87654 32109" 
                           {...field} 
                         />
@@ -316,14 +345,15 @@ export default function ProfilePage() {
                   <FormItem>
                     <FormLabel>Aadhar Number (Optional)</FormLabel>
                     <FormControl>
-                      <Input 
+                      <IconInput 
+                        icon={CreditCard}
                         placeholder="1234 5678 9012"
                         maxLength={14}
                         {...field} 
                       />
                     </FormControl>
                     <FormDescription>
-                      12-digit Aadhar identification number
+                      Your 12-digit Aadhar card number
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
