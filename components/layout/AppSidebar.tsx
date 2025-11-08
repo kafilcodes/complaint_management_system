@@ -127,6 +127,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
               src="/logo.png"
               alt="ServiceFirst Logo"
               fill
+              sizes="(max-width: 768px) 48px, 40px"
               className="object-contain"
               priority
             />

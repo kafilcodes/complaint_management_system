@@ -71,7 +71,7 @@ export async function GET(
  * PUT /api/users/[id]
  * Update a user (admin only)
  * 
- * Body: { email?, name?, role?, phone?, disabled? }
+ * Body: { email?, name?, role?, phone?, isActive?, mobile?, address?, aadhar?, alternateNo? }
  */
 export async function PUT(
   request: NextRequest,
@@ -99,7 +99,17 @@ export async function PUT(
 
     // Parse request body
     const body = await request.json();
-    const { email, name, role, phone, disabled } = body;
+    const { 
+      email, 
+      name, 
+      role, 
+      phone, 
+      isActive,
+      mobile,
+      address,
+      aadhar,
+      alternateNo
+    } = body;
 
     // Validate role if provided
     if (role) {
@@ -112,10 +122,10 @@ export async function PUT(
       }
     }
 
-    // Prevent users from disabling themselves
-    if (id === user.id && disabled === true) {
+    // Prevent users from deactivating themselves
+    if (id === user.id && isActive === false) {
       return NextResponse.json(
-        { error: "You cannot disable your own account" },
+        { error: "You cannot deactivate your own account" },
         { status: 400 }
       );
     }
@@ -132,7 +142,7 @@ export async function PUT(
     const authUpdates: any = {};
     if (email) authUpdates.email = email;
     if (name) authUpdates.displayName = name;
-    if (typeof disabled === "boolean") authUpdates.disabled = disabled;
+    if (typeof isActive === "boolean") authUpdates.disabled = !isActive;
 
     if (Object.keys(authUpdates).length > 0) {
       await adminAuth.updateUser(id, authUpdates);
@@ -153,6 +163,11 @@ export async function PUT(
     if (name) firestoreUpdates.name = name;
     if (role) firestoreUpdates.role = role;
     if (phone !== undefined) firestoreUpdates.phone = phone || null;
+    if (typeof isActive === "boolean") firestoreUpdates.isActive = isActive;
+    if (mobile !== undefined) firestoreUpdates.mobile = mobile || null;
+    if (address !== undefined) firestoreUpdates.address = address || null;
+    if (aadhar !== undefined) firestoreUpdates.aadhar = aadhar || null;
+    if (alternateNo !== undefined) firestoreUpdates.alternateNo = alternateNo || null;
 
     await adminDb.collection("users").doc(id).update(firestoreUpdates);
 

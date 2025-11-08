@@ -27,6 +27,8 @@ export interface EmptyStateProps {
   className?: string;
   /** Optional image className for custom image styling */
   imageClassName?: string;
+  /** Optional priority loading for LCP images */
+  priority?: boolean;
 }
 
 /**
@@ -42,6 +44,7 @@ export function EmptyState({
   cta,
   className,
   imageClassName,
+  priority = false,
 }: EmptyStateProps) {
   return (
     <div
@@ -65,7 +68,8 @@ export function EmptyState({
             alt={title}
             fill
             className="object-contain"
-            priority={false}
+            priority={priority}
+            loading={priority ? "eager" : "lazy"}
             sizes="(max-width: 768px) 208px, (max-width: 1024px) 250px, 291px"
           />
         </div>

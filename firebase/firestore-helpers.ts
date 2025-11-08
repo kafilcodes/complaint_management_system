@@ -297,6 +297,7 @@ export async function batchUpdateDocuments(
  * 
  * Handles all possible timestamp formats from Firestore and JavaScript:
  * - Firestore Timestamp objects (with .toDate() method)
+ * - Serialized Firestore timestamps ({ seconds, nanoseconds })
  * - Native JavaScript Date objects
  * - ISO 8601 date strings
  * - Unix timestamps (milliseconds)
@@ -319,7 +320,13 @@ export function timestampToDate(timestamp: any): Date {
     return timestamp.toDate();
   }
   
-  // Case 3: ISO 8601 string or Unix timestamp
+  // Case 3: Serialized Firestore Timestamp (REST API / JSON serialization)
+  // Format: { seconds: number, nanoseconds: number }
+  if (timestamp && typeof timestamp.seconds === 'number') {
+    return new Date(timestamp.seconds * 1000);
+  }
+  
+  // Case 4: ISO 8601 string or Unix timestamp
   if (typeof timestamp === 'string' || typeof timestamp === 'number') {
     const date = new Date(timestamp);
     // Validate the date is not invalid

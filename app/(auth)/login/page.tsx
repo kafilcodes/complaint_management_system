@@ -167,6 +167,7 @@ export default function LoginPage() {
               src="/sign_in.svg"
               alt="Sign in illustration"
               fill
+              sizes="(max-width: 768px) 0px, 400px"
               className="object-contain"
               priority
             />
@@ -182,6 +183,7 @@ export default function LoginPage() {
                 src="/logo.png"
                 alt="ServiceFirst Logo"
                 fill
+                sizes="(max-width: 768px) 96px, 128px"
                 className="object-contain"
                 priority
               />
@@ -198,6 +200,7 @@ export default function LoginPage() {
                 src="/sign_in.svg"
                 alt="Sign in illustration"
                 fill
+                sizes="208px"
                 className="object-contain"
               />
             </div>
