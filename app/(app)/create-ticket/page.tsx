@@ -24,10 +24,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useCreateTicket } from "@/hooks/use-tickets";
-import { BRANDS, CATEGORIES } from "@/lib/configuration";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { useCreateTicket } from "@/hooks/useTicketData";
+import { useBrandList } from "@/hooks/useConfig";
+import { useRealtimeUsers } from "@/hooks/useRealtimeUsers";
+import { Loader2, ArrowLeft, Wrench } from "lucide-react";
 import type { TicketCreateInput } from "@/lib/types";
 
 // Form validation schema
@@ -42,6 +45,8 @@ const ticketFormSchema = z.object({
   brand: z.string().min(1, "Brand is required"),
   issueDescription: z.string().min(10, "Issue description must be at least 10 characters"),
   comments: z.string().optional(),
+  link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  assignedTo: z.string().optional(),
 });
 
 type TicketFormValues = z.infer<typeof ticketFormSchema>;
@@ -49,6 +54,13 @@ type TicketFormValues = z.infer<typeof ticketFormSchema>;
 export default function CreateTicketPage() {
   const router = useRouter();
   const createTicket = useCreateTicket();
+  
+  // Fetch brands from Firestore with 24-hour cache
+  const { data: brands = [], isLoading: brandsLoading } = useBrandList();
+  
+  // Fetch technicians for assignee combobox
+  const { data: allUsers = [], isLoading: usersLoading } = useRealtimeUsers();
+  const technicians = allUsers.filter((user) => user.role === "it_technician");
 
   const form = useForm<TicketFormValues>({
     resolver: zodResolver(ticketFormSchema),
@@ -63,14 +75,25 @@ export default function CreateTicketPage() {
       brand: "",
       issueDescription: "",
       comments: "",
+      link: "",
+      assignedTo: "",
     },
   });
 
   async function onSubmit(values: TicketFormValues) {
     try {
       const ticketData: TicketCreateInput = {
-        ...values,
+        customerName: values.customerName,
+        customerPhone: values.customerPhone,
+        address: values.address,
+        pincode: values.pincode,
+        productName: values.productName,
+        productModel: values.productModel,
         purchaseDate: new Date(values.purchaseDate),
+        brand: values.brand,
+        issueDescription: values.issueDescription,
+        comments: values.comments,
+        assignedTo: values.assignedTo || undefined,
       };
 
       await createTicket.mutateAsync(ticketData);
@@ -82,6 +105,14 @@ export default function CreateTicketPage() {
       console.error("Error creating ticket:", error);
     }
   }
+  
+  // Convert technicians to combobox options
+  const technicianOptions: ComboboxOption[] = technicians.map((tech) => ({
+    value: tech.id,
+    label: tech.name,
+    email: tech.email,
+    role: tech.role,
+  }));
 
   return (
     <div className="container mx-auto py-6">
@@ -192,11 +223,17 @@ export default function CreateTicketPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {BRANDS.map((brand) => (
-                          <SelectItem key={brand.value} value={brand.value}>
-                            {brand.label}
+                        {brandsLoading ? (
+                          <SelectItem value="loading" disabled>
+                            Loading brands...
                           </SelectItem>
-                        ))}
+                        ) : (
+                          brands.map((brand) => (
+                            <SelectItem key={brand.value} value={brand.value}>
+                              {brand.label}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -241,6 +278,75 @@ export default function CreateTicketPage() {
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Assignment & Link */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Assignment & Reference</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="assignedTo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Assign to Technician (Optional)</FormLabel>
+                    <FormControl>
+                      <Combobox
+                        options={technicianOptions}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder="Select a technician..."
+                        searchPlaceholder="Search technicians..."
+                        emptyText="No technicians found."
+                        disabled={usersLoading}
+                        renderOption={(option) => (
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                <Wrench className="h-4 w-4" />
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{option.label}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {option.email}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Assign this ticket to a technician immediately
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="link"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Reference Link (Optional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="url"
+                        placeholder="https://example.com/reference" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Add a reference link related to this ticket
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

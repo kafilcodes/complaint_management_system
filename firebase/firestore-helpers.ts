@@ -293,12 +293,42 @@ export async function batchUpdateDocuments(
 }
 
 /**
- * Convert Firestore Timestamp to Date
+ * Convert Firestore Timestamp to Date (Production-Safe)
+ * 
+ * Handles all possible timestamp formats from Firestore and JavaScript:
+ * - Firestore Timestamp objects (with .toDate() method)
+ * - Native JavaScript Date objects
+ * - ISO 8601 date strings
+ * - Unix timestamps (milliseconds)
+ * - Null/undefined values
+ * 
+ * @param timestamp - Any date-like value
+ * @returns A valid JavaScript Date object
  */
-export function timestampToDate(timestamp: Timestamp | Date | undefined): Date {
+export function timestampToDate(timestamp: any): Date {
+  // Handle null/undefined
   if (!timestamp) return new Date();
-  if (timestamp instanceof Date) return timestamp;
-  return timestamp.toDate();
+  
+  // Case 1: Already a JavaScript Date
+  if (timestamp instanceof Date) {
+    return timestamp;
+  }
+  
+  // Case 2: Firestore Timestamp (has toDate method)
+  if (timestamp && typeof timestamp.toDate === 'function') {
+    return timestamp.toDate();
+  }
+  
+  // Case 3: ISO 8601 string or Unix timestamp
+  if (typeof timestamp === 'string' || typeof timestamp === 'number') {
+    const date = new Date(timestamp);
+    // Validate the date is not invalid
+    return isNaN(date.getTime()) ? new Date() : date;
+  }
+  
+  // Fallback for any other type
+  console.warn('Unknown timestamp format:', timestamp);
+  return new Date();
 }
 
 /**

@@ -113,6 +113,7 @@ export const queryKeys = {
     lists: () => [...queryKeys.tickets.all, "list"] as const,
     list: (filters?: Record<string, unknown>) =>
       [...queryKeys.tickets.lists(), filters] as const,
+    myTickets: () => [...queryKeys.tickets.all, "my-tickets"] as const,
     details: () => [...queryKeys.tickets.all, "detail"] as const,
     detail: (id: string) => [...queryKeys.tickets.details(), id] as const,
     resolution: (id: string) =>
