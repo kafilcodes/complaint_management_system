@@ -51,7 +51,8 @@ export function useUsers(options: UseUsersOptions = {}) {
       }
 
       const data = await response.json();
-      return data.users as User[];
+      // API returns { success: true, data: [...] }
+      return data.data as User[];
     },
     enabled,
     staleTime: 1000 * 60 * 5, // 5 minutes

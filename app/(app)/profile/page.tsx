@@ -57,6 +57,7 @@ const profileFormSchema = z.object({
   // Mutable fields (user can edit)
   mobile: z
     .string()
+    .max(13, "Mobile number must not exceed 13 characters")
     .optional()
     .refine(
       (val) => !val || /^(\+91)?[6-9]\d{9}$/.test(val),
@@ -66,9 +67,13 @@ const profileFormSchema = z.object({
     .string()
     .max(100, "Address must be 100 characters or less")
     .optional(),
-  aadhar: z.string().optional(),
+  aadhar: z
+    .string()
+    .max(12, "Aadhar number must be 12 digits")
+    .optional(),
   alternateNo: z
     .string()
+    .max(13, "Mobile number must not exceed 13 characters")
     .optional()
     .refine(
       (val) => !val || /^(\+91)?[6-9]\d{9}$/.test(val),

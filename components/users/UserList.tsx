@@ -112,6 +112,36 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
     role: roleFilter === "all" ? undefined : (roleFilter as "admin" | "full_developer_admin" | "it_technician" | "customer"),
   });
 
+  // Early return for loading state - prevents filter crash
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex gap-4">
+          <Skeleton className="h-10 flex-1" />
+          <Skeleton className="h-10 w-[200px]" />
+        </div>
+        <div className="rounded-md border">
+          <div className="p-4 space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Defensive check - ensure allUsers is not null/undefined before filtering
+  if (!allUsers) {
+    return (
+      <EmptyState
+        imageUrl="/no_users.svg"
+        title="Unable to Load Users"
+        description="There was an error loading the user list. Please refresh the page."
+      />
+    );
+  }
+
   // Filter out the current admin user from the list
   const users = allUsers
     .filter((user) => user.id !== currentUser?.id)
@@ -160,18 +190,6 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
       setToggleUserId(null);
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <div className="flex gap-4">
-          <Skeleton className="h-10 flex-1" />
-          <Skeleton className="h-10 w-[200px]" />
-        </div>
-        <Skeleton className="h-[400px]" />
-      </div>
-    );
-  }
 
   return (
     <>

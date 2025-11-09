@@ -33,10 +33,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Only full_developer_admin can manage users
-    if (user.role !== "full_developer_admin") {
+    // Only admins can view users
+    if (user.role !== "full_developer_admin" && user.role !== "it_admin") {
       return NextResponse.json(
-        { error: "Forbidden - Only full admins can manage users" },
+        { error: "Forbidden - Admin access required" },
         { status: 403 }
       );
     }

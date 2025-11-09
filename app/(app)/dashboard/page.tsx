@@ -9,7 +9,10 @@
 
 "use client";
 
+import dynamic from "next/dynamic";
 import { useDashboardStats } from "@/hooks/use-dashboard";
+import { useTicketList } from "@/hooks/useTicketData";
+import { useUsers } from "@/hooks/useUsers";
 import { useStore } from "@/lib/store";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { RecentTickets } from "@/components/dashboard/RecentTickets";
@@ -22,11 +25,45 @@ import {
   AlertCircle 
 } from "lucide-react";
 
+// Dynamically import chart components for code splitting
+const TicketsOverTimeChart = dynamic(
+  () => import("@/components/charts/TicketsOverTimeChart").then(mod => ({ default: mod.TicketsOverTimeChart })),
+  { 
+    loading: () => <Skeleton className="h-[400px] w-full rounded-lg" />,
+    ssr: false 
+  }
+);
+
+const TicketsByBrandChart = dynamic(
+  () => import("@/components/charts/TicketsByBrandChart").then(mod => ({ default: mod.TicketsByBrandChart })),
+  { 
+    loading: () => <Skeleton className="h-[400px] w-full rounded-lg" />,
+    ssr: false 
+  }
+);
+
+const TechnicianPerformanceChart = dynamic(
+  () => import("@/components/charts/TechnicianPerformanceChart").then(mod => ({ default: mod.TechnicianPerformanceChart })),
+  { 
+    loading: () => <Skeleton className="h-[400px] w-full rounded-lg" />,
+    ssr: false 
+  }
+);
+
 export default function DashboardPage() {
   const user = useStore((state) => state.user);
   const { data, isLoading } = useDashboardStats();
+  
+  // Fetch all tickets and technicians for charts (admin only)
+  const isAdmin = user?.role === "it_admin" || user?.role === "full_developer_admin";
+  const { data: allTickets = [], isLoading: isLoadingTickets } = useTicketList();
+  const { data: technicians = [], isLoading: isLoadingTechs } = useUsers({ 
+    role: "it_technician",
+    enabled: isAdmin 
+  });
 
   const stats = data?.data;
+  const isTechnician = user?.role === "it_technician";
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -34,9 +71,6 @@ export default function DashboardPage() {
     if (hour < 18) return "Good afternoon";
     return "Good evening";
   };
-
-  const isAdmin = user?.role === "it_admin" || user?.role === "full_developer_admin";
-  const isTechnician = user?.role === "it_technician";
 
   return (
     <div className="space-y-6">
@@ -97,6 +131,25 @@ export default function DashboardPage() {
               label: "vs last week",
             }}
           />
+        </div>
+      )}
+
+      {/* Charts Section (Admin Only) */}
+      {isAdmin && (
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Tickets Over Time */}
+          <TicketsOverTimeChart tickets={allTickets} days={30} />
+
+          {/* Tickets by Brand */}
+          <TicketsByBrandChart tickets={allTickets} />
+
+          {/* Technician Performance (Full Width) */}
+          <div className="md:col-span-2">
+            <TechnicianPerformanceChart 
+              tickets={allTickets} 
+              technicians={technicians} 
+            />
+          </div>
         </div>
       )}
 

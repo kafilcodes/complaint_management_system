@@ -105,16 +105,10 @@ export function CommandMenu() {
 
         <CommandGroup heading="Actions">
           {(user?.role === "it_admin" || user?.role === "full_developer_admin") && (
-            <>
-              <CommandItem onSelect={() => runCommand(() => router.push("/create-ticket"))}>
-                <Plus className="mr-2 h-4 w-4" />
-                <span>Create New Ticket</span>
-              </CommandItem>
-              <CommandItem onSelect={() => runCommand(() => router.push("/create-user"))}>
-                <Plus className="mr-2 h-4 w-4" />
-                <span>Create New User</span>
-              </CommandItem>
-            </>
+            <CommandItem onSelect={() => runCommand(() => router.push("/create-ticket"))}>
+              <Plus className="mr-2 h-4 w-4" />
+              <span>Create New Ticket</span>
+            </CommandItem>
           )}
         </CommandGroup>
 
