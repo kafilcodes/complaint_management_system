@@ -116,9 +116,8 @@ export default function CreateTicketPage() {
 
   return (
     <div className="container mx-auto py-6">
-      <div className="flex flex-col lg:flex-row gap-8">
-        {/* Left Column: Form */}
-        <div className="flex-1 max-w-3xl space-y-6">
+    {/* Left Column: Form */}
+    <div className="flex-1 max-w-3xl mx-auto space-y-6">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
@@ -421,20 +420,6 @@ export default function CreateTicketPage() {
         </form>
       </Form>
     </div>
-
-    {/* Right Column: Info Graphic (Desktop only) - Reduced by ~35% for better LCP */}
-    <div className="hidden lg:flex lg:w-96 items-start justify-center sticky top-6">
-      <div className="relative w-full max-w-[250px] aspect-square">
-        <Image
-          src="/create_tickets.svg"
-          alt="Create ticket illustration"
-          fill
-          className="object-contain"
-          priority={false}
-        />
-      </div>
-    </div>
-  </div>
   </div>
   );
 }

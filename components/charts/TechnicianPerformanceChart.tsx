@@ -24,7 +24,7 @@ interface TechnicianPerformanceChartProps {
 const chartConfig = {
   resolved: {
     label: "Resolved Tickets",
-    color: "hsl(var(--chart-2))",
+    color: "hsl(var(--primary))",
   },
 } satisfies ChartConfig;
 
@@ -94,7 +94,7 @@ export function TechnicianPerformanceChart({ tickets, technicians }: TechnicianP
             <ChartTooltip content={<ChartTooltipContent />} />
             <Bar
               dataKey="resolved"
-              fill="hsl(var(--chart-2))"
+              fill="hsl(var(--primary))"
               radius={[4, 4, 0, 0]}
             />
           </BarChart>

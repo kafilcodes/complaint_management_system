@@ -178,34 +178,32 @@ export default function ProfilePage() {
         </p>
       </div>
 
-      {/* Theme Settings Card */}
+      {/* Theme Preferences Card */}
       <Card>
         <CardHeader>
+          <CardTitle className="text-xl font-semibold">Appearance</CardTitle>
+          <CardDescription className="text-sm text-muted-foreground">
+            Customize how the application looks on your device
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
           <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Moon className="h-5 w-5" />
-                Appearance
-              </CardTitle>
-              <CardDescription className="mt-1.5">
-                Customize how the app looks on your device
-              </CardDescription>
+            <div className="space-y-0.5">
+              <div className="text-sm font-medium">Theme</div>
+              <div className="text-sm text-muted-foreground">
+                Choose your preferred color scheme
+              </div>
             </div>
             <ThemeToggle />
           </div>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Switch between light and dark mode using the toggle above. Your preference is saved automatically.
-          </p>
         </CardContent>
       </Card>
 
       {/* Account Information Card */}
       <Card>
         <CardHeader>
-          <CardTitle>Account Information</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-xl font-semibold">Account Information</CardTitle>
+          <CardDescription className="text-sm text-muted-foreground">
             Your account details and system role (read-only)
           </CardDescription>
         </CardHeader>
@@ -270,8 +268,8 @@ export default function ProfilePage() {
       {/* Editable Profile Form */}
       <Card>
         <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-xl font-semibold">Personal Information</CardTitle>
+          <CardDescription className="text-sm text-muted-foreground">
             Update your contact details and additional information
           </CardDescription>
         </CardHeader>
@@ -288,7 +286,8 @@ export default function ProfilePage() {
                       <FormControl>
                         <IconInput 
                           icon={Phone}
-                          placeholder="+91 98765 43210" 
+                          placeholder="+91 98765 43210"
+                          maxLength={13}
                           {...field} 
                         />
                       </FormControl>
@@ -309,7 +308,8 @@ export default function ProfilePage() {
                       <FormControl>
                         <IconInput 
                           icon={PhoneCall}
-                          placeholder="+91 87654 32109" 
+                          placeholder="+91 87654 32109"
+                          maxLength={13}
                           {...field} 
                         />
                       </FormControl>

@@ -20,7 +20,7 @@ interface TicketsOverTimeChartProps {
 const chartConfig = {
   tickets: {
     label: "Tickets Created",
-    color: "hsl(var(--chart-1))",
+    color: "hsl(var(--primary))",
   },
 } satisfies ChartConfig;
 
@@ -83,8 +83,8 @@ export function TicketsOverTimeChart({ tickets, days = 30 }: TicketsOverTimeChar
             <Area
               type="monotone"
               dataKey="tickets"
-              stroke="hsl(var(--chart-1))"
-              fill="hsl(var(--chart-1))"
+              stroke="hsl(var(--primary))"
+              fill="hsl(var(--primary))"
               fillOpacity={0.2}
               strokeWidth={2}
             />

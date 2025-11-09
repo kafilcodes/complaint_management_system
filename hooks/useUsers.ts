@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { User } from "@/lib/types";
+import { apiGet } from "@/lib/api-client";
 
 /**
  * Hook for fetching users from the API (client-side)
@@ -27,6 +28,12 @@ interface UseUsersOptions {
   enabled?: boolean;
 }
 
+interface UsersApiResponse {
+  success: boolean;
+  data: User[];
+  count: number;
+}
+
 /**
  * Fetch users from the API with optional role filtering
  * Replaces useRealtimeUsers for better security (uses API route with auth middleware)
@@ -43,16 +50,12 @@ export function useUsers(options: UseUsersOptions = {}) {
       }
 
       const url = `/api/users${params.toString() ? `?${params.toString()}` : ""}`;
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: "Failed to fetch users" }));
-        throw new Error(error.message || "Failed to fetch users");
-      }
-
-      const data = await response.json();
+      
+      // Use authenticated API client that includes Firebase Auth token
+      const response = await apiGet<UsersApiResponse>(url);
+      
       // API returns { success: true, data: [...] }
-      return data.data as User[];
+      return response.data;
     },
     enabled,
     staleTime: 1000 * 60 * 5, // 5 minutes
