@@ -16,6 +16,8 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useRef, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Moon, 
   Shield, 
@@ -26,7 +28,8 @@ import {
   Phone,
   MapPin,
   CreditCard,
-  PhoneCall
+  PhoneCall,
+  Camera
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
@@ -47,6 +50,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { apiGet, getAuthToken } from "@/lib/api-client";
 import type { UserRole } from "@/lib/types";
 
 // ==============================================================================
@@ -54,29 +58,32 @@ import type { UserRole } from "@/lib/types";
 // ==============================================================================
 
 const profileFormSchema = z.object({
-  // Mutable fields (user can edit)
+  // Mutable fields (user can edit) - NOW REQUIRED
   mobile: z
     .string()
+    .min(10, "Mobile number is required")
     .max(13, "Mobile number must not exceed 13 characters")
-    .optional()
     .refine(
-      (val) => !val || /^(\+91)?[6-9]\d{9}$/.test(val),
+      (val) => /^(\+91)?[6-9]\d{9}$/.test(val),
       "Must be a valid 10-digit Indian mobile number (e.g., 9876543210 or +919876543210)"
     ),
   address: z
     .string()
-    .max(100, "Address must be 100 characters or less")
-    .optional(),
+    .min(5, "Address is required")
+    .max(100, "Address must be 100 characters or less"),
   aadhar: z
     .string()
-    .max(12, "Aadhar number must be 12 digits")
-    .optional(),
+    .length(12, "Aadhar number must be exactly 12 digits")
+    .refine(
+      (val) => /^\d{12}$/.test(val),
+      "Aadhar must contain only digits"
+    ),
   alternateNo: z
     .string()
+    .min(10, "Alternate number is required")
     .max(13, "Mobile number must not exceed 13 characters")
-    .optional()
     .refine(
-      (val) => !val || /^(\+91)?[6-9]\d{9}$/.test(val),
+      (val) => /^(\+91)?[6-9]\d{9}$/.test(val),
       "Must be a valid 10-digit Indian mobile number"
     ),
 });
@@ -121,7 +128,10 @@ function getRoleLabel(role: UserRole): string {
 // ==============================================================================
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
+  const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [photoURL, setPhotoURL] = useState<string | undefined>(undefined);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -132,6 +142,64 @@ export default function ProfilePage() {
       alternateNo: "",
     },
   });
+
+  // Photo upload mutation
+  const uploadPhotoMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("photo", file);
+
+      const token = await getAuthToken();
+      if (!token) {
+        throw new Error("Not authenticated");
+      }
+
+      const response = await fetch("/api/users/profile-photo", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to upload photo");
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setPhotoURL(data.data.photoURL);
+      toast.success("Profile photo updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to upload photo", {
+        description: error.message,
+      });
+    },
+  });
+
+  // Handle file selection
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please select an image file");
+        return;
+      }
+
+      // Validate file size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image must be less than 5MB");
+        return;
+      }
+
+      uploadPhotoMutation.mutate(file);
+    }
+  };
 
   // Early return if no user
   if (!user) {
@@ -210,13 +278,39 @@ export default function ProfilePage() {
         <CardContent className="space-y-6">
           {/* Avatar and Basic Info */}
           <div className="flex items-center gap-6">
-            <Avatar className="h-24 w-24">
-              {/* TODO: Add profileImageUrl support when implemented */}
-              <AvatarImage src={undefined} alt={user.name} />
-              <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
-                {userInitials}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative group">
+              <Avatar className="h-24 w-24">
+                <AvatarImage src={photoURL || (user as any).photoURL} alt={user.name} />
+                <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
+                  {userInitials}
+                </AvatarFallback>
+              </Avatar>
+              
+              {/* Upload button overlay */}
+              <Button
+                size="icon"
+                variant="secondary"
+                className="absolute bottom-0 right-0 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadPhotoMutation.isPending}
+                type="button"
+              >
+                {uploadPhotoMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Camera className="h-4 w-4" />
+                )}
+              </Button>
+              
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </div>
             
             <div className="flex-1 space-y-2">
               <div>
@@ -282,7 +376,9 @@ export default function ProfilePage() {
                   name="mobile"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Mobile Number (WhatsApp)</FormLabel>
+                      <FormLabel>
+                        Mobile Number (WhatsApp) <span className="text-destructive">*</span>
+                      </FormLabel>
                       <FormControl>
                         <IconInput 
                           icon={Phone}
@@ -304,7 +400,9 @@ export default function ProfilePage() {
                   name="alternateNo"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Alternate Number (Optional)</FormLabel>
+                      <FormLabel>
+                        Alternate Number <span className="text-destructive">*</span>
+                      </FormLabel>
                       <FormControl>
                         <IconInput 
                           icon={PhoneCall}
@@ -327,7 +425,9 @@ export default function ProfilePage() {
                 name="address"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Address (Optional)</FormLabel>
+                    <FormLabel>
+                      Address <span className="text-destructive">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="Street, City, State, PIN Code"
@@ -348,12 +448,14 @@ export default function ProfilePage() {
                 name="aadhar"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Aadhar Number (Optional)</FormLabel>
+                    <FormLabel>
+                      Aadhar Number <span className="text-destructive">*</span>
+                    </FormLabel>
                     <FormControl>
                       <IconInput 
                         icon={CreditCard}
-                        placeholder="1234 5678 9012"
-                        maxLength={14}
+                        placeholder="123456789012"
+                        maxLength={12}
                         {...field} 
                       />
                     </FormControl>
@@ -376,7 +478,7 @@ export default function ProfilePage() {
                 </Button>
                 <Button 
                   type="submit" 
-                  disabled={form.formState.isSubmitting || !form.formState.isDirty}
+                  disabled={form.formState.isSubmitting || !form.formState.isDirty || !form.formState.isValid}
                 >
                   {form.formState.isSubmitting && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

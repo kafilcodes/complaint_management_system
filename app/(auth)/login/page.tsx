@@ -177,7 +177,7 @@ export default function LoginPage() {
         {/* Right Column: Login Form */}
         <div className="flex-1 flex flex-col items-center justify-center max-w-md mx-auto w-full">
           {/* Logo (visible on mobile above graphic, on desktop above form) - INCREASED SIZE */}
-          <div className="mb-8 flex flex-col items-center gap-4">
+          <div className="mb-8 flex flex-col items-center ">
             <div className="relative h-24 w-24 md:h-32 md:w-32">
               <Image
                 src="/logo.png"

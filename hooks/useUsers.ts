@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { User } from "@/lib/types";
 import { apiGet } from "@/lib/api-client";
+import { useStore } from "@/lib/store";
 
 /**
  * Hook for fetching users from the API (client-side)
@@ -40,6 +41,7 @@ interface UsersApiResponse {
  */
 export function useUsers(options: UseUsersOptions = {}) {
   const { role, enabled = true } = options;
+  const isAuthLoading = useStore((state) => state.isAuthLoading);
 
   return useQuery({
     queryKey: ["users", role],
@@ -57,8 +59,10 @@ export function useUsers(options: UseUsersOptions = {}) {
       // API returns { success: true, data: [...] }
       return response.data;
     },
-    enabled,
+    // Only run query when auth is ready and explicitly enabled
+    enabled: !isAuthLoading && enabled,
     staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: true,
   });
 }
+

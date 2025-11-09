@@ -321,9 +321,10 @@ export function timestampToDate(timestamp: any): Date {
   }
   
   // Case 3: Serialized Firestore Timestamp (REST API / JSON serialization)
-  // Format: { seconds: number, nanoseconds: number }
-  if (timestamp && typeof timestamp.seconds === 'number') {
-    return new Date(timestamp.seconds * 1000);
+  // Format: { seconds: number, nanoseconds: number } OR { _seconds: number, _nanoseconds: number }
+  if (timestamp && (typeof timestamp.seconds === 'number' || typeof (timestamp as any)._seconds === 'number')) {
+    const seconds = timestamp.seconds || (timestamp as any)._seconds;
+    return new Date(seconds * 1000);
   }
   
   // Case 4: ISO 8601 string or Unix timestamp

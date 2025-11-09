@@ -120,14 +120,14 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
           Shows app logo and name
       ======================================== */}
       <SidebarHeader className="border-b-0">
-        <div className="flex items-center gap-3 px-4 py-4 group-data-[collapsible=icon]:justify-center">
-          {/* Logo with proper aspect ratio */}
-          <div className="relative h-10 w-10 flex-shrink-0 group-data-[collapsible=icon]:h-12 group-data-[collapsible=icon]:w-12">
+        <div className="flex items-center justify-center gap-3 px-4 py-4 group-data-[collapsible=icon]:justify-center">
+          {/* Logo with proper aspect ratio - increased size */}
+          <div className="relative h-16 w-16 flex-shrink-0 group-data-[collapsible=icon]:h-16 group-data-[collapsible=icon]:w-16">
             <Image
               src="/logo.png"
               alt="ServiceFirst Logo"
               fill
-              sizes="(max-width: 768px) 48px, 40px"
+              sizes="64px"
               className="object-contain"
               priority
             />
