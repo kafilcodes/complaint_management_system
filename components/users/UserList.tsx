@@ -95,14 +95,12 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [toggleUserId, setToggleUserId] = useState<string | null>(null);
   const [toggleIsActive, setToggleIsActive] = useState(true);
-
-  const queryClient = useQueryClient();
-  const currentUser = useStore((state) => state.user);
-
-  // Fetch users with real-time updates
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const queryClient = useQueryClient();
+  const currentUser = useStore((state) => state.user);
 
   // Debounce search term
   const debouncedSearch = useDebounce(search, 500);
@@ -112,7 +110,43 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
     role: roleFilter === "all" ? undefined : (roleFilter as "admin" | "full_developer_admin" | "it_technician" | "customer"),
   });
 
-  // Early return for loading state - prevents filter crash
+  // Toggle user status mutation
+  const toggleStatus = useMutation({
+    mutationFn: async (isActive: boolean) => {
+      if (!toggleUserId) throw new Error("No user selected");
+      return await apiPut(`/api/users/${toggleUserId}`, { isActive });
+    },
+    onSuccess: (data) => {
+      const user = data.data;
+      toast.success(
+        user.isActive ? "User activated" : "User deactivated",
+        {
+          description: `${user.name} has been ${user.isActive ? "activated" : "deactivated"}`,
+        }
+      );
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      setToggleUserId(null);
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to update user status", {
+        description: error.message,
+      });
+    },
+  });
+
+  const handleToggleStatus = (userId: string, currentIsActive: boolean) => {
+    setToggleUserId(userId);
+    setToggleIsActive(!currentIsActive);
+  };
+
+  const confirmToggleStatus = () => {
+    if (toggleUserId) {
+      toggleStatus.mutate(toggleIsActive);
+      setToggleUserId(null);
+    }
+  };
+
+  // Loading state
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -154,42 +188,6 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
         user.role.toLowerCase().includes(searchLower)
       );
     });
-
-  // Toggle user status mutation
-  const toggleStatus = useMutation({
-    mutationFn: async (isActive: boolean) => {
-      if (!toggleUserId) throw new Error("No user selected");
-      return await apiPut(`/api/users/${toggleUserId}`, { isActive });
-    },
-    onSuccess: (data) => {
-      const user = data.data;
-      toast.success(
-        user.isActive ? "User activated" : "User deactivated",
-        {
-          description: `${user.name} has been ${user.isActive ? "activated" : "deactivated"}`,
-        }
-      );
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      setToggleUserId(null);
-    },
-    onError: (error: Error) => {
-      toast.error("Failed to update user status", {
-        description: error.message,
-      });
-    },
-  });
-
-  const handleToggleStatus = (userId: string, currentIsActive: boolean) => {
-    setToggleUserId(userId);
-    setToggleIsActive(!currentIsActive);
-  };
-
-  const confirmToggleStatus = () => {
-    if (toggleUserId) {
-      toggleStatus.mutate(toggleIsActive);
-      setToggleUserId(null);
-    }
-  };
 
   return (
     <>
