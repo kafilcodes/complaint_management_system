@@ -63,17 +63,20 @@ export async function POST(request: NextRequest) {
     const fileName = `profile-photos/${user.id}/profile.jpg`;
     const file = bucket.file(fileName);
 
+    // Save file with proper metadata including cache control
     await file.save(buffer, {
       metadata: {
         contentType: photo.type,
+        cacheControl: "public, max-age=31536000", // Cache for 1 year
       },
+      public: true, // Make file public during upload
     });
 
-    // Make the file publicly accessible
+    // Explicitly make the file publicly accessible
     await file.makePublic();
 
-    // Get the public URL
-    const photoURL = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+    // Get the public URL - Use firebasestorage.googleapis.com for proper CORS
+    const photoURL = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(fileName)}?alt=media`;
 
     // Update user document in Firestore
     await adminDb.collection("users").doc(user.id).update({
