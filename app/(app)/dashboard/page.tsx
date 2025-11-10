@@ -88,13 +88,13 @@ export default function DashboardPage() {
 
       {/* Stats Grid */}
       {isLoading ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-32" />
           ))}
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {/* Total Tickets */}
           <StatCard
             title="Total Tickets"
@@ -136,7 +136,7 @@ export default function DashboardPage() {
 
       {/* Charts Section (Admin Only) */}
       {isAdmin && (
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Tickets Over Time */}
           <TicketsOverTimeChart tickets={allTickets} days={30} />
 
@@ -144,7 +144,7 @@ export default function DashboardPage() {
           <TicketsByBrandChart tickets={allTickets} />
 
           {/* Technician Performance (Full Width) */}
-          <div className="md:col-span-2">
+          <div className="lg:col-span-2">
             <TechnicianPerformanceChart 
               tickets={allTickets} 
               technicians={technicians} 

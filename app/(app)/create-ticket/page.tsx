@@ -147,7 +147,7 @@ export default function CreateTicketPage() {
                 name="customerName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Customer Name</FormLabel>
+                    <FormLabel>Customer Name <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Input placeholder="John Doe" {...field} />
                     </FormControl>
@@ -161,7 +161,7 @@ export default function CreateTicketPage() {
                 name="customerPhone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone Number</FormLabel>
+                    <FormLabel>Phone Number <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Input placeholder="+1234567890" {...field} />
                     </FormControl>
@@ -175,7 +175,7 @@ export default function CreateTicketPage() {
                 name="address"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Address</FormLabel>
+                    <FormLabel>Address <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="123 Main St, City, State" 
@@ -192,7 +192,7 @@ export default function CreateTicketPage() {
                 name="pincode"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Pincode</FormLabel>
+                    <FormLabel>Pincode <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Input placeholder="12345" {...field} />
                     </FormControl>
@@ -214,7 +214,7 @@ export default function CreateTicketPage() {
                 name="brand"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Brand</FormLabel>
+                    <FormLabel>Brand <span className="text-destructive">*</span></FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -245,7 +245,7 @@ export default function CreateTicketPage() {
                 name="productName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Product Name</FormLabel>
+                    <FormLabel>Product Name <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Input placeholder="e.g., Point of Sale System" {...field} />
                     </FormControl>
@@ -259,7 +259,7 @@ export default function CreateTicketPage() {
                 name="productModel"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Product Model</FormLabel>
+                    <FormLabel>Product Model <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Input placeholder="e.g., POS-2024-X" {...field} />
                     </FormControl>
@@ -273,7 +273,7 @@ export default function CreateTicketPage() {
                 name="purchaseDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Purchase Date</FormLabel>
+                    <FormLabel>Purchase Date <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -364,7 +364,7 @@ export default function CreateTicketPage() {
                 name="issueDescription"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Issue Description</FormLabel>
+                    <FormLabel>Issue Description <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="Describe the issue in detail..."

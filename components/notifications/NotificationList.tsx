@@ -84,15 +84,17 @@ export function NotificationList() {
               Mark all read
             </Button>
           )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => clearReadMutation.mutate()}
-            disabled={clearReadMutation.isPending}
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Clear read
-          </Button>
+          {notifications.length > 0 && notifications.some(n => n.read) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => clearReadMutation.mutate()}
+              disabled={clearReadMutation.isPending}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Clear read
+            </Button>
+          )}
         </div>
       </div>
 
