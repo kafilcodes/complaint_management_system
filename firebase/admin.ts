@@ -141,14 +141,17 @@ export type {
  */
 export const verifyIdToken = async (idToken: string) => {
   if (!adminAuth) {
+    console.error("[verifyIdToken] ERROR: Firebase Admin Auth not initialized!");
     throw new Error("Firebase Admin Auth not initialized");
   }
   
   try {
+    console.log("[verifyIdToken] Starting verification, token length:", idToken.length);
     const decodedToken = await adminAuth.verifyIdToken(idToken);
+    console.log("[verifyIdToken] ✅ Token verified successfully for user:", decodedToken.uid);
     return decodedToken;
   } catch (error) {
-    console.error("Token verification failed:", error);
+    console.error("[verifyIdToken] ❌ Token verification FAILED:", error);
     throw new Error("Invalid or expired token");
   }
 };

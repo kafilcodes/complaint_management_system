@@ -35,22 +35,24 @@ interface AuthProviderProps {
  * This component runs on the client and establishes the auth listener.
  */
 export function AuthProvider({ children }: AuthProviderProps) {
-  const { setUser, setAuthLoading } = useAuth();
+  const { setUser, setAuthToken, setAuthLoading } = useAuth();
 
   useEffect(() => {
     // Set up the Firebase Auth state listener
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser) {
-          // User is signed in
-          await handleUserSignedIn(firebaseUser, setUser);
+          // User is signed in - get token and fetch profile
+          await handleUserSignedIn(firebaseUser, setUser, setAuthToken);
         } else {
           // User is signed out
           setUser(null);
+          setAuthToken(null);
         }
       } catch (error) {
         console.error("Error in auth state change handler:", error);
         setUser(null);
+        setAuthToken(null);
       } finally {
         // Always set loading to false after first check
         setAuthLoading(false);
@@ -59,7 +61,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     // Cleanup listener on unmount
     return () => unsubscribe();
-  }, [setUser, setAuthLoading]);
+  }, [setUser, setAuthToken, setAuthLoading]);
 
   return <>{children}</>;
 }
@@ -67,14 +69,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
 /**
  * Handle user signed in state
  * 
- * Fetches the user's profile from Firestore and updates the store
+ * Fetches the user's profile from Firestore, gets the ID token, and updates the store
  */
 async function handleUserSignedIn(
   firebaseUser: FirebaseUser,
-  setUser: (user: User | null) => void
+  setUser: (user: User | null) => void,
+  setAuthToken: (token: string | null) => void
 ) {
   try {
-    // Get the ID token to access custom claims (role)
+    // Get the ID token first - this is critical for API requests
+    const token = await firebaseUser.getIdToken();
+    setAuthToken(token); // Store token in global state IMMEDIATELY
+    console.log("[AuthProvider] ✅ Got auth token, length:", token.length);
+    
+    // Get the ID token result to access custom claims (role)
     const idTokenResult = await firebaseUser.getIdTokenResult();
     const role = idTokenResult.claims.role as string | undefined;
 
@@ -104,6 +112,7 @@ async function handleUserSignedIn(
       };
 
       setUser(user);
+      console.log("[AuthProvider] ✅ User profile loaded:", user.email);
     } else {
       // User profile doesn't exist in Firestore (shouldn't happen normally)
       console.warn("User authenticated but no Firestore profile found:", firebaseUser.uid);
@@ -125,6 +134,7 @@ async function handleUserSignedIn(
   } catch (error) {
     console.error("Error fetching user profile:", error);
     setUser(null);
+    setAuthToken(null);
     throw error;
   }
 }

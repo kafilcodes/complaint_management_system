@@ -47,6 +47,9 @@ export function useUsers(options: UseUsersOptions = {}) {
   return useQuery({
     queryKey: ["users", role],
     queryFn: async () => {
+      console.log("[useUsers] Query function called, role:", role);
+      console.log("[useUsers] Auth state - isAuthLoading:", isAuthLoading, "user:", user?.id || "null");
+      
       const params = new URLSearchParams();
       if (role) {
         params.set("role", role);
@@ -54,8 +57,12 @@ export function useUsers(options: UseUsersOptions = {}) {
 
       const url = `/api/users${params.toString() ? `?${params.toString()}` : ""}`;
       
+      console.log("[useUsers] Calling apiGet for URL:", url);
+      
       // Use authenticated API client that includes Firebase Auth token
       const response = await apiGet<UsersApiResponse>(url);
+      
+      console.log("[useUsers] Got response:", response?.data?.length || 0, "users");
       
       // API returns { success: true, data: [...] }
       return response.data;

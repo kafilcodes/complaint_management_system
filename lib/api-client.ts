@@ -7,39 +7,49 @@
  * @module lib/api-client
  */
 
-import { auth } from "@/firebase/client";
+import { useStore } from "@/lib/store";
 
 /**
- * Get the current user's ID token for API requests
+ * Get the current auth token from the store
+ * This is more reliable than calling auth.currentUser.getIdToken()
+ * because it's already fetched and stored by AuthProvider
  */
-export async function getAuthToken(): Promise<string | null> {
-  try {
-    const user = auth.currentUser;
-    if (!user) {
-      console.warn("No user logged in, cannot get auth token");
-      return null;
-    }
-    
-    return await user.getIdToken();
-  } catch (error) {
-    console.error("Error getting auth token:", error);
+export function getAuthToken(): string | null {
+  const token = useStore.getState().authToken;
+  
+  if (!token) {
+    console.warn("[getAuthToken] ❌ No auth token in store");
     return null;
   }
+  
+  console.log("[getAuthToken] ✅ Got token from store, length:", token.length);
+  return token;
 }
 
 /**
  * Make an authenticated API request
  * Automatically includes Firebase Auth token in Authorization header
  */
-export async function fetchWithAuth(
+export function fetchWithAuth(
   url: string,
   options: RequestInit = {}
-): Promise<Response> {
-  const token = await getAuthToken();
+): Response | Promise<Response> {
+  const token = getAuthToken();
 
   if (!token) {
-    throw new Error("Not authenticated");
+    console.warn("[fetchWithAuth] No token available for request to:", url);
+    // Return a mock 401 response instead of throwing immediately
+    // This allows React Query to handle the error gracefully
+    return new Response(
+      JSON.stringify({ error: "Not authenticated", code: "AUTH_REQUIRED" }),
+      { 
+        status: 401,
+        headers: { "Content-Type": "application/json" }
+      }
+    );
   }
+
+  console.log("[fetchWithAuth] Making authenticated request to:", url);
 
   const headers = new Headers(options.headers);
   headers.set("Authorization", `Bearer ${token}`);

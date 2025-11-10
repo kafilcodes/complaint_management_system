@@ -28,8 +28,10 @@ import type { User, ThemeMode } from "./types";
  */
 interface AuthSlice {
   user: User | null;
+  authToken: string | null; // Firebase ID token for API requests
   isAuthLoading: boolean;
   setUser: (user: User | null) => void;
+  setAuthToken: (token: string | null) => void; // New action to set token
   setAuthLoading: (loading: boolean) => void;
   clearAuth: () => void;
 }
@@ -84,13 +86,16 @@ export const useStore = create<AppStore>()(
       // AUTH SLICE
       // ========================================================================
       user: null,
+      authToken: null, // Firebase ID token
       isAuthLoading: true, // Start as true until Firebase initializes
       
       setUser: (user) => set({ user }),
       
+      setAuthToken: (token) => set({ authToken: token }),
+      
       setAuthLoading: (loading) => set({ isAuthLoading: loading }),
       
-      clearAuth: () => set({ user: null, isAuthLoading: false }),
+      clearAuth: () => set({ user: null, authToken: null, isAuthLoading: false }),
 
       // ========================================================================
       // THEME SLICE
@@ -147,12 +152,14 @@ export const useStore = create<AppStore>()(
  */
 export const useAuth = () => {
   const user = useStore((state) => state.user);
+  const authToken = useStore((state) => state.authToken);
   const isAuthLoading = useStore((state) => state.isAuthLoading);
   const setUser = useStore((state) => state.setUser);
+  const setAuthToken = useStore((state) => state.setAuthToken);
   const setAuthLoading = useStore((state) => state.setAuthLoading);
   const clearAuth = useStore((state) => state.clearAuth);
 
-  return { user, isAuthLoading, setUser, setAuthLoading, clearAuth };
+  return { user, authToken, isAuthLoading, setUser, setAuthToken, setAuthLoading, clearAuth };
 };
 
 /**

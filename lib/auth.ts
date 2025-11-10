@@ -86,11 +86,14 @@ export async function isFullAdmin(): Promise<boolean> {
  * Server-side function to verify authentication from request
  * Use this in API routes and Server Components
  */
-export async function verifyAuth(request?: Request): Promise<{
+export async function verifyAuth(request?: Request | { headers: Headers }): Promise<{
   authenticated: boolean;
   user: User | null;
   error?: string;
 }> {
+  const requestId = Math.random().toString(36).substring(7);
+  console.log(`[verifyAuth:${requestId}] ===== START =====`);
+  
   try {
     // Try to get token from Authorization header
     let token: string | null = null;
@@ -99,6 +102,9 @@ export async function verifyAuth(request?: Request): Promise<{
       const authHeader = request.headers.get("Authorization");
       if (authHeader?.startsWith("Bearer ")) {
         token = authHeader.substring(7);
+        console.log(`[verifyAuth:${requestId}] Found Bearer token in header, length:`, token.length);
+      } else {
+        console.log(`[verifyAuth:${requestId}] No Bearer token found in Authorization header`);
       }
     }
 
@@ -106,9 +112,13 @@ export async function verifyAuth(request?: Request): Promise<{
     if (!token) {
       const cookieStore = await cookies();
       token = cookieStore.get("session")?.value ?? null;
+      if (token) {
+        console.log(`[verifyAuth:${requestId}] Found token in cookie, length:`, token.length);
+      }
     }
 
     if (!token) {
+      console.log(`[verifyAuth:${requestId}] ❌ No token found anywhere - returning 401`);
       return {
         authenticated: false,
         user: null,
@@ -116,8 +126,10 @@ export async function verifyAuth(request?: Request): Promise<{
       };
     }
 
+    console.log(`[verifyAuth:${requestId}] 🔍 About to verify token...`);
     // Verify the token
     const decodedToken = await verifyIdToken(token);
+    console.log(`[verifyAuth:${requestId}] ✅ Token verified, constructing user object...`);
 
     // Construct user object from token claims
     const user: User = {
@@ -139,7 +151,7 @@ export async function verifyAuth(request?: Request): Promise<{
       user,
     };
   } catch (error) {
-    console.error("Authentication verification failed:", error);
+    console.error(`[verifyAuth:${requestId}] ❌ Authentication verification failed:`, error);
     return {
       authenticated: false,
       user: null,
