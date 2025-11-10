@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,8 +31,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCreateTicket } from "@/hooks/useTicketData";
 import { useBrandList } from "@/hooks/useConfig";
 import { useUsers } from "@/hooks/useUsers";
-import { Loader2, ArrowLeft, Wrench } from "lucide-react";
+import { Loader2, ArrowLeft, Wrench, Upload, X } from "lucide-react";
 import type { TicketCreateInput } from "@/lib/types";
+import { toast } from "sonner";
 
 // Form validation schema
 const ticketFormSchema = z.object({
@@ -46,7 +48,7 @@ const ticketFormSchema = z.object({
   issueDescription: z.string().min(10, "Issue description must be at least 10 characters"),
   comments: z.string().optional(),
   link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  assignedTo: z.string().optional(),
+  assignedTo: z.string().min(1, "Please assign this ticket to a technician"),
 });
 
 type TicketFormValues = z.infer<typeof ticketFormSchema>;
@@ -54,6 +56,10 @@ type TicketFormValues = z.infer<typeof ticketFormSchema>;
 export default function CreateTicketPage() {
   const router = useRouter();
   const createTicket = useCreateTicket();
+  
+  // File attachments state (max 3 files, max 10MB each)
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   
   // Fetch brands from Firestore with 24-hour cache
   const { data: brands = [], isLoading: brandsLoading } = useBrandList();
@@ -295,7 +301,7 @@ export default function CreateTicketPage() {
                 name="assignedTo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Assign to Technician (Optional)</FormLabel>
+                    <FormLabel>Assign to Technician <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Combobox
                         options={technicianOptions}
@@ -323,7 +329,7 @@ export default function CreateTicketPage() {
                       />
                     </FormControl>
                     <FormDescription>
-                      Assign this ticket to a technician immediately
+                      Select a technician to assign this ticket to
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
