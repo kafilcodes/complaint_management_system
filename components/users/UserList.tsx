@@ -18,6 +18,7 @@ import {
   User as UserIcon,
   ShieldCheck,
 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EditUserDialog } from "./EditUserDialog";
 import { DeleteUserDialog } from "./DeleteUserDialog";
 import { useUsers } from "@/hooks/useUsers";
@@ -106,6 +107,34 @@ const getRoleIcon = (role: string) => {
     default:
       return <UserIcon className="h-4 w-4" />;
   }
+};
+
+// Helper to get role description
+const getRoleDescription = (role: string): string => {
+  switch (role) {
+    case "full_developer_admin":
+      return "Full system access with developer privileges";
+    case "it_admin":
+      return "IT department administrator";
+    case "it_technician":
+      return "Technical support specialist";
+    case "store_manager":
+      return "Store location manager";
+    case "store_employee":
+      return "Store staff member";
+    default:
+      return "Standard user";
+  }
+};
+
+// Helper to get user initials for avatar
+const getUserInitials = (name: string): string => {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 };
 
 // Helper to convert Timestamp or Date to Date object
@@ -270,12 +299,12 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[50px]"></TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Last Login</TableHead>
-                <TableHead>Created</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
@@ -298,18 +327,32 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
               ) : (
                 users.map((user) => (
                   <TableRow key={user.id}>
+                    <TableCell>
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user.photoURL || undefined} alt={user.name} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                          {getUserInitials(user.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </TableCell>
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
-                              {getRoleIcon(user.role)}
+                            <div className="flex items-center justify-start w-fit">
+                              <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted hover:bg-muted/80 transition-colors cursor-help">
+                                {getRoleIcon(user.role)}
+                                <span className="text-sm font-medium">{roleLabels[user.role]}</span>
+                              </div>
                             </div>
                           </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{roleLabels[user.role]}</p>
+                          <TooltipContent side="right" className="max-w-xs">
+                            <p className="font-semibold">{roleLabels[user.role]}</p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {getRoleDescription(user.role)}
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -327,12 +370,6 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
                       {user.lastLogin
                         ? formatDistanceToNow(new Date(user.lastLogin), { addSuffix: true })
                         : "Never"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {(() => {
-                        const date = toDate(user.createdAt);
-                        return date ? formatDistanceToNow(date, { addSuffix: true }) : "Unknown";
-                      })()}
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>

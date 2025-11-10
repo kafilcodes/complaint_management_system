@@ -18,6 +18,7 @@
 "use client";
 
 import { Menu, Moon, Sun, LogOut, User } from "lucide-react";
+import Image from "next/image";
 import { useTheme } from "next-themes";
 import { signOut } from "firebase/auth";
 import { auth } from "@/firebase/client";
@@ -67,6 +68,17 @@ export function Header() {
 
         {/* App Title/Logo */}
         <div className="flex items-center gap-2">
+          {/* Logo - Show on mobile and desktop */}
+          <div className="relative h-8 w-8 md:h-10 md:w-10 flex-shrink-0">
+            <Image
+              src="/logo.png"
+              alt="ServiceFirst Logo"
+              fill
+              sizes="(max-width: 768px) 32px, 40px"
+              className="object-contain"
+              priority
+            />
+          </div>
           <h1 className="text-lg font-semibold tracking-tight md:text-xl">
             {process.env.NEXT_PUBLIC_APP_NAME || "ServiceFirst"}
           </h1>

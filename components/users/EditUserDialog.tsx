@@ -36,7 +36,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const editUserSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
   role: z.enum(["user", "it_technician", "it_admin", "full_developer_admin"]),
   phone: z.string().optional(),
 });
@@ -61,7 +60,6 @@ export function EditUserDialog({
     resolver: zodResolver(editUserSchema),
     defaultValues: {
       name: "",
-      email: "",
       role: "user",
       phone: "",
     },
@@ -72,7 +70,6 @@ export function EditUserDialog({
     if (user) {
       form.reset({
         name: user.name,
-        email: user.email,
         role: user.role,
         phone: user.phone || "",
       });
@@ -86,11 +83,11 @@ export function EditUserDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] bg-background">
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
           <DialogDescription>
-            Update user information and permissions.
+            Update user information and permissions. Email cannot be changed as it's used for authentication.
           </DialogDescription>
         </DialogHeader>
 
@@ -118,23 +115,21 @@ export function EditUserDialog({
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="john@example.com"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Email - Display only, not editable */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Email
+                </label>
+                <Input
+                  type="email"
+                  value={user?.email || ""}
+                  disabled
+                  className="bg-muted cursor-not-allowed"
+                />
+                <p className="text-sm text-muted-foreground">
+                  Email cannot be changed as it's used for Firebase authentication
+                </p>
+              </div>
 
               <FormField
                 control={form.control}

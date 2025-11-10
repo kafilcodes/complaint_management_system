@@ -47,6 +47,10 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
   const statusColor = ticket ? getColorByValue(TICKET_STATUSES, ticket.status) : "";
   const brandLabel = ticket ? getLabelByValue(BRANDS, ticket.brand) : "";
 
+  // Debug: Check if timeline exists
+  console.log("[TicketDetail] Ticket data:", ticket);
+  console.log("[TicketDetail] Timeline data:", ticket?.timeline);
+
   // Format timeline events for display
   const timelineData = ticket?.timeline?.map((event) => {
     const iconMap = {
@@ -345,9 +349,22 @@ ${ticket.assignedTo ? `👨‍🔧 Assigned to technician` : '⚠️ Unassigned'
       </div>
 
       {/* Activity Timeline */}
-      {timelineData.length > 0 && (
+      {timelineData && timelineData.length > 0 ? (
         <div className="mt-12">
           <Timeline data={timelineData} />
+        </div>
+      ) : (
+        <div className="mt-12">
+          <Card>
+            <CardHeader>
+              <CardTitle>Activity Timeline</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                No activity recorded for this ticket yet. Timeline will appear as events occur.
+              </p>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>
