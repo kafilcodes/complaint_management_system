@@ -86,6 +86,18 @@ export interface UserProfile {
 export type TicketStatus = "open" | "closed";
 
 /**
+ * Timeline event for ticket activity log
+ */
+export interface TimelineEvent {
+  event: "created" | "assigned" | "updated" | "resolved" | "comment";
+  timestamp: Timestamp | Date;
+  userId: string; // UID of user who triggered the event
+  userName?: string; // Display name of user
+  details?: Record<string, any>; // Additional event-specific data
+  message?: string; // Human-readable message
+}
+
+/**
  * Ticket document structure from Firestore
  * This is the main collection for all complaints/service requests
  */
@@ -120,6 +132,12 @@ export interface Ticket {
   // Issue Details
   issueDescription: string;
   comments?: string | null;
+  
+  // Attachments (Firebase Storage URLs)
+  attachmentUrls?: string[];
+  
+  // Timeline (Activity log)
+  timeline?: TimelineEvent[];
 }
 
 /**
