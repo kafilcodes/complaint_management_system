@@ -9,10 +9,10 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { Timestamp } from "firebase-admin/firestore";
+import { Timestamp, FieldValue } from "firebase-admin/firestore";
 import { adminDb } from "@/firebase/admin";
 import { verifyAuth } from "@/lib/auth";
-import type { Ticket, TicketCreateInput, ApiSuccessResponse, ApiErrorResponse } from "@/lib/types";
+import type { Ticket, TicketCreateInput, TimelineEvent, ApiSuccessResponse, ApiErrorResponse } from "@/lib/types";
 
 // Using adminDb from @/firebase/admin which handles initialization
 
@@ -140,12 +140,39 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare ticket document
+    const now = Timestamp.now();
+    
+    // Create initial timeline event
+    const initialTimelineEvent: TimelineEvent = {
+      event: "created",
+      timestamp: now as any,
+      userId: user.id,
+      userName: user.name,
+      message: `Ticket created by ${user.name}`,
+    };
+    
+    // Add assignment event if ticket is assigned
+    const timelineEvents: TimelineEvent[] = [initialTimelineEvent];
+    
+    if (data.assignedTo) {
+      timelineEvents.push({
+        event: "assigned",
+        timestamp: now as any,
+        userId: user.id,
+        userName: user.name,
+        message: `Ticket assigned to technician`,
+        details: {
+          assignedTo: data.assignedTo,
+        },
+      });
+    }
+    
     const ticketData: Omit<Ticket, "id"> = {
       status: "open",
-      createdAt: Timestamp.now() as any,
+      createdAt: now as any,
       createdBy: user.id,
       assignedTo: data.assignedTo || null,
-      assignedAt: data.assignedTo ? (Timestamp.now() as any) : null,
+      assignedAt: data.assignedTo ? (now as any) : null,
       closedAt: null,
       
       // Customer Information
@@ -157,12 +184,15 @@ export async function POST(request: NextRequest) {
       // Product Information
       productName: data.productName,
       productModel: data.productModel || "",
-      purchaseDate: data.purchaseDate ? (Timestamp.fromDate(new Date(data.purchaseDate)) as any) : (Timestamp.now() as any),
+      purchaseDate: data.purchaseDate ? (Timestamp.fromDate(new Date(data.purchaseDate)) as any) : (now as any),
       brand: data.brand || "",
       
       // Issue Details
       issueDescription: data.issueDescription,
       comments: data.comments || null,
+      
+      // Timeline
+      timeline: timelineEvents,
     };
 
     // Add ticket to Firestore

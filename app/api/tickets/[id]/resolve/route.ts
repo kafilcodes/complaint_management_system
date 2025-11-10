@@ -8,10 +8,10 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { getApps, initializeApp, cert } from "firebase-admin/app";
 import { verifyAuth } from "@/lib/auth";
-import type { ApiSuccessResponse, ApiErrorResponse } from "@/lib/types";
+import type { ApiSuccessResponse, ApiErrorResponse, TimelineEvent } from "@/lib/types";
 
 // Initialize Firebase Admin if not already initialized
 if (!getApps().length) {
@@ -115,11 +115,26 @@ export async function POST(
     // Create resolution document
     await db.collection("resolutions").doc(id).set(resolutionData);
 
-    // Update ticket status to closed
+    // Create timeline event for resolution
+    const now = Timestamp.now();
+    const resolvedEvent: TimelineEvent = {
+      event: "resolved",
+      timestamp: now as any, // Firebase Admin Timestamp
+      userId: user.id,
+      userName: user.name,
+      message: `Ticket resolved by ${user.name}`,
+      details: {
+        serviceRating: data.serviceRating,
+        productSerial: data.productSerial,
+      },
+    };
+
+    // Update ticket status to closed and add timeline event
     await db.collection("tickets").doc(id).update({
       status: "closed",
-      closedAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
+      closedAt: now,
+      updatedAt: now,
+      timeline: FieldValue.arrayUnion(resolvedEvent),
     });
 
     // Create notification for ticket creator

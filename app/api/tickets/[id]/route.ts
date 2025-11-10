@@ -10,10 +10,10 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { getApps, initializeApp, cert } from "firebase-admin/app";
 import { verifyAuth } from "@/lib/auth";
-import type { Ticket, TicketUpdateInput, ApiSuccessResponse, ApiErrorResponse } from "@/lib/types";
+import type { Ticket, TicketUpdateInput, TimelineEvent, ApiSuccessResponse, ApiErrorResponse } from "@/lib/types";
 
 // Initialize Firebase Admin if not already initialized
 if (!getApps().length) {
@@ -147,19 +147,51 @@ export async function PUT(
     // Parse update data
     const updates: TicketUpdateInput = await request.json();
 
-    // Prepare update object
+    // Prepare update object and timeline events
+    const now = Timestamp.now();
+    const timelineEvents: TimelineEvent[] = [];
+    
     const updateData: any = {
-      updatedAt: Timestamp.now(),
+      updatedAt: now,
     };
 
     // Only allow certain fields to be updated based on role
     if (user.role === "it_admin" || user.role === "full_developer_admin") {
       // Admins can update everything
-      if (updates.status !== undefined) updateData.status = updates.status;
-      if (updates.assignedTo !== undefined) {
-        updateData.assignedTo = updates.assignedTo;
-        updateData.assignedAt = updates.assignedTo ? Timestamp.now() : null;
+      if (updates.status !== undefined) {
+        updateData.status = updates.status;
+        timelineEvents.push({
+          event: "updated",
+          timestamp: now as any,
+          userId: user.id,
+          userName: user.name,
+          message: `Status changed to ${updates.status}`,
+          details: { status: updates.status },
+        });
       }
+      
+      if (updates.assignedTo !== undefined) {
+        const wasAssigned = existingTicket.assignedTo;
+        updateData.assignedTo = updates.assignedTo;
+        updateData.assignedAt = updates.assignedTo ? now : null;
+        
+        if (wasAssigned !== updates.assignedTo) {
+          timelineEvents.push({
+            event: "assigned",
+            timestamp: now as any,
+            userId: user.id,
+            userName: user.name,
+            message: updates.assignedTo 
+              ? `Ticket ${wasAssigned ? 're-' : ''}assigned to technician`
+              : "Ticket unassigned",
+            details: {
+              from: wasAssigned,
+              to: updates.assignedTo,
+            },
+          });
+        }
+      }
+      
       if (updates.customerName !== undefined) updateData.customerName = updates.customerName;
       if (updates.customerPhone !== undefined) updateData.customerPhone = updates.customerPhone;
       if (updates.address !== undefined) updateData.address = updates.address;
@@ -168,15 +200,57 @@ export async function PUT(
       if (updates.productModel !== undefined) updateData.productModel = updates.productModel;
       if (updates.brand !== undefined) updateData.brand = updates.brand;
       if (updates.issueDescription !== undefined) updateData.issueDescription = updates.issueDescription;
-      if (updates.comments !== undefined) updateData.comments = updates.comments;
+      if (updates.comments !== undefined) {
+        updateData.comments = updates.comments;
+        timelineEvents.push({
+          event: "comment",
+          timestamp: now as any,
+          userId: user.id,
+          userName: user.name,
+          message: "Added a comment",
+        });
+      }
     } else if (user.role === "it_technician") {
       // Technicians can only update status and comments
-      if (updates.status !== undefined) updateData.status = updates.status;
-      if (updates.comments !== undefined) updateData.comments = updates.comments;
+      if (updates.status !== undefined) {
+        updateData.status = updates.status;
+        timelineEvents.push({
+          event: "updated",
+          timestamp: now as any,
+          userId: user.id,
+          userName: user.name,
+          message: `Status changed to ${updates.status}`,
+          details: { status: updates.status },
+        });
+      }
+      if (updates.comments !== undefined) {
+        updateData.comments = updates.comments;
+        timelineEvents.push({
+          event: "comment",
+          timestamp: now as any,
+          userId: user.id,
+          userName: user.name,
+          message: "Added a comment",
+        });
+      }
     } else {
       // Store employees/managers can only update description and comments if ticket is open
       if (updates.issueDescription !== undefined) updateData.issueDescription = updates.issueDescription;
-      if (updates.comments !== undefined) updateData.comments = updates.comments;
+      if (updates.comments !== undefined) {
+        updateData.comments = updates.comments;
+        timelineEvents.push({
+          event: "comment",
+          timestamp: now as any,
+          userId: user.id,
+          userName: user.name,
+          message: "Added a comment",
+        });
+      }
+    }
+
+    // Add timeline events to update using arrayUnion
+    if (timelineEvents.length > 0) {
+      updateData.timeline = FieldValue.arrayUnion(...timelineEvents);
     }
 
     // Update ticket in Firestore
