@@ -24,9 +24,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Star, Upload, X, Loader2, Image as ImageIcon } from "lucide-react";
+import { FileUpload } from "@/components/ui/file-upload";
+import { Star, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { validateFileUpload, createFilePreview, revokeFilePreview } from "@/lib/storage";
 import { SERVICE_RATINGS } from "@/lib/configuration";
 
 // Form validation schema
@@ -50,11 +50,9 @@ interface ResolutionFormProps {
 export function ResolutionForm({ ticketId, onSubmit, isSubmitting = false }: ResolutionFormProps) {
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
-  const [previews, setPreviews] = useState<{
-    productImage?: string;
-    warrantyCard?: string;
-    partConsumedImage?: string;
-  }>({});
+  const [productImageFiles, setProductImageFiles] = useState<File[]>([]);
+  const [warrantyCardFiles, setWarrantyCardFiles] = useState<File[]>([]);
+  const [partConsumedFiles, setPartConsumedFiles] = useState<File[]>([]);
 
   const form = useForm<ResolutionFormValues>({
     resolver: zodResolver(resolutionFormSchema),
@@ -70,34 +68,16 @@ export function ResolutionForm({ ticketId, onSubmit, isSubmitting = false }: Res
     form.setValue("serviceRating", value);
   };
 
-  const handleFileChange = (
-    field: "productImage" | "warrantyCard" | "partConsumedImage",
-    file: File | undefined
-  ) => {
-    if (!file) {
-      // Clear preview
-      if (previews[field]) {
-        revokeFilePreview(previews[field]!);
-        setPreviews((prev) => ({ ...prev, [field]: undefined }));
-      }
-      return;
-    }
-
-    // Validate file
-    const validation = validateFileUpload(file);
-    if (!validation.valid) {
-      form.setError(field, { message: validation.error });
-      return;
-    }
-
-    // Create preview
-    const previewUrl = createFilePreview(file);
-    setPreviews((prev) => ({ ...prev, [field]: previewUrl }));
-  };
-
   const handleSubmit = async (values: ResolutionFormValues) => {
     try {
-      await onSubmit(values);
+      // Add file data to submission
+      const submissionData = {
+        ...values,
+        productImage: productImageFiles[0],
+        warrantyCard: warrantyCardFiles[0],
+        partConsumedImage: partConsumedFiles[0],
+      };
+      await onSubmit(submissionData);
     } catch (error) {
       console.error("Error submitting resolution:", error);
     }
@@ -198,148 +178,62 @@ export function ResolutionForm({ ticketId, onSubmit, isSubmitting = false }: Res
             />
 
             {/* Product Image */}
-            <FormField
-              control={form.control}
-              name="productImage"
-              render={({ field: { value, onChange, ...field } }) => (
-                <FormItem>
-                  <FormLabel>Product Image</FormLabel>
-                  <FormControl>
-                    <div className="space-y-3">
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          onChange(file);
-                          handleFileChange("productImage", file);
-                        }}
-                        {...field}
-                      />
-                      {previews.productImage && (
-                        <div className="relative w-full h-48 border rounded-lg overflow-hidden">
-                          <img
-                            src={previews.productImage}
-                            alt="Product preview"
-                            className="w-full h-full object-cover"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              onChange(undefined);
-                              handleFileChange("productImage", undefined);
-                            }}
-                            className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </FormControl>
-                  <FormDescription>
-                    Upload a photo of the product
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <FormItem>
+              <FormLabel>Product Image</FormLabel>
+              <FormControl>
+                <FileUpload
+                  onChange={setProductImageFiles}
+                  maxFiles={1}
+                  maxSize={10}
+                  accept={{
+                    "image/*": [".png", ".jpg", ".jpeg", ".gif"],
+                  }}
+                />
+              </FormControl>
+              <FormDescription>
+                Upload a photo of the product
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
 
             {/* Warranty Card */}
-            <FormField
-              control={form.control}
-              name="warrantyCard"
-              render={({ field: { value, onChange, ...field } }) => (
-                <FormItem>
-                  <FormLabel>Warranty Card (Optional)</FormLabel>
-                  <FormControl>
-                    <div className="space-y-3">
-                      <Input
-                        type="file"
-                        accept="image/*,application/pdf"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          onChange(file);
-                          handleFileChange("warrantyCard", file);
-                        }}
-                        {...field}
-                      />
-                      {previews.warrantyCard && (
-                        <div className="relative w-full h-48 border rounded-lg overflow-hidden">
-                          <img
-                            src={previews.warrantyCard}
-                            alt="Warranty card preview"
-                            className="w-full h-full object-cover"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              onChange(undefined);
-                              handleFileChange("warrantyCard", undefined);
-                            }}
-                            className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </FormControl>
-                  <FormDescription>
-                    Upload warranty card image or PDF
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <FormItem>
+              <FormLabel>Warranty Card (Optional)</FormLabel>
+              <FormControl>
+                <FileUpload
+                  onChange={setWarrantyCardFiles}
+                  maxFiles={1}
+                  maxSize={10}
+                  accept={{
+                    "image/*": [".png", ".jpg", ".jpeg", ".gif"],
+                    "application/pdf": [".pdf"],
+                  }}
+                />
+              </FormControl>
+              <FormDescription>
+                Upload warranty card image or PDF
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
 
             {/* Parts Consumed Image */}
-            <FormField
-              control={form.control}
-              name="partConsumedImage"
-              render={({ field: { value, onChange, ...field } }) => (
-                <FormItem>
-                  <FormLabel>Parts Consumed (Optional)</FormLabel>
-                  <FormControl>
-                    <div className="space-y-3">
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          onChange(file);
-                          handleFileChange("partConsumedImage", file);
-                        }}
-                        {...field}
-                      />
-                      {previews.partConsumedImage && (
-                        <div className="relative w-full h-48 border rounded-lg overflow-hidden">
-                          <img
-                            src={previews.partConsumedImage}
-                            alt="Parts consumed preview"
-                            className="w-full h-full object-cover"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              onChange(undefined);
-                              handleFileChange("partConsumedImage", undefined);
-                            }}
-                            className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </FormControl>
-                  <FormDescription>
-                    Upload image of parts used for repair
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <FormItem>
+              <FormLabel>Parts Consumed (Optional)</FormLabel>
+              <FormControl>
+                <FileUpload
+                  onChange={setPartConsumedFiles}
+                  maxFiles={1}
+                  maxSize={10}
+                  accept={{
+                    "image/*": [".png", ".jpg", ".jpeg", ".gif"],
+                  }}
+                />
+              </FormControl>
+              <FormDescription>
+                Upload image of parts used for repair
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
 
             {/* Submit Button */}
             <Button type="submit" disabled={isSubmitting || rating === 0} className="w-full">

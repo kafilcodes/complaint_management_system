@@ -102,18 +102,24 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
       user.role === "full_developer_admin");
 
   const handleResolve = async (data: any) => {
-    await resolveTicketMutation.mutateAsync({
-      ticketId: id,
-      data: {
-        productSerial: data.productSerial,
-        serviceRating: data.serviceRating,
-        feedbackText: data.feedbackText,
-        productImage: data.productImage,
-        warrantyCard: data.warrantyCard,
-        partConsumedImage: data.partConsumedImage,
-      },
-    });
-    router.push("/tickets");
+    try {
+      await resolveTicketMutation.mutateAsync({
+        ticketId: id,
+        data: {
+          productSerial: data.productSerial,
+          serviceRating: data.serviceRating,
+          feedbackText: data.feedbackText,
+          productImage: data.productImage,
+          warrantyCard: data.warrantyCard,
+          partConsumedImage: data.partConsumedImage,
+        },
+      });
+      toast.success("Ticket resolved successfully!");
+      router.push("/tickets");
+    } catch (error) {
+      console.error("Error resolving ticket:", error);
+      toast.error("Failed to resolve ticket");
+    }
   };
 
   const handleShare = async () => {

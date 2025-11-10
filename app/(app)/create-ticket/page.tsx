@@ -162,13 +162,7 @@ export default function CreateTicketPage() {
     {/* Left Column: Form */}
     <div className="flex-1 max-w-3xl mx-auto space-y-6">
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-          onClick={() => router.back()}
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
+            
         <div>
           <h1 className="text-3xl font-bold">Create New Ticket</h1>
           <p className="text-muted-foreground mt-2">
