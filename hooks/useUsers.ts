@@ -41,6 +41,7 @@ interface UsersApiResponse {
  */
 export function useUsers(options: UseUsersOptions = {}) {
   const { role, enabled = true } = options;
+  const user = useStore((state) => state.user);
   const isAuthLoading = useStore((state) => state.isAuthLoading);
 
   return useQuery({
@@ -59,10 +60,14 @@ export function useUsers(options: UseUsersOptions = {}) {
       // API returns { success: true, data: [...] }
       return response.data;
     },
-    // Only run query when auth is ready and explicitly enabled
-    enabled: !isAuthLoading && enabled,
+    // Only run query when:
+    // 1. Auth is ready (isAuthLoading = false)
+    // 2. User is logged in (user !== null)
+    // 3. Explicitly enabled
+    enabled: !isAuthLoading && user !== null && enabled,
     staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: true,
   });
 }
+
 
