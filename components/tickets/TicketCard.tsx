@@ -42,37 +42,30 @@ export function TicketCard({
   const brandLabel = getLabelByValue(BRANDS, ticket.brand);
 
   return (
-    <Card className="hover:shadow-lg transition-shadow">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
-              <Badge className={cn("text-xs", statusColor)}>
-                {getLabelByValue(TICKET_STATUSES, ticket.status)}
-              </Badge>
-              <Badge variant="outline" className="text-xs">
-                {brandLabel}
-              </Badge>
+    <Link href={`/tickets/${ticket.id}`} className="block group">
+      <Card className="hover:shadow-lg transition-all hover:border-primary/50 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 h-full">
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <Badge className={cn("text-xs", statusColor)}>
+                  {getLabelByValue(TICKET_STATUSES, ticket.status)}
+                </Badge>
+                <Badge variant="outline" className="text-xs">
+                  {brandLabel}
+                </Badge>
+              </div>
+              <h3 className="text-lg font-semibold group-hover:text-primary transition-colors line-clamp-1">
+                {ticket.productName}
+              </h3>
+              {ticket.productModel && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Model: {ticket.productModel}
+                </p>
+              )}
             </div>
-            <Link 
-              href={`/tickets/${ticket.id}`}
-              className="text-lg font-semibold hover:text-primary transition-colors line-clamp-1"
-            >
-              {ticket.productName}
-            </Link>
-            {ticket.productModel && (
-              <p className="text-sm text-muted-foreground mt-1">
-                Model: {ticket.productModel}
-              </p>
-            )}
           </div>
-          <Link href={`/tickets/${ticket.id}`}>
-            <Button variant="ghost" size="icon">
-              <ExternalLink className="h-4 w-4" />
-            </Button>
-          </Link>
-        </div>
-      </CardHeader>
+        </CardHeader>
 
       <CardContent className="space-y-3 pb-3">
         {/* Customer Info */}
@@ -121,7 +114,10 @@ export function TicketCard({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onAssign(ticket.id)}
+              onClick={(e) => {
+                e.preventDefault();
+                onAssign(ticket.id);
+              }}
               className="flex-1"
             >
               Assign
@@ -131,19 +127,21 @@ export function TicketCard({
             <Button
               variant="default"
               size="sm"
-              onClick={() => onResolve(ticket.id)}
+              onClick={(e) => {
+                e.preventDefault();
+                onResolve(ticket.id);
+              }}
               className="flex-1"
             >
               Resolve
             </Button>
           )}
-          <Link href={`/tickets/${ticket.id}`} className="flex-1">
-            <Button variant="outline" size="sm" className="w-full">
-              View Details
-            </Button>
-          </Link>
+          <Button variant="outline" size="sm" className="flex-1">
+            View Details
+          </Button>
         </CardFooter>
       )}
     </Card>
+    </Link>
   );
 }
