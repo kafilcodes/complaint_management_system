@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { Timeline } from "@/components/ui/timeline";
 import { ResolutionForm } from "@/components/tickets/ResolutionForm";
 import { ResolutionDetails } from "@/components/tickets/ResolutionDetails";
 import {
@@ -22,6 +23,10 @@ import {
   Clock,
   CheckCircle,
   Share2,
+  Plus,
+  UserCheck,
+  Edit,
+  MessageSquare,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDateTime, getRelativeTime } from "@/firebase/firestore-helpers";
@@ -41,6 +46,51 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
 
   const statusColor = ticket ? getColorByValue(TICKET_STATUSES, ticket.status) : "";
   const brandLabel = ticket ? getLabelByValue(BRANDS, ticket.brand) : "";
+
+  // Format timeline events for display
+  const timelineData = ticket?.timeline?.map((event) => {
+    const iconMap = {
+      created: <Plus className="h-4 w-4" />,
+      assigned: <UserCheck className="h-4 w-4" />,
+      updated: <Edit className="h-4 w-4" />,
+      resolved: <CheckCircle className="h-4 w-4" />,
+      comment: <MessageSquare className="h-4 w-4" />,
+    };
+
+    return {
+      title: event.event.charAt(0).toUpperCase() + event.event.slice(1),
+      timestamp: formatDateTime(event.timestamp),
+      icon: iconMap[event.event] || <Clock className="h-4 w-4" />,
+      content: (
+        <div className="space-y-2">
+          <p className="text-neutral-800 dark:text-neutral-200 text-sm md:text-base font-normal">
+            {event.message || `Ticket ${event.event}`}
+          </p>
+          {event.details && Object.keys(event.details).length > 0 && (
+            <div className="text-xs md:text-sm text-neutral-500 dark:text-neutral-400 space-y-1">
+              {event.details.status && (
+                <p>Status: <span className="font-medium">{event.details.status}</span></p>
+              )}
+              {event.details.from !== undefined && event.details.to !== undefined && (
+                <p>
+                  {event.details.from ? `Reassigned from: ${event.details.from}` : 'Assigned to technician'}
+                </p>
+              )}
+              {event.details.serviceRating && (
+                <p>Service Rating: <span className="font-medium">{event.details.serviceRating}/5</span></p>
+              )}
+              {event.details.productSerial && (
+                <p>Product Serial: <span className="font-medium">{event.details.productSerial}</span></p>
+              )}
+            </div>
+          )}
+          <p className="text-xs text-neutral-400 dark:text-neutral-500">
+            {event.userName || 'System'} • {getRelativeTime(event.timestamp)}
+          </p>
+        </div>
+      ),
+    };
+  }) || [];
 
   // Check if current user can resolve this ticket
   const canResolve =
@@ -270,51 +320,6 @@ ${ticket.assignedTo ? `👨‍🔧 Assigned to technician` : '⚠️ Unassigned'
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Timeline */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Timeline</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex gap-3">
-                <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium">Created</p>
-                  <p className="text-sm text-muted-foreground">
-                    {getRelativeTime(ticket.createdAt)}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {formatDateTime(ticket.createdAt)}
-                  </p>
-                </div>
-              </div>
-
-              {ticket.assignedAt && (
-                <div className="flex gap-3">
-                  <User className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium">Assigned</p>
-                    <p className="text-sm text-muted-foreground">
-                      {getRelativeTime(ticket.assignedAt)}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {ticket.closedAt && (
-                <div className="flex gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium">Closed</p>
-                    <p className="text-sm text-muted-foreground">
-                      {getRelativeTime(ticket.closedAt)}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
           {/* Actions */}
           {!canResolve && ticket.status === "open" && (
             <Card>
@@ -332,6 +337,13 @@ ${ticket.assignedTo ? `👨‍🔧 Assigned to technician` : '⚠️ Unassigned'
           )}
         </div>
       </div>
+
+      {/* Activity Timeline */}
+      {timelineData.length > 0 && (
+        <div className="mt-12">
+          <Timeline data={timelineData} />
+        </div>
+      )}
     </div>
   );
 }
