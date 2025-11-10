@@ -84,7 +84,7 @@ export function TicketsByBrandChart({ tickets }: TicketsByBrandChartProps) {
               labelLine={false}
               label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
               outerRadius={100}
-              fill="#8884d8"
+              fill="#4fa1caff"
               dataKey="value"
             >
               {chartData.map((entry, index) => (

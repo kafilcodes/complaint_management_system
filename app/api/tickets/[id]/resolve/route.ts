@@ -8,23 +8,9 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
-import { getApps, initializeApp, cert } from "firebase-admin/app";
-import { verifyAuth } from "@/lib/auth";
+import { Timestamp, FieldValue } from "firebase-admin/firestore";
+import { adminDb } from "@/firebase/admin";
 import type { ApiSuccessResponse, ApiErrorResponse, TimelineEvent } from "@/lib/types";
-
-// Initialize Firebase Admin if not already initialized
-if (!getApps().length) {
-  initializeApp({
-    credential: cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    }),
-  });
-}
-
-const db = getFirestore();
 
 /**
  * POST /api/tickets/[id]/resolve
@@ -38,30 +24,30 @@ export async function POST(
   try {
     const { id } = await params;
     
-    // Verify authentication
-    const { authenticated, user, error } = await verifyAuth(request);
+    // Parse resolution data from request body
+    const data = await request.json();
 
-    if (!authenticated || !user) {
+    // Validate required fields
+    if (!data.productSerial || !data.serviceRating || !data.userId) {
       return NextResponse.json<ApiErrorResponse>(
-        { success: false, error: error || "Unauthorized" },
-        { status: 401 }
+        { success: false, error: "Product serial, service rating, and user ID are required" },
+        { status: 400 }
       );
     }
 
-    // Only technicians and admins can resolve tickets
-    if (
-      user.role !== "it_technician" &&
-      user.role !== "it_admin" &&
-      user.role !== "full_developer_admin"
-    ) {
+    // Get user from Firestore
+    const userDoc = await adminDb.collection("users").doc(data.userId).get();
+    if (!userDoc.exists) {
       return NextResponse.json<ApiErrorResponse>(
-        { success: false, error: "Only technicians can resolve tickets" },
-        { status: 403 }
+        { success: false, error: "User not found" },
+        { status: 404 }
       );
     }
+
+    const user = { id: userDoc.id, ...userDoc.data() } as any;
 
     // Get existing ticket
-    const ticketDoc = await db.collection("tickets").doc(id).get();
+    const ticketDoc = await adminDb.collection("tickets").doc(id).get();
 
     if (!ticketDoc.exists) {
       return NextResponse.json<ApiErrorResponse>(
@@ -72,29 +58,10 @@ export async function POST(
 
     const ticket = ticketDoc.data();
 
-    // Check if technician is assigned to this ticket
-    if (user.role === "it_technician" && ticket?.assignedTo !== user.id) {
-      return NextResponse.json<ApiErrorResponse>(
-        { success: false, error: "You are not assigned to this ticket" },
-        { status: 403 }
-      );
-    }
-
     // Check if ticket is already closed
     if (ticket?.status === "closed") {
       return NextResponse.json<ApiErrorResponse>(
         { success: false, error: "Ticket is already closed" },
-        { status: 400 }
-      );
-    }
-
-    // Parse resolution data from request body
-    const data = await request.json();
-
-    // Validate required fields
-    if (!data.productSerial || !data.serviceRating) {
-      return NextResponse.json<ApiErrorResponse>(
-        { success: false, error: "Product serial and service rating are required" },
         { status: 400 }
       );
     }
@@ -113,7 +80,7 @@ export async function POST(
     };
 
     // Create resolution document
-    await db.collection("resolutions").doc(id).set(resolutionData);
+    await adminDb.collection("resolutions").doc(id).set(resolutionData);
 
     // Create timeline event for resolution
     const now = Timestamp.now();
@@ -130,7 +97,7 @@ export async function POST(
     };
 
     // Update ticket status to closed and add timeline event
-    await db.collection("tickets").doc(id).update({
+    await adminDb.collection("tickets").doc(id).update({
       status: "closed",
       closedAt: now,
       updatedAt: now,
@@ -139,7 +106,7 @@ export async function POST(
 
     // Create notification for ticket creator
     if (ticket?.createdBy) {
-      await db.collection("notifications").add({
+      await adminDb.collection("notifications").add({
         userId: ticket.createdBy,
         createdAt: Timestamp.now(),
         read: false,

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/firebase/admin";
-import { verifyAuth } from "@/lib/auth";
 
 export interface DashboardStats {
   // Ticket counts by status
@@ -34,47 +33,23 @@ export interface DashboardStats {
 
 /**
  * GET /api/dashboard/stats
- * Get dashboard statistics based on user role
+ * Get dashboard statistics
  * 
- * Admins see all tickets
- * Technicians see their assigned tickets
- * Users see their created tickets
+ * Returns all tickets (no authentication required)
  */
 export async function GET(request: NextRequest) {
   try {
-    // Verify authentication
-    const { authenticated, user, error } = await verifyAuth(request);
-    if (!authenticated || !user) {
-      return NextResponse.json(
-        { error: error || "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    const isAdmin = user.role === "it_admin" || user.role === "full_developer_admin";
-    const isTechnician = user.role === "it_technician";
-
     // Get current date boundaries
     const now = new Date();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 
-    // Base queries
-    let allTicketsQuery = adminDb.collection("tickets");
-    let recentTicketsQuery = adminDb
+    // Base queries - show all tickets
+    const allTicketsQuery = adminDb.collection("tickets");
+    const recentTicketsQuery = adminDb
       .collection("tickets")
       .orderBy("createdAt", "desc")
       .limit(5);
-
-    // Apply role-based filters
-    if (isTechnician) {
-      allTicketsQuery = allTicketsQuery.where("assignedTo", "==", user.id) as any;
-      recentTicketsQuery = recentTicketsQuery.where("assignedTo", "==", user.id) as any;
-    } else if (!isAdmin) {
-      // Regular users see only their tickets
-      allTicketsQuery = allTicketsQuery.where("createdBy", "==", user.id) as any;
-      recentTicketsQuery = recentTicketsQuery.where("createdBy", "==", user.id) as any;
-    }
 
     // Fetch all tickets (for counts)
     const allTicketsSnapshot = await allTicketsQuery.get();
@@ -151,14 +126,6 @@ export async function GET(request: NextRequest) {
         resolvedTicketsChange: Math.round(resolvedTicketsChange * 10) / 10,
       },
     };
-
-    // Add user-specific stats
-    if (isTechnician) {
-      stats.myAssignedTickets = openTickets;
-      stats.myResolvedTickets = closedTickets;
-    } else if (!isAdmin) {
-      stats.myTickets = allTickets.length;
-    }
 
     return NextResponse.json({
       success: true,

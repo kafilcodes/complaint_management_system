@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { uploadFile, generateTicketFilePath } from "@/lib/storage";
+import { useAuth } from "@/lib/store";
 
 interface Resolution {
   id: string;
@@ -63,9 +64,14 @@ export function useResolution(ticketId: string) {
  */
 export function useResolveTicket() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async ({ ticketId, data }: ResolveTicketVariables) => {
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+
       // Upload images to Firebase Storage if provided
       const uploadPromises: Promise<[string, string]>[] = [];
       const imageFields = [
@@ -92,8 +98,9 @@ export function useResolveTicket() {
       // Build image URLs object
       const imageURLs = Object.fromEntries(uploadResults);
 
-      // Submit resolution with image URLs
+      // Submit resolution with image URLs and userId
       const resolutionData = {
+        userId: user.id, // Add user ID
         productSerial: data.productSerial,
         serviceRating: data.serviceRating,
         feedbackText: data.feedbackText || null,

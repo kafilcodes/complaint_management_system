@@ -81,7 +81,7 @@ export const FileUpload = ({
     <div className="w-full" {...getRootProps()}>
       <motion.div
         onClick={handleClick}
-        whileHover="animate"
+    
         className="group/file relative block w-full cursor-pointer overflow-hidden rounded-lg"
       >
         <input
@@ -98,7 +98,7 @@ export const FileUpload = ({
           accept={Object.keys(accept).join(",")}
         />
 
-        <div className="flex min-h-[200px] w-full flex-col items-center justify-center rounded-lg border border-dashed border-primary/20 bg-muted/50 transition-colors hover:border-primary/40 hover:bg-muted/80">
+        <div className="flex min-h-[200px] w-full flex-col items-center justify-center rounded-lg border border-dashed border-primary/20 bg-muted/50">
           <div className="relative w-full max-w-xl mx-auto">
             {files.length > 0 ? (
               <div className="flex flex-col gap-2 p-8">
@@ -177,12 +177,10 @@ export const FileUpload = ({
                   <p className="text-sm font-medium text-foreground">
                     {isDragActive ? "Drop files here" : "Upload files"}
                   </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="mt-1 text-[0.65rem] text-muted-foreground">
                     Drag and drop or click to browse
                   </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Max {maxFiles} files • {maxSize / (1024 * 1024)}MB each
-                  </p>
+                  
                 </div>
               </motion.div>
             )}

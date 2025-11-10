@@ -47,11 +47,16 @@ export function AppFloatingDock({ className }: AppFloatingDockProps) {
     [currentUser]
   );
 
-  // Limit to first 5 items to prevent mobile overflow (better UX)
-  const dockItems = React.useMemo(
-    () => visibleNavItems.slice(0, 5),
-    [visibleNavItems]
-  );
+  // Limit items for mobile dock but always include Profile
+  // Priority: Dashboard, Tickets, Create Ticket, Notifications, Profile
+  const dockItems = React.useMemo(() => {
+    // Find profile item
+    const profileItem = visibleNavItems.find(item => item.href === '/profile');
+    // Get first 4 items (excluding profile if it's in there)
+    const firstFour = visibleNavItems.filter(item => item.href !== '/profile').slice(0, 4);
+    // Always add profile as 5th item
+    return profileItem ? [...firstFour, profileItem] : firstFour;
+  }, [visibleNavItems]);
 
   if (!currentUser) return null;
 

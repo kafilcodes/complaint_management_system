@@ -341,11 +341,9 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="flex items-center justify-start w-fit">
-                              <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted hover:bg-muted/80 transition-colors cursor-help">
-                                {getRoleIcon(user.role)}
-                                <span className="text-sm font-medium">{roleLabels[user.role]}</span>
-                              </div>
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted hover:bg-muted/80 transition-colors cursor-help w-fit">
+                              {getRoleIcon(user.role)}
+                              <span className="text-sm font-medium">{roleLabels[user.role]}</span>
                             </div>
                           </TooltipTrigger>
                           <TooltipContent side="right" className="max-w-xs">

@@ -180,8 +180,9 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
       ======================================== */}
       <SidebarFooter className="border-t-0 mt-auto px-4 pb-4">
         {/* User Info */}
-        <div className="flex items-center gap-3 px-2 py-3 rounded-lg bg-accent/50 group-data-[collapsible=icon]:justify-center">
-          <Avatar className="h-10 w-10 rounded-lg">
+        <div className="flex items-center gap-3 px-2 py-3 rounded-lg  group-data-[collapsible=icon]:justify-center">
+          <Avatar className="h-10 w-10 rounded-lg m-1">
+            <AvatarImage src={currentUser.photoURL || undefined} alt={currentUser.name} />
             <AvatarFallback className="rounded-lg bg-primary text-primary-foreground">
               {userInitials}
             </AvatarFallback>
@@ -206,7 +207,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
             size="sm"
             className={cn(
               "flex-1 justify-start gap-3 h-11",
-              "group-data-[collapsible=icon]:flex-initial group-data-[collapsible=icon]:justify-center"
+              "group-data-[collapsible=icon]:flex-initial group-data-[collapsible=icon]:justify-center bg-transparent hover:bg-transparent"
             )}
             onClick={handleLogout}
             disabled={isLoggingOut}
@@ -214,9 +215,9 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
             {isLoggingOut ? (
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
-              <LogOut className="h-5 w-5" />
+              <LogOut className="h-5 w-5 hover:text-red-600" />
             )}
-            <span className="text-base group-data-[collapsible=icon]:hidden">
+            <span className="text-base group-data-[collapsible=icon]:hidden hover:text-red-600">
               Logout
             </span>
           </Button>

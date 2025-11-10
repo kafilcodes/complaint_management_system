@@ -76,8 +76,22 @@ export function EditUserDialog({
     }
   }, [user, form]);
 
+  // Check if form has changed from original values
+  const hasChanged = form.formState.isDirty;
+
   const onSubmit = async (data: EditUserFormData) => {
-    await updateUser.mutateAsync(data);
+    // Only send changed fields
+    const updates: Partial<EditUserFormData> = {};
+    if (data.name !== user?.name) updates.name = data.name;
+    if (data.role !== user?.role) updates.role = data.role;
+    if (data.phone !== user?.phone) updates.phone = data.phone;
+
+    if (Object.keys(updates).length === 0) {
+      onOpenChange(false);
+      return;
+    }
+
+    await updateUser.mutateAsync(updates);
     onOpenChange(false);
   };
 
@@ -186,7 +200,10 @@ export function EditUserDialog({
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={updateUser.isPending}>
+                <Button 
+                  type="submit" 
+                  disabled={updateUser.isPending || !hasChanged}
+                >
                   {updateUser.isPending && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}

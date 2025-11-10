@@ -58,14 +58,14 @@
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --accent: oklch(0.82 0.13 194); /* Turquoise accent */
+  --accent-foreground: oklch(0.145 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --ring: oklch(0.82 0.13 194); /* Turquoise ring */
   /* Chart colors - Turquoise variations for consistency */
-  --chart-1: oklch(0.82 0.13 194); /* Primary turquoise */
+  --chart-1: oklch(0.82 0.13 194); /* Primary turquoise #40e0d0 */
   --chart-2: oklch(0.72 0.11 194); /* Darker turquoise */
   --chart-3: oklch(0.65 0.09 194); /* Even darker */
   --chart-4: oklch(0.85 0.12 180); /* Cyan variant */
@@ -94,14 +94,14 @@
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --accent: oklch(0.82 0.13 194); /* Turquoise accent */
+  --accent-foreground: oklch(0.145 0 0);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --ring: oklch(0.82 0.13 194); /* Turquoise ring */
   /* Chart colors - Turquoise variations for consistency (dark mode) */
-  --chart-1: oklch(0.82 0.13 194); /* Primary turquoise - same as light */
+  --chart-1: oklch(0.82 0.13 194); /* Primary turquoise #40e0d0 */
   --chart-2: oklch(0.72 0.11 194); /* Darker turquoise */
   --chart-3: oklch(0.65 0.09 194); /* Even darker */
   --chart-4: oklch(0.85 0.12 180); /* Cyan variant */
