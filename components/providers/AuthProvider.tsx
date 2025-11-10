@@ -92,6 +92,7 @@ async function handleUserSignedIn(
         email: firebaseUser.email || userData.email,
         name: userData.name,
         phone: userData.phone,
+        photoURL: userData.photoURL, // Include profile photo URL
         role: role || userData.role,
         category: userData.category,
         storeId: userData.storeId,

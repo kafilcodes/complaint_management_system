@@ -16,7 +16,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Moon, 
@@ -131,7 +131,6 @@ export default function ProfilePage() {
   const { user, setUser } = useAuth();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [photoURL, setPhotoURL] = useState<string | undefined>(undefined);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -170,7 +169,10 @@ export default function ProfilePage() {
       return response.json();
     },
     onSuccess: (data) => {
-      setPhotoURL(data.data.photoURL);
+      // Update user in store with new photoURL
+      if (user) {
+        setUser({ ...user, photoURL: data.data.photoURL });
+      }
       toast.success("Profile photo updated successfully");
       queryClient.invalidateQueries({ queryKey: ["profile"] });
     },
@@ -280,7 +282,7 @@ export default function ProfilePage() {
           <div className="flex items-center gap-6">
             <div className="relative group">
               <Avatar className="h-24 w-24">
-                <AvatarImage src={photoURL || (user as any).photoURL} alt={user.name} />
+                <AvatarImage src={user.photoURL} alt={user.name} />
                 <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
                   {userInitials}
                 </AvatarFallback>
