@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/firebase/admin";
-import { verifyAuth } from "@/lib/auth";
 
 export interface User {
   id: string;
@@ -24,23 +23,6 @@ export interface User {
  */
 export async function GET(request: NextRequest) {
   try {
-    // Verify authentication and admin role
-    const { authenticated, user, error } = await verifyAuth(request);
-    if (!authenticated || !user) {
-      return NextResponse.json(
-        { error: error || "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    // Only admins can view users
-    if (user.role !== "full_developer_admin" && user.role !== "it_admin") {
-      return NextResponse.json(
-        { error: "Forbidden - Admin access required" },
-        { status: 403 }
-      );
-    }
-
     // Parse query parameters
     const { searchParams } = new URL(request.url);
     const roleFilter = searchParams.get("role");
@@ -109,23 +91,6 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Verify authentication and admin role
-    const { authenticated, user, error } = await verifyAuth(request);
-    if (!authenticated || !user) {
-      return NextResponse.json(
-        { error: error || "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    // Only full_developer_admin can manage users
-    if (user.role !== "full_developer_admin") {
-      return NextResponse.json(
-        { error: "Forbidden - Only full admins can manage users" },
-        { status: 403 }
-      );
-    }
-
     // Parse request body
     const body = await request.json();
     const { email, password, name, role, phone } = body;
@@ -173,7 +138,6 @@ export async function POST(request: NextRequest) {
       role,
       phone: phone || null,
       createdAt: new Date().toISOString(),
-      createdBy: user.id,
     };
 
     await adminDb.collection("users").doc(authUser.uid).set(userData);

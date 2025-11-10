@@ -12,7 +12,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { getApps, initializeApp, cert } from "firebase-admin/app";
-import { verifyAuth } from "@/lib/auth";
 import type { Ticket, TicketUpdateInput, TimelineEvent, ApiSuccessResponse, ApiErrorResponse } from "@/lib/types";
 
 // Initialize Firebase Admin if not already initialized
@@ -39,16 +38,6 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    
-    // Verify authentication
-    const { authenticated, user, error } = await verifyAuth(request);
-
-    if (!authenticated || !user) {
-      return NextResponse.json<ApiErrorResponse>(
-        { success: false, error: error || "Unauthorized" },
-        { status: 401 }
-      );
-    }
 
     // Get ticket from Firestore
     const ticketDoc = await db.collection("tickets").doc(id).get();
@@ -64,21 +53,6 @@ export async function GET(
       id: ticketDoc.id,
       ...ticketDoc.data(),
     } as Ticket;
-
-    // Check if user has access to this ticket
-    const canView =
-      user.role === "it_admin" ||
-      user.role === "full_developer_admin" ||
-      user.role === "it_technician" ||
-      ticket.createdBy === user.id ||
-      (user.role === "store_manager" && ticket.storeId === user.storeId);
-
-    if (!canView) {
-      return NextResponse.json<ApiErrorResponse>(
-        { success: false, error: "Access denied" },
-        { status: 403 }
-      );
-    }
 
     return NextResponse.json<ApiSuccessResponse<Ticket>>({
       success: true,
@@ -107,16 +81,6 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    
-    // Verify authentication
-    const { authenticated, user, error } = await verifyAuth(request);
-
-    if (!authenticated || !user) {
-      return NextResponse.json<ApiErrorResponse>(
-        { success: false, error: error || "Unauthorized" },
-        { status: 401 }
-      );
-    }
 
     // Get existing ticket
     const ticketDoc = await db.collection("tickets").doc(id).get();
@@ -130,22 +94,11 @@ export async function PUT(
 
     const existingTicket = ticketDoc.data() as Ticket;
 
-    // Check if user can modify this ticket
-    const canModify =
-      user.role === "it_admin" ||
-      user.role === "full_developer_admin" ||
-      (user.role === "it_technician" && existingTicket.assignedTo === user.id) ||
-      (existingTicket.createdBy === user.id && existingTicket.status === "open");
-
-    if (!canModify) {
-      return NextResponse.json<ApiErrorResponse>(
-        { success: false, error: "Access denied" },
-        { status: 403 }
-      );
-    }
-
     // Parse update data
-    const updates: TicketUpdateInput = await request.json();
+    const body = await request.json();
+    const updates: TicketUpdateInput = body;
+    const updatedBy = body.updatedBy || "anonymous";
+    const updaterName = body.updaterName || "User";
 
     // Prepare update object and timeline events
     const now = Timestamp.now();
@@ -155,97 +108,58 @@ export async function PUT(
       updatedAt: now,
     };
 
-    // Only allow certain fields to be updated based on role
-    if (user.role === "it_admin" || user.role === "full_developer_admin") {
-      // Admins can update everything
-      if (updates.status !== undefined) {
-        updateData.status = updates.status;
-        timelineEvents.push({
-          event: "updated",
-          timestamp: now as any,
-          userId: user.id,
-          userName: user.name,
-          message: `Status changed to ${updates.status}`,
-          details: { status: updates.status },
-        });
-      }
+    // Update fields
+    if (updates.status !== undefined) {
+      updateData.status = updates.status;
+      timelineEvents.push({
+        event: "updated",
+        timestamp: now as any,
+        userId: updatedBy,
+        userName: updaterName,
+        message: `Status changed to ${updates.status}`,
+        details: { status: updates.status },
+      });
+    }
+    
+    if (updates.assignedTo !== undefined) {
+      const wasAssigned = existingTicket.assignedTo;
+      updateData.assignedTo = updates.assignedTo;
+      updateData.assignedAt = updates.assignedTo ? now : null;
       
-      if (updates.assignedTo !== undefined) {
-        const wasAssigned = existingTicket.assignedTo;
-        updateData.assignedTo = updates.assignedTo;
-        updateData.assignedAt = updates.assignedTo ? now : null;
-        
-        if (wasAssigned !== updates.assignedTo) {
-          timelineEvents.push({
-            event: "assigned",
-            timestamp: now as any,
-            userId: user.id,
-            userName: user.name,
-            message: updates.assignedTo 
-              ? `Ticket ${wasAssigned ? 're-' : ''}assigned to technician`
-              : "Ticket unassigned",
-            details: {
-              from: wasAssigned,
-              to: updates.assignedTo,
-            },
-          });
-        }
-      }
-      
-      if (updates.customerName !== undefined) updateData.customerName = updates.customerName;
-      if (updates.customerPhone !== undefined) updateData.customerPhone = updates.customerPhone;
-      if (updates.address !== undefined) updateData.address = updates.address;
-      if (updates.pincode !== undefined) updateData.pincode = updates.pincode;
-      if (updates.productName !== undefined) updateData.productName = updates.productName;
-      if (updates.productModel !== undefined) updateData.productModel = updates.productModel;
-      if (updates.brand !== undefined) updateData.brand = updates.brand;
-      if (updates.issueDescription !== undefined) updateData.issueDescription = updates.issueDescription;
-      if (updates.comments !== undefined) {
-        updateData.comments = updates.comments;
+      if (wasAssigned !== updates.assignedTo) {
         timelineEvents.push({
-          event: "comment",
+          event: "assigned",
           timestamp: now as any,
-          userId: user.id,
-          userName: user.name,
-          message: "Added a comment",
+          userId: updatedBy,
+          userName: updaterName,
+          message: updates.assignedTo 
+            ? `Ticket ${wasAssigned ? 're-' : ''}assigned to technician`
+            : "Ticket unassigned",
+          details: {
+            from: wasAssigned,
+            to: updates.assignedTo,
+          },
         });
       }
-    } else if (user.role === "it_technician") {
-      // Technicians can only update status and comments
-      if (updates.status !== undefined) {
-        updateData.status = updates.status;
-        timelineEvents.push({
-          event: "updated",
-          timestamp: now as any,
-          userId: user.id,
-          userName: user.name,
-          message: `Status changed to ${updates.status}`,
-          details: { status: updates.status },
-        });
-      }
-      if (updates.comments !== undefined) {
-        updateData.comments = updates.comments;
-        timelineEvents.push({
-          event: "comment",
-          timestamp: now as any,
-          userId: user.id,
-          userName: user.name,
-          message: "Added a comment",
-        });
-      }
-    } else {
-      // Store employees/managers can only update description and comments if ticket is open
-      if (updates.issueDescription !== undefined) updateData.issueDescription = updates.issueDescription;
-      if (updates.comments !== undefined) {
-        updateData.comments = updates.comments;
-        timelineEvents.push({
-          event: "comment",
-          timestamp: now as any,
-          userId: user.id,
-          userName: user.name,
-          message: "Added a comment",
-        });
-      }
+    }
+    
+    if (updates.customerName !== undefined) updateData.customerName = updates.customerName;
+    if (updates.customerPhone !== undefined) updateData.customerPhone = updates.customerPhone;
+    if (updates.address !== undefined) updateData.address = updates.address;
+    if (updates.pincode !== undefined) updateData.pincode = updates.pincode;
+    if (updates.productName !== undefined) updateData.productName = updates.productName;
+    if (updates.productModel !== undefined) updateData.productModel = updates.productModel;
+    if (updates.brand !== undefined) updateData.brand = updates.brand;
+    if (updates.issueDescription !== undefined) updateData.issueDescription = updates.issueDescription;
+    if (updates.comments !== undefined) {
+      updateData.comments = updates.comments;
+      timelineEvents.push({
+        event: "comment",
+        timestamp: now as any,
+        userId: updatedBy,
+        userName: updaterName,
+        message: "Added a comment",
+      });
     }
 
     // Add timeline events to update using arrayUnion
@@ -305,26 +219,8 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    
-    // Verify authentication
-    const { authenticated, user, error } = await verifyAuth(request);
 
-    if (!authenticated || !user) {
-      return NextResponse.json<ApiErrorResponse>(
-        { success: false, error: error || "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    // Only full_developer_admin can delete tickets
-    if (user.role !== "full_developer_admin") {
-      return NextResponse.json<ApiErrorResponse>(
-        { success: false, error: "Access denied" },
-        { status: 403 }
-      );
-    }
-
-    // Check if ticket exists
+    // Get ticket to check if it exists
     const ticketDoc = await db.collection("tickets").doc(id).get();
 
     if (!ticketDoc.exists) {
@@ -334,29 +230,24 @@ export async function DELETE(
       );
     }
 
-    // Delete ticket
+    // Delete the ticket
     await db.collection("tickets").doc(id).delete();
 
-    // Delete related resolution if exists
-    const resolutionDoc = await db.collection("resolutions").doc(id).get();
-    if (resolutionDoc.exists) {
-      await db.collection("resolutions").doc(id).delete();
-    }
-
-    // Delete related notifications
+    // Also delete associated notifications
     const notificationsSnapshot = await db
       .collection("notifications")
       .where("ticketId", "==", id)
       .get();
 
     const deleteBatch = db.batch();
-    notificationsSnapshot.forEach((doc) => {
+    notificationsSnapshot.docs.forEach((doc) => {
       deleteBatch.delete(doc.ref);
     });
     await deleteBatch.commit();
 
-    return NextResponse.json<ApiSuccessResponse>({
+    return NextResponse.json<ApiSuccessResponse<{ id: string }>>({
       success: true,
+      data: { id },
       message: "Ticket deleted successfully",
     });
   } catch (error: any) {

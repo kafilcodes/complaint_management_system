@@ -11,7 +11,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Timestamp, FieldValue } from "firebase-admin/firestore";
 import { adminDb } from "@/firebase/admin";
-import { verifyAuth } from "@/lib/auth";
 import type { Ticket, TicketCreateInput, TimelineEvent, ApiSuccessResponse, ApiErrorResponse } from "@/lib/types";
 
 // Using adminDb from @/firebase/admin which handles initialization
@@ -23,16 +22,6 @@ import type { Ticket, TicketCreateInput, TimelineEvent, ApiSuccessResponse, ApiE
  */
 export async function GET(request: NextRequest) {
   try {
-    // Verify authentication
-    const { authenticated, user, error } = await verifyAuth(request);
-
-    if (!authenticated || !user) {
-      return NextResponse.json<ApiErrorResponse>(
-        { success: false, error: error || "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
     // Get query parameters
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
@@ -40,25 +29,8 @@ export async function GET(request: NextRequest) {
     const assignedTo = searchParams.get("assignedTo");
     const limit = parseInt(searchParams.get("limit") || "20");
 
-    // Build query based on user role
+    // Build query
     let query = adminDb.collection("tickets");
-
-    // Role-based filtering
-    if (user.role === "store_employee") {
-      // Store employees can only see their own tickets
-      query = query.where("createdBy", "==", user.id) as any;
-    } else if (user.role === "store_manager") {
-      // Store managers can see all tickets from their store
-      if (user.storeId) {
-        query = query.where("storeId", "==", user.storeId) as any;
-      }
-    } else if (user.role === "it_technician") {
-      // Technicians can see assigned tickets
-      if (assignedTo === user.id || !assignedTo) {
-        query = query.where("assignedTo", "==", user.id) as any;
-      }
-    }
-    // IT Admin and Full Developer Admin can see all tickets
 
     // Apply filters
     if (status) {
@@ -69,7 +41,7 @@ export async function GET(request: NextRequest) {
       query = query.where("brand", "==", brand) as any;
     }
 
-    if (assignedTo && (user.role === "it_admin" || user.role === "full_developer_admin")) {
+    if (assignedTo) {
       query = query.where("assignedTo", "==", assignedTo) as any;
     }
 
@@ -110,26 +82,11 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Verify authentication
-    const { authenticated, user, error } = await verifyAuth(request);
-
-    if (!authenticated || !user) {
-      return NextResponse.json<ApiErrorResponse>(
-        { success: false, error: error || "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    // Only admins and store employees can create tickets
-    if (user.role === "it_technician") {
-      return NextResponse.json<ApiErrorResponse>(
-        { success: false, error: "Technicians cannot create tickets" },
-        { status: 403 }
-      );
-    }
-
     // Parse request body
-    const data: TicketCreateInput = await request.json();
+    const body = await request.json();
+    const data: TicketCreateInput = body;
+    const createdBy = body.createdBy || null;
+    const creatorName = body.creatorName || "User";
 
     // Validate required fields
     if (!data.customerName || !data.customerPhone || !data.productName || !data.issueDescription) {
@@ -146,9 +103,9 @@ export async function POST(request: NextRequest) {
     const initialTimelineEvent: TimelineEvent = {
       event: "created",
       timestamp: now as any,
-      userId: user.id,
-      userName: user.name,
-      message: `Ticket created by ${user.name}`,
+      userId: createdBy || "anonymous",
+      userName: creatorName,
+      message: `Ticket created`,
     };
     
     // Add assignment event if ticket is assigned
@@ -158,8 +115,8 @@ export async function POST(request: NextRequest) {
       timelineEvents.push({
         event: "assigned",
         timestamp: now as any,
-        userId: user.id,
-        userName: user.name,
+        userId: createdBy || "anonymous",
+        userName: creatorName,
         message: `Ticket assigned to technician`,
         details: {
           assignedTo: data.assignedTo,
@@ -170,7 +127,7 @@ export async function POST(request: NextRequest) {
     const ticketData: Omit<Ticket, "id"> = {
       status: "open",
       createdAt: now as any,
-      createdBy: user.id,
+      createdBy: createdBy,
       assignedTo: data.assignedTo || null,
       assignedAt: data.assignedTo ? (now as any) : null,
       closedAt: null,

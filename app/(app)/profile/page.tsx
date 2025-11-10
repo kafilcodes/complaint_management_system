@@ -50,7 +50,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { apiGet, getAuthToken } from "@/lib/api-client";
+import { apiGet } from "@/lib/api-client";
 import type { UserRole } from "@/lib/types";
 
 // ==============================================================================
@@ -148,16 +148,8 @@ export default function ProfilePage() {
       const formData = new FormData();
       formData.append("photo", file);
 
-      const token = await getAuthToken();
-      if (!token) {
-        throw new Error("Not authenticated");
-      }
-
       const response = await fetch("/api/users/profile-photo", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
         body: formData,
       });
 

@@ -170,7 +170,7 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
   const toggleStatus = useMutation({
     mutationFn: async (isActive: boolean) => {
       if (!toggleUserId) throw new Error("No user selected");
-      return await apiPut(`/api/users/${toggleUserId}`, { isActive });
+      return await apiPut<{ success: boolean; data: User }>(`/api/users/${toggleUserId}`, { isActive });
     },
     onSuccess: (data) => {
       const user = data.data;

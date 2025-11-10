@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/firebase/admin";
-import { verifyAuth } from "@/lib/auth";
 
 interface RouteContext {
   params: {
@@ -17,23 +16,6 @@ export async function GET(
   context: RouteContext
 ) {
   try {
-    // Verify authentication and admin role
-    const { authenticated, user, error } = await verifyAuth(request);
-    if (!authenticated || !user) {
-      return NextResponse.json(
-        { error: error || "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    // Only full_developer_admin can manage users
-    if (user.role !== "full_developer_admin") {
-      return NextResponse.json(
-        { error: "Forbidden - Only full admins can manage users" },
-        { status: 403 }
-      );
-    }
-
     const { id } = context.params;
 
     // Fetch user from Firestore
@@ -78,23 +60,6 @@ export async function PUT(
   context: RouteContext
 ) {
   try {
-    // Verify authentication and admin role
-    const { authenticated, user, error } = await verifyAuth(request);
-    if (!authenticated || !user) {
-      return NextResponse.json(
-        { error: error || "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    // Only full_developer_admin can manage users
-    if (user.role !== "full_developer_admin") {
-      return NextResponse.json(
-        { error: "Forbidden - Only full admins can manage users" },
-        { status: 403 }
-      );
-    }
-
     const { id } = context.params;
 
     // Parse request body
@@ -118,24 +83,8 @@ export async function PUT(
         return NextResponse.json(
           { error: "Invalid role" },
           { status: 400 }
-        );
+      );
       }
-    }
-
-    // Prevent users from deactivating themselves
-    if (id === user.id && isActive === false) {
-      return NextResponse.json(
-        { error: "You cannot deactivate your own account" },
-        { status: 400 }
-      );
-    }
-
-    // Prevent users from changing their own role
-    if (id === user.id && role && role !== user.role) {
-      return NextResponse.json(
-        { error: "You cannot change your own role" },
-        { status: 400 }
-      );
     }
 
     // Update Firebase Auth user
@@ -156,7 +105,6 @@ export async function PUT(
     // Update Firestore user document
     const firestoreUpdates: any = {
       updatedAt: new Date().toISOString(),
-      updatedBy: user.id,
     };
     
     if (email) firestoreUpdates.email = email;
@@ -226,32 +174,7 @@ export async function DELETE(
   context: RouteContext
 ) {
   try {
-    // Verify authentication and admin role
-    const { authenticated, user, error } = await verifyAuth(request);
-    if (!authenticated || !user) {
-      return NextResponse.json(
-        { error: error || "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    // Only full_developer_admin can manage users
-    if (user.role !== "full_developer_admin") {
-      return NextResponse.json(
-        { error: "Forbidden - Only full admins can manage users" },
-        { status: 403 }
-      );
-    }
-
     const { id } = context.params;
-
-    // Prevent users from deleting themselves
-    if (id === user.id) {
-      return NextResponse.json(
-        { error: "You cannot delete your own account" },
-        { status: 400 }
-      );
-    }
 
     // Get reassign parameter
     const { searchParams } = new URL(request.url);

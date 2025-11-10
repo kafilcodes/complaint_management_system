@@ -46,7 +46,7 @@ const ticketFormSchema = z.object({
   address: z.string().min(5, "Address is required"),
   pincode: z.string().min(5, "Pincode must be at least 5 characters"),
   productName: z.string().min(2, "Product name is required"),
-  productModel: z.string().min(1, "Product model is required"),
+  productModel: z.string().optional(),
   purchaseDate: z.string().min(1, "Purchase date is required"),
   brand: z.string().min(1, "Brand is required"),
   issueDescription: z.string().min(10, "Issue description must be at least 10 characters"),
@@ -101,7 +101,7 @@ export default function CreateTicketPage() {
         address: values.address,
         pincode: values.pincode,
         productName: values.productName,
-        productModel: values.productModel,
+        productModel: values.productModel || "",
         purchaseDate: new Date(values.purchaseDate),
         brand: values.brand,
         issueDescription: values.issueDescription,
@@ -296,7 +296,7 @@ export default function CreateTicketPage() {
                 name="productModel"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Product Model <span className="text-destructive">*</span></FormLabel>
+                    <FormLabel>Product Model</FormLabel>
                     <FormControl>
                       <Input placeholder="e.g., POS-2024-X" {...field} />
                     </FormControl>
@@ -332,7 +332,7 @@ export default function CreateTicketPage() {
                 name="assignedTo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Assign to Technician <span className="text-destructive">*</span></FormLabel>
+                    <FormLabel>Assigned To <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Combobox
                         options={technicianOptions}
