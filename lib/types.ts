@@ -45,6 +45,8 @@ export interface User {
   brand?: string; // Brand (KFC, Pizza Hut, Taco Bell)
   category?: string; // Only for technicians
   isActive: boolean;
+  disabled?: boolean; // From Firebase Auth (server-side only)
+  lastLogin?: string; // From Firebase Auth metadata (server-side only)
   createdAt: Timestamp | Date;
   updatedAt?: Timestamp | Date;
 }

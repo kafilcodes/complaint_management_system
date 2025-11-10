@@ -19,9 +19,10 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, Grid, List as ListIcon, Plus } from "lucide-react";
+import { Search, Filter, Grid, List as ListIcon, Plus, Clock, Loader2, Package, CheckCircle, XCircle } from "lucide-react";
 import type { Ticket } from "@/lib/types";
-import { TICKET_STATUSES, BRANDS } from "@/lib/configuration";
+import { TICKET_STATUSES } from "@/lib/configuration";
+import { useBrandList } from "@/hooks/useConfig";
 import { EmptyState } from "@/components/common/EmptyState";
 
 interface TicketListProps {
@@ -43,6 +44,9 @@ export function TicketList({
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [brandFilter, setBrandFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  // Fetch brands from Firestore with 24-hour cache
+  const { data: brands = [], isLoading: brandsLoading } = useBrandList();
 
   // Filter tickets based on search and filters
   const filteredTickets = tickets.filter((ticket) => {
@@ -98,7 +102,14 @@ export function TicketList({
             <SelectItem value="all">All Status</SelectItem>
             {TICKET_STATUSES.map((status) => (
               <SelectItem key={status.value} value={status.value}>
-                {status.label}
+                <div className="flex items-center gap-2">
+                  {status.value === "open" && <Clock className="h-4 w-4" />}
+                  {status.value === "in_progress" && <Loader2 className="h-4 w-4" />}
+                  {status.value === "pending_parts" && <Package className="h-4 w-4" />}
+                  {status.value === "resolved" && <CheckCircle className="h-4 w-4" />}
+                  {status.value === "closed" && <XCircle className="h-4 w-4" />}
+                  {status.label}
+                </div>
               </SelectItem>
             ))}
           </SelectContent>
@@ -111,7 +122,7 @@ export function TicketList({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Brands</SelectItem>
-            {BRANDS.map((brand) => (
+            {brands.map((brand) => (
               <SelectItem key={brand.value} value={brand.value}>
                 {brand.label}
               </SelectItem>

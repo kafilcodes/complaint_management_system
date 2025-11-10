@@ -12,6 +12,11 @@ import {
   Trash2,
   Search,
   Filter,
+  Shield,
+  Wrench,
+  Store,
+  User as UserIcon,
+  ShieldCheck,
 } from "lucide-react";
 import { EditUserDialog } from "./EditUserDialog";
 import { DeleteUserDialog } from "./DeleteUserDialog";
@@ -25,6 +30,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/common/EmptyState";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -81,6 +92,22 @@ const roleColors: Record<string, string> = {
   store_employee: "default",
 };
 
+// Helper to get role icon
+const getRoleIcon = (role: string) => {
+  switch (role) {
+    case "full_developer_admin":
+      return <ShieldCheck className="h-4 w-4" />;
+    case "it_admin":
+      return <Shield className="h-4 w-4" />;
+    case "it_technician":
+      return <Wrench className="h-4 w-4" />;
+    case "store_manager":
+      return <Store className="h-4 w-4" />;
+    default:
+      return <UserIcon className="h-4 w-4" />;
+  }
+};
+
 // Helper to convert Timestamp or Date to Date object
 const toDate = (value: Date | Timestamp | string | undefined): Date | null => {
   if (!value) return null;
@@ -134,9 +161,9 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
     },
   });
 
-  const handleToggleStatus = (userId: string, currentIsActive: boolean) => {
+  const handleToggleStatus = (userId: string, currentDisabled: boolean) => {
     setToggleUserId(userId);
-    setToggleIsActive(!currentIsActive);
+    setToggleIsActive(currentDisabled); // If currently disabled, we want to activate (isActive = true)
   };
 
   const confirmToggleStatus = () => {
@@ -210,10 +237,30 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Roles</SelectItem>
-              <SelectItem value="user">User</SelectItem>
-              <SelectItem value="it_technician">Technician</SelectItem>
-              <SelectItem value="it_admin">IT Admin</SelectItem>
-              <SelectItem value="full_developer_admin">Full Admin</SelectItem>
+              <SelectItem value="user">
+                <div className="flex items-center gap-2">
+                  <UserIcon className="h-4 w-4" />
+                  User
+                </div>
+              </SelectItem>
+              <SelectItem value="it_technician">
+                <div className="flex items-center gap-2">
+                  <Wrench className="h-4 w-4" />
+                  Technician
+                </div>
+              </SelectItem>
+              <SelectItem value="it_admin">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4" />
+                  IT Admin
+                </div>
+              </SelectItem>
+              <SelectItem value="full_developer_admin">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4" />
+                  Full Admin
+                </div>
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -254,27 +301,21 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      <Badge
-                        variant={
-                          roleColors[user.role] === "default"
-                            ? "secondary"
-                            : "default"
-                        }
-                        className={
-                          roleColors[user.role] === "blue"
-                            ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                            : roleColors[user.role] === "purple"
-                            ? "bg-purple-100 text-purple-700 hover:bg-purple-200"
-                            : roleColors[user.role] === "red"
-                            ? "bg-red-100 text-red-700 hover:bg-red-200"
-                            : ""
-                        }
-                      >
-                        {roleLabels[user.role]}
-                      </Badge>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
+                              {getRoleIcon(user.role)}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{roleLabels[user.role]}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableCell>
                     <TableCell>
-                      {!user.isActive ? (
+                      {user.disabled ? (
                         <Badge variant="destructive">Inactive</Badge>
                       ) : (
                         <Badge variant="outline" className="text-green-600">
@@ -283,11 +324,8 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
                       )}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {user.updatedAt
-                        ? (() => {
-                            const date = toDate(user.updatedAt);
-                            return date ? formatDistanceToNow(date, { addSuffix: true }) : "Never";
-                          })()
+                      {user.lastLogin
+                        ? formatDistanceToNow(new Date(user.lastLogin), { addSuffix: true })
                         : "Never"}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
@@ -313,18 +351,18 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() =>
-                              handleToggleStatus(user.id, user.isActive)
+                              handleToggleStatus(user.id, user.disabled || false)
                             }
                           >
-                            {user.isActive ? (
-                              <>
-                                <UserX className="mr-2 h-4 w-4" />
-                                Deactivate User
-                              </>
-                            ) : (
+                            {user.disabled ? (
                               <>
                                 <UserCheck className="mr-2 h-4 w-4" />
                                 Activate User
+                              </>
+                            ) : (
+                              <>
+                                <UserX className="mr-2 h-4 w-4" />
+                                Deactivate User
                               </>
                             )}
                           </DropdownMenuItem>
