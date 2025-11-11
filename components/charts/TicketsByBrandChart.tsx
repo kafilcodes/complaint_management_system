@@ -15,11 +15,11 @@ interface TicketsByBrandChartProps {
 }
 
 const COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
+  "hsl(var(--chart-1))", // Primary turquoise
+  "hsl(var(--chart-2))", // Darker turquoise
+  "hsl(var(--chart-3))", // Even darker turquoise
+  "hsl(var(--chart-4))", // Cyan variant
+  "hsl(var(--chart-5))", // Blue-green variant
 ];
 
 /**
@@ -84,7 +84,6 @@ export function TicketsByBrandChart({ tickets }: TicketsByBrandChartProps) {
               labelLine={false}
               label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
               outerRadius={100}
-              fill="#4fa1caff"
               dataKey="value"
             >
               {chartData.map((entry, index) => (
