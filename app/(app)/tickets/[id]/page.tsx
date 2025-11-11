@@ -3,8 +3,10 @@
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTicket, useDeleteTicket } from "@/hooks/use-tickets";
+import { useUser } from "@/hooks/use-users";
 import { useResolveTicket } from "@/hooks/use-resolution";
 import { useStore } from "@/lib/store";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +44,9 @@ import {
   ExternalLink,
   Paperclip,
   Trash2,
+  Mail,
+  Building2,
+  Wrench,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDateTime, getRelativeTime } from "@/firebase/firestore-helpers";
@@ -57,12 +62,23 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
   const router = useRouter();
   const user = useStore((state) => state.user);
   const { data: ticket, isLoading } = useTicket(id);
+  const { data: assignedEmployee } = useUser(ticket?.assignedTo || null);
   const resolveTicketMutation = useResolveTicket();
   const deleteTicketMutation = useDeleteTicket();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const statusColor = ticket ? getColorByValue(TICKET_STATUSES, ticket.status) : "";
   const brandLabel = ticket ? getLabelByValue(BRANDS, ticket.brand) : "";
+
+  // Helper to get user initials
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   // Debug: Check if timeline exists
   console.log("[TicketDetail] Ticket data:", ticket);
@@ -78,6 +94,13 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
       comment: <MessageSquare className="h-4 w-4" />,
     };
 
+    // Enhanced message for assigned event
+    let displayMessage = event.message || `Ticket ${event.event}`;
+    if (event.event === "assigned" && assignedEmployee) {
+      const firstName = assignedEmployee.name.split(" ")[0];
+      displayMessage = `Ticket assigned to technician (${firstName})`;
+    }
+
     return {
       title: event.event.charAt(0).toUpperCase() + event.event.slice(1),
       timestamp: formatDateTime(event.timestamp),
@@ -85,7 +108,7 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
       content: (
         <div className="space-y-2">
           <p className="text-neutral-800 dark:text-neutral-200 text-sm md:text-base font-normal">
-            {event.message || `Ticket ${event.event}`}
+            {displayMessage}
           </p>
           {event.details && Object.keys(event.details).length > 0 && (
             <div className="text-xs md:text-sm text-neutral-500 dark:text-neutral-400 space-y-1">
@@ -538,17 +561,59 @@ ${ticket.assignedTo ? `👨‍🔧 Assigned to technician` : '⚠️ Unassigned'
             </Card>
           </div>
 
-          {/* Actions Card */}
-          {!canResolve && ticket.status === "open" && (
+          {/* Assigned Employee Card or Actions Card */}
+          {ticket.assignedTo && assignedEmployee ? (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <UserCheck className="h-4 w-4 text-primary" />
+                  Assigned To
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <Avatar className="h-12 w-12 flex-shrink-0">
+                    {(assignedEmployee as any).photoURL && (
+                      <AvatarImage src={(assignedEmployee as any).photoURL} alt={assignedEmployee.name} />
+                    )}
+                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                      {getInitials(assignedEmployee.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div>
+                      <p className="font-semibold text-sm leading-tight">{assignedEmployee.name}</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Mail className="h-3.5 w-3.5 flex-shrink-0" />
+                        <span className="truncate">{assignedEmployee.email}</span>
+                      </div>
+                      {(assignedEmployee as any).department && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Building2 className="h-3.5 w-3.5 flex-shrink-0" />
+                          <span>{(assignedEmployee as any).department}</span>
+                        </div>
+                      )}
+                      {assignedEmployee.phone && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Phone className="h-3.5 w-3.5 flex-shrink-0" />
+                          <span>{assignedEmployee.phone}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : !canResolve && ticket.status === "open" && (
             <Card>
               <CardHeader>
-                <CardTitle>Actions</CardTitle>
+                <CardTitle className="text-base">Status</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  {ticket.assignedTo
-                    ? "This ticket is assigned to a technician"
-                    : "This ticket needs to be assigned"}
+                  This ticket needs to be assigned to a technician
                 </p>
               </CardContent>
             </Card>
