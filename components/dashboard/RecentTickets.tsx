@@ -2,14 +2,16 @@
 
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, Clock, User, Plus, CircleDot, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { ArrowRight, Clock, User, Plus, CircleDot, CheckCircle, XCircle, AlertCircle, UserCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { TICKET_STATUSES, getLabelByValue, getColorByValue } from "@/lib/configuration";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/common/EmptyState";
+import { useUser } from "@/hooks/use-users";
 
 interface RecentTicket {
   id: string;
@@ -23,6 +25,71 @@ interface RecentTicket {
 interface RecentTicketsProps {
   tickets: RecentTicket[];
   isLoading?: boolean;
+}
+
+// Separate component for ticket row to use hooks
+function TicketRow({ ticket, getStatusIcon }: { ticket: RecentTicket; getStatusIcon: (status: string) => React.ReactElement }) {
+  const { data: assignedEmployee } = useUser(ticket.assignedTo);
+  const statusColor = getColorByValue(TICKET_STATUSES, ticket.status);
+  const timeAgo = formatDistanceToNow(new Date(ticket.createdAt), {
+    addSuffix: true,
+  });
+
+  const getInitials = (name: string) => {
+    return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  };
+
+  return (
+    <Link
+      href={`/tickets/${ticket.id}`}
+      className="block group"
+    >
+      <div className="flex items-center gap-3 p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-muted/50 transition-all">
+        {/* Assigned Employee Avatar */}
+        <div className="flex-shrink-0">
+          {ticket.assignedTo && assignedEmployee ? (
+            <Avatar className="h-9 w-9">
+              {(assignedEmployee as any).photoURL && (
+                <AvatarImage src={(assignedEmployee as any).photoURL} alt={assignedEmployee.name} />
+              )}
+              <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">
+                {getInitials(assignedEmployee.name)}
+              </AvatarFallback>
+            </Avatar>
+          ) : (
+            <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
+              <UserCircle className="h-5 w-5 text-muted-foreground" />
+            </div>
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0 space-y-1.5">
+          <div className="flex items-start justify-between gap-2">
+            <p className="font-semibold text-sm truncate group-hover:text-primary transition-colors">
+              {ticket.productName}
+            </p>
+            <Badge className={cn("text-xs flex items-center gap-1 flex-shrink-0 h-fit", statusColor)}>
+              {getStatusIcon(ticket.status)}
+              {getLabelByValue(TICKET_STATUSES, ticket.status)}
+            </Badge>
+          </div>
+          
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <User className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="truncate max-w-[150px]">{ticket.customerName}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="whitespace-nowrap">{timeAgo}</span>
+            </div>
+          </div>
+        </div>
+
+        <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+      </div>
+    </Link>
+  );
 }
 
 export function RecentTickets({ tickets, isLoading }: RecentTicketsProps) {
@@ -97,52 +164,9 @@ export function RecentTickets({ tickets, isLoading }: RecentTicketsProps) {
         </Button>
       </CardHeader>
       <CardContent className="space-y-2">
-        {tickets.slice(0, 5).map((ticket, index) => {
-          const statusColor = getColorByValue(TICKET_STATUSES, ticket.status);
-          const timeAgo = formatDistanceToNow(new Date(ticket.createdAt), {
-            addSuffix: true,
-          });
-
-          return (
-            <Link
-              key={ticket.id}
-              href={`/tickets/${ticket.id}`}
-              className="block group"
-            >
-              <div className="flex items-start gap-3 p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-muted/50 transition-all">
-                {/* Ticket Number Badge */}
-                <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-xs">
-                  {index + 1}
-                </div>
-
-                <div className="flex-1 min-w-0 space-y-1.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="font-semibold text-sm truncate group-hover:text-primary transition-colors">
-                      {ticket.productName}
-                    </p>
-                    <Badge className={cn("text-xs flex items-center gap-1 flex-shrink-0", statusColor)}>
-                      {getStatusIcon(ticket.status)}
-                      {getLabelByValue(TICKET_STATUSES, ticket.status)}
-                    </Badge>
-                  </div>
-                  
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1.5">
-                      <User className="h-3.5 w-3.5" />
-                      <span className="truncate max-w-[150px]">{ticket.customerName}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Clock className="h-3.5 w-3.5" />
-                      <span>{timeAgo}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all flex-shrink-0 mt-1" />
-              </div>
-            </Link>
-          );
-        })}
+        {tickets.slice(0, 5).map((ticket) => (
+          <TicketRow key={ticket.id} ticket={ticket} getStatusIcon={getStatusIcon} />
+        ))}
       </CardContent>
     </Card>
   );
