@@ -50,6 +50,15 @@ const TechnicianPerformanceChart = dynamic(
   }
 );
 
+// Dynamically import PDF download button (client-side only)
+const DownloadReportButton = dynamic(
+  () => import("@/components/dashboard/DownloadReportButton").then(mod => ({ default: mod.DownloadReportButton })),
+  { 
+    loading: () => <Skeleton className="h-9 w-40" />,
+    ssr: false 
+  }
+);
+
 export default function DashboardPage() {
   const user = useStore((state) => state.user);
   const { data, isLoading } = useDashboardStats();
@@ -75,15 +84,21 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl sm:text-1xl font-bold tracking-tight">
-          {getGreeting()}, {user?.name?.split(" ")[0] || "User"}!
-        </h1>
-        <p className="text-muted-foreground">
-          {isAdmin && "Here's an overview of all service tickets."}
-          {isTechnician && "Here's an overview of your assigned tickets."}
-          {!isAdmin && !isTechnician && "Here's an overview of your service requests."}
-        </p>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-3xl sm:text-1xl font-bold tracking-tight">
+            {getGreeting()}, {user?.name?.split(" ")[0] || "User"}!
+          </h1>
+          <p className="text-muted-foreground">
+            {isAdmin && "Here's an overview of all service tickets."}
+            {isTechnician && "Here's an overview of your assigned tickets."}
+            {!isAdmin && !isTechnician && "Here's an overview of your service requests."}
+          </p>
+        </div>
+        {/* PDF Download Button */}
+        {stats && !isLoading && (
+          <DownloadReportButton stats={stats} tickets={allTickets} />
+        )}
       </div>
 
       {/* Stats Grid */}
