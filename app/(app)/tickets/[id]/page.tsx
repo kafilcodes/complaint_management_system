@@ -607,6 +607,37 @@ ${ticket.assignedTo ? `👨‍🔧 Assigned to technician` : '⚠️ Unassigned'
                     </div>
                   </div>
                 </div>
+                
+                {/* Action Buttons */}
+                <div className="flex gap-2 pt-2">
+                  {assignedEmployee.phone && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      asChild
+                    >
+                      <a href={`tel:${assignedEmployee.phone}`} className="flex items-center justify-center gap-2">
+                        <Phone className="h-4 w-4" />
+                        Call
+                      </a>
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    asChild
+                  >
+                    <a 
+                      href={`mailto:${assignedEmployee.email}?subject=${encodeURIComponent(`Ticket #${ticket.id.slice(0, 8)} - ${ticket.productName}`)}&body=${encodeURIComponent(`Hi ${assignedEmployee.name.split(' ')[0]},\n\nI'm reaching out regarding the following ticket:\n\nTicket ID: ${ticket.id}\nProduct: ${ticket.productName}\nCustomer: ${ticket.customerName}\nStatus: ${ticket.status}\nIssue: ${ticket.issueDescription}\n\nPlease let me know if you need any additional information.\n\nBest regards`)}`}
+                      className="flex items-center justify-center gap-2"
+                    >
+                      <Mail className="h-4 w-4" />
+                      Email
+                    </a>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ) : !canResolve && ticket.status === "open" && (
