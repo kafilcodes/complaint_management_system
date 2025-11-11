@@ -27,6 +27,10 @@ import {
   UserCheck,
   Edit,
   MessageSquare,
+  CircleDot,
+  Download,
+  ExternalLink,
+  Paperclip,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDateTime, getRelativeTime } from "@/firebase/firestore-helpers";
@@ -204,21 +208,24 @@ ${ticket.assignedTo ? `👨‍🔧 Assigned to technician` : '⚠️ Unassigned'
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.back()}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <Badge className={cn("text-xs", statusColor)}>
-              {getLabelByValue(TICKET_STATUSES, ticket.status)}
-            </Badge>
-            <Badge variant="outline" className="text-xs">
-              {brandLabel}
-            </Badge>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => router.back()}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <Badge className={cn("text-sm px-3 py-1.5 font-semibold flex items-center gap-1.5", statusColor)}>
+                <CircleDot className="h-4 w-4" />
+                {getLabelByValue(TICKET_STATUSES, ticket.status)}
+              </Badge>
+              <Badge variant="outline" className="text-sm px-3 py-1">
+                {brandLabel}
+              </Badge>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{ticket.productName}</h1>
+            <p className="text-sm text-muted-foreground mt-1">Ticket ID: #{ticket.id.slice(0, 8)}</p>
           </div>
-          <h1 className="text-3xl font-bold">{ticket.productName}</h1>
-          <p className="text-muted-foreground mt-1">Ticket ID: {ticket.id}</p>
         </div>
         <Button
           variant="outline"
@@ -232,34 +239,68 @@ ${ticket.assignedTo ? `👨‍🔧 Assigned to technician` : '⚠️ Unassigned'
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-6 order-2 lg:order-1">
           {/* Customer Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Customer Information</CardTitle>
+              <CardTitle className="text-lg font-semibold">Customer Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center gap-3">
-                <User className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Name</p>
-                  <p className="font-medium">{ticket.customerName}</p>
+              <div className="flex items-start gap-3">
+                <div className="rounded-full bg-primary/10 p-2">
+                  <User className="h-4 w-4 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs text-muted-foreground mb-0.5">Name</p>
+                  <p className="font-semibold text-base">{ticket.customerName}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <Phone className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Phone</p>
-                  <p className="font-medium">{ticket.customerPhone}</p>
+              
+              <Separator />
+              
+              <div className="flex items-start gap-3">
+                <div className="rounded-full bg-primary/10 p-2">
+                  <Phone className="h-4 w-4 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs text-muted-foreground mb-0.5">Phone Number</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-semibold text-base">{ticket.customerPhone}</p>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs gap-1.5"
+                        onClick={() => window.location.href = `tel:${ticket.customerPhone}`}
+                      >
+                        <Phone className="h-3 w-3" />
+                        Call
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs gap-1.5"
+                        onClick={() => window.location.href = `sms:${ticket.customerPhone}`}
+                      >
+                        <MessageSquare className="h-3 w-3" />
+                        Message
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <MapPin className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Address</p>
-                  <p className="font-medium">
+              
+              <Separator />
+              
+              <div className="flex items-start gap-3">
+                <div className="rounded-full bg-primary/10 p-2">
+                  <MapPin className="h-4 w-4 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs text-muted-foreground mb-0.5">Address</p>
+                  <p className="font-medium text-sm leading-relaxed">
                     {ticket.address}
-                    {ticket.pincode && ` - ${ticket.pincode}`}
+                    {ticket.pincode && <span className="block text-xs text-muted-foreground mt-1">Pincode: {ticket.pincode}</span>}
                   </p>
                 </div>
               </div>
@@ -269,23 +310,33 @@ ${ticket.assignedTo ? `👨‍🔧 Assigned to technician` : '⚠️ Unassigned'
           {/* Product Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Product Information</CardTitle>
+              <CardTitle className="text-lg font-semibold">Product Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Package className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Product</p>
-                  <p className="font-medium">
-                    {ticket.productName} {ticket.productModel && `- ${ticket.productModel}`}
+              <div className="flex items-start gap-3">
+                <div className="rounded-full bg-primary/10 p-2">
+                  <Package className="h-4 w-4 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs text-muted-foreground mb-0.5">Product</p>
+                  <p className="font-semibold text-base">
+                    {ticket.productName}
                   </p>
+                  {ticket.productModel && (
+                    <p className="text-sm text-muted-foreground mt-1">Model: {ticket.productModel}</p>
+                  )}
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <Calendar className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Purchase Date</p>
-                  <p className="font-medium">{formatDateTime(ticket.purchaseDate)}</p>
+              
+              <Separator />
+              
+              <div className="flex items-start gap-3">
+                <div className="rounded-full bg-primary/10 p-2">
+                  <Calendar className="h-4 w-4 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs text-muted-foreground mb-0.5">Purchase Date</p>
+                  <p className="font-semibold text-sm">{formatDateTime(ticket.purchaseDate)}</p>
                 </div>
               </div>
             </CardContent>
@@ -294,21 +345,84 @@ ${ticket.assignedTo ? `👨‍🔧 Assigned to technician` : '⚠️ Unassigned'
           {/* Issue Details */}
           <Card>
             <CardHeader>
-              <CardTitle>Issue Description</CardTitle>
+              <CardTitle className="text-lg font-semibold">Issue Description</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm leading-relaxed">{ticket.issueDescription}</p>
+              <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">{ticket.issueDescription}</p>
               {ticket.comments && (
                 <>
                   <Separator />
                   <div>
-                    <p className="text-sm font-medium mb-2">Additional Comments</p>
-                    <p className="text-sm text-muted-foreground">{ticket.comments}</p>
+                    <p className="text-xs text-muted-foreground font-medium mb-2 uppercase tracking-wide">Additional Comments</p>
+                    <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">{ticket.comments}</p>
                   </div>
                 </>
               )}
             </CardContent>
           </Card>
+
+          {/* Attachments */}
+          {ticket.attachmentUrls && ticket.attachmentUrls.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <Paperclip className="h-5 w-5" />
+                  Attachments ({ticket.attachmentUrls.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-3">
+                  {ticket.attachmentUrls.map((url, index) => {
+                    const fileName = url.split('/').pop()?.split('?')[0] || `attachment-${index + 1}`;
+                    const fileExtension = fileName.split('.').pop()?.toLowerCase();
+                    const isPDF = fileExtension === 'pdf';
+                    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic'].includes(fileExtension || '');
+                    
+                    return (
+                      <div key={index} className="flex items-center justify-between p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="rounded-md bg-primary/10 p-2">
+                            <Paperclip className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{fileName}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {isPDF ? 'PDF Document' : isImage ? 'Image' : 'File'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                            onClick={() => window.open(url, '_blank')}
+                            title="Open in new tab"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                            onClick={() => {
+                              const link = document.createElement('a');
+                              link.href = url;
+                              link.download = fileName;
+                              link.click();
+                            }}
+                            title="Download"
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Resolution Form (for open tickets assigned to current user) */}
           {canResolve && (
@@ -328,9 +442,61 @@ ${ticket.assignedTo ? `👨‍🔧 Assigned to technician` : '⚠️ Unassigned'
           )}
         </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Actions */}
+        {/* Sidebar - Timeline on Desktop */}
+        <div className="space-y-6 order-1 lg:order-2">
+          {/* Activity Timeline - Desktop & Tablet */}
+          <div className="hidden lg:block">
+            <Card className="sticky top-6">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Activity Timeline
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                {timelineData && timelineData.length > 0 ? (
+                  <div className="relative space-y-4 pb-4">
+                    {/* Vertical beam line */}
+                    <div className="absolute left-[9px] top-2 bottom-0 w-[2px] bg-gradient-to-b from-primary/60 via-primary/40 to-transparent" />
+                    
+                    {timelineData.map((item, index) => (
+                      <div key={index} className="relative pl-8 pb-4 last:pb-0">
+                        {/* Node */}
+                        <div className="absolute left-0 top-1 h-5 w-5 rounded-full border-2 border-primary bg-background flex items-center justify-center shadow-sm shadow-primary/20">
+                          <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                        </div>
+                        
+                        {/* Content */}
+                        <div className="space-y-1.5">
+                          <div className="flex items-start justify-between gap-2">
+                            <h4 className="text-sm font-semibold text-foreground leading-tight">
+                              {item.title}
+                            </h4>
+                          </div>
+                          
+                          {item.timestamp && (
+                            <p className="text-xs text-muted-foreground">
+                              {item.timestamp}
+                            </p>
+                          )}
+                          
+                          <div className="text-xs leading-relaxed text-muted-foreground">
+                            {item.content}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground py-4">
+                    No activity recorded yet
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Actions Card */}
           {!canResolve && ticket.status === "open" && (
             <Card>
               <CardHeader>
@@ -348,13 +514,52 @@ ${ticket.assignedTo ? `👨‍🔧 Assigned to technician` : '⚠️ Unassigned'
         </div>
       </div>
 
-      {/* Activity Timeline */}
-      {timelineData && timelineData.length > 0 ? (
-        <div className="mt-12">
-          <Timeline data={timelineData} />
-        </div>
-      ) : (
-        <div className="mt-12">
+      {/* Activity Timeline - Mobile (Bottom) */}
+      <div className="lg:hidden mt-8">
+        {timelineData && timelineData.length > 0 ? (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Activity Timeline
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="relative space-y-4 pb-2">
+                {/* Vertical beam line */}
+                <div className="absolute left-[9px] top-2 bottom-0 w-[2px] bg-gradient-to-b from-primary/60 via-primary/40 to-transparent" />
+                
+                {timelineData.map((item, index) => (
+                  <div key={index} className="relative pl-8 pb-4 last:pb-0">
+                    {/* Node */}
+                    <div className="absolute left-0 top-1 h-5 w-5 rounded-full border-2 border-primary bg-background flex items-center justify-center shadow-sm shadow-primary/20">
+                      <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                    </div>
+                    
+                    {/* Content */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="text-sm font-semibold text-foreground leading-tight">
+                          {item.title}
+                        </h4>
+                      </div>
+                      
+                      {item.timestamp && (
+                        <p className="text-xs text-muted-foreground">
+                          {item.timestamp}
+                        </p>
+                      )}
+                      
+                      <div className="text-xs leading-relaxed text-muted-foreground">
+                        {item.content}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
           <Card>
             <CardHeader>
               <CardTitle>Activity Timeline</CardTitle>
@@ -365,8 +570,8 @@ ${ticket.assignedTo ? `👨‍🔧 Assigned to technician` : '⚠️ Unassigned'
               </p>
             </CardContent>
           </Card>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
