@@ -18,7 +18,11 @@ import {
   MapPin,
   Phone,
   Calendar,
-  ExternalLink 
+  ExternalLink,
+  CircleDot,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
 } from "lucide-react";
 import type { Ticket } from "@/lib/types";
 import { formatDateTime, getRelativeTime } from "@/firebase/firestore-helpers";
@@ -41,6 +45,20 @@ export function TicketCard({
   const statusColor = getColorByValue(TICKET_STATUSES, ticket.status);
   const brandLabel = getLabelByValue(BRANDS, ticket.brand);
 
+  // Map status to icons
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "open":
+        return <CircleDot className="h-3.5 w-3.5" />;
+      case "closed":
+        return <CheckCircle className="h-3.5 w-3.5" />;
+      case "cancelled":
+        return <XCircle className="h-3.5 w-3.5" />;
+      default:
+        return <AlertCircle className="h-3.5 w-3.5" />;
+    }
+  };
+
   return (
     <Link href={`/tickets/${ticket.id}`} className="block group">
       <Card className="hover:shadow-lg transition-all hover:border-primary/50 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 h-full">
@@ -48,7 +66,8 @@ export function TicketCard({
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <Badge className={cn("text-xs", statusColor)}>
+                <Badge className={cn("text-xs flex items-center gap-1.5", statusColor)}>
+                  {getStatusIcon(ticket.status)}
                   {getLabelByValue(TICKET_STATUSES, ticket.status)}
                 </Badge>
                 <Badge variant="outline" className="text-xs">

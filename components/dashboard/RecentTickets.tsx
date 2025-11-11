@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, Clock, User, Plus } from "lucide-react";
+import { ArrowRight, Clock, User, Plus, CircleDot, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { TICKET_STATUSES, getLabelByValue, getColorByValue } from "@/lib/configuration";
 import { cn } from "@/lib/utils";
@@ -26,6 +26,20 @@ interface RecentTicketsProps {
 }
 
 export function RecentTickets({ tickets, isLoading }: RecentTicketsProps) {
+  // Map status to icons
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "open":
+        return <CircleDot className="h-3 w-3" />;
+      case "closed":
+        return <CheckCircle className="h-3 w-3" />;
+      case "cancelled":
+        return <XCircle className="h-3 w-3" />;
+      default:
+        return <AlertCircle className="h-3 w-3" />;
+    }
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -96,7 +110,8 @@ export function RecentTickets({ tickets, isLoading }: RecentTicketsProps) {
                     <p className="font-medium text-sm truncate group-hover:text-primary transition-colors">
                       {ticket.productName}
                     </p>
-                    <Badge className={cn("text-xs", statusColor)}>
+                    <Badge className={cn("text-xs flex items-center gap-1", statusColor)}>
+                      {getStatusIcon(ticket.status)}
                       {getLabelByValue(TICKET_STATUSES, ticket.status)}
                     </Badge>
                   </div>

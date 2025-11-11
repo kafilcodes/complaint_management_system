@@ -1,8 +1,8 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTicket } from "@/hooks/use-tickets";
+import { useTicket, useDeleteTicket } from "@/hooks/use-tickets";
 import { useResolveTicket } from "@/hooks/use-resolution";
 import { useStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,16 @@ import { Separator } from "@/components/ui/separator";
 import { Timeline } from "@/components/ui/timeline";
 import { ResolutionForm } from "@/components/tickets/ResolutionForm";
 import { ResolutionDetails } from "@/components/tickets/ResolutionDetails";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   ArrowLeft,
   User,
@@ -31,6 +41,7 @@ import {
   Download,
   ExternalLink,
   Paperclip,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDateTime, getRelativeTime } from "@/firebase/firestore-helpers";
@@ -47,6 +58,8 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
   const user = useStore((state) => state.user);
   const { data: ticket, isLoading } = useTicket(id);
   const resolveTicketMutation = useResolveTicket();
+  const deleteTicketMutation = useDeleteTicket();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const statusColor = ticket ? getColorByValue(TICKET_STATUSES, ticket.status) : "";
   const brandLabel = ticket ? getLabelByValue(BRANDS, ticket.brand) : "";
@@ -109,6 +122,9 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
       user.role === "it_admin" ||
       user.role === "full_developer_admin");
 
+  // Check if current user can delete this ticket (admin only)
+  const canDelete = user && (user.role === "full_developer_admin" || user.role === "it_admin");
+
   const handleResolve = async (data: any) => {
     try {
       await resolveTicketMutation.mutateAsync({
@@ -127,6 +143,19 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
     } catch (error) {
       console.error("Error resolving ticket:", error);
       toast.error("Failed to resolve ticket");
+    }
+  };
+
+  const handleDeleteTicket = async () => {
+    try {
+      await deleteTicketMutation.mutateAsync(id);
+      toast.success("Ticket deleted successfully!");
+      router.push("/tickets");
+    } catch (error) {
+      console.error("Error deleting ticket:", error);
+      // Error toast is already shown by the mutation
+    } finally {
+      setShowDeleteDialog(false);
     }
   };
 
@@ -227,14 +256,27 @@ ${ticket.assignedTo ? `👨‍🔧 Assigned to technician` : '⚠️ Unassigned'
             <p className="text-sm text-muted-foreground mt-1">Ticket ID: #{ticket.id.slice(0, 8)}</p>
           </div>
         </div>
-        <Button
-          variant="outline"
-          onClick={handleShare}
-          className="gap-2"
-        >
-          <Share2 className="h-4 w-4" />
-          <span className="hidden sm:inline">Share</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleShare}
+            className="gap-2"
+          >
+            <Share2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Share</span>
+          </Button>
+          {canDelete && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setShowDeleteDialog(true)}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              title="Delete Ticket"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -572,6 +614,29 @@ ${ticket.assignedTo ? `👨‍🔧 Assigned to technician` : '⚠️ Unassigned'
           </Card>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent className="bg-background">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Ticket</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this ticket? This action cannot be undone.
+              All associated data including attachments and timeline will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteTicket}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteTicketMutation.isPending}
+            >
+              {deleteTicketMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
