@@ -281,8 +281,8 @@ export default function CreateTicketPage() {
                     <FormLabel>Customer Name <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="John Doe" maxLength={100} className="pl-10" {...field} />
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground peer-focus:text-primary transition-colors" />
+                        <Input placeholder="John Doe" maxLength={100} className="pl-10 peer" {...field} />
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -298,8 +298,8 @@ export default function CreateTicketPage() {
                     <FormLabel>Phone Number <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="+1234567890" maxLength={20} className="pl-10" {...field} />
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground peer-focus:text-primary transition-colors" />
+                        <Input placeholder="+1234567890" maxLength={20} className="pl-10 peer" {...field} />
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -315,11 +315,11 @@ export default function CreateTicketPage() {
                     <FormLabel>Address <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground peer-focus:text-primary transition-colors" />
                         <Textarea 
                           placeholder="123 Main St, City, State" 
                           maxLength={500}
-                          className="pl-10"
+                          className="pl-10 peer"
                           {...field} 
                         />
                       </div>
@@ -337,8 +337,8 @@ export default function CreateTicketPage() {
                     <FormLabel>Pincode <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="12345" maxLength={10} className="pl-10" {...field} />
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground peer-focus:text-primary transition-colors" />
+                        <Input placeholder="12345" maxLength={10} className="pl-10 peer" {...field} />
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -410,11 +410,11 @@ export default function CreateTicketPage() {
                       <FormLabel>Custom Brand Name <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <Package className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Package className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground peer-focus:text-primary transition-colors" />
                           <Input 
                             placeholder="Enter brand name" 
                             maxLength={100} 
-                            className="pl-10" 
+                            className="pl-10 peer" 
                             {...field} 
                           />
                         </div>
@@ -436,8 +436,8 @@ export default function CreateTicketPage() {
                     <FormLabel>Product Name <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Package className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="e.g., Point of Sale System" maxLength={200} className="pl-10" {...field} />
+                        <Package className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground peer-focus:text-primary transition-colors" />
+                        <Input placeholder="e.g., Point of Sale System" maxLength={200} className="pl-10 peer" {...field} />
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -453,8 +453,8 @@ export default function CreateTicketPage() {
                     <FormLabel>Product Model</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Package className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="e.g., POS-2024-X" maxLength={100} className="pl-10" {...field} />
+                        <Package className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground peer-focus:text-primary transition-colors" />
+                        <Input placeholder="e.g., POS-2024-X" maxLength={100} className="pl-10 peer" {...field} />
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -470,8 +470,8 @@ export default function CreateTicketPage() {
                     <FormLabel>Purchase Date <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input type="date" className="pl-10" {...field} />
+                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground peer-focus:text-primary transition-colors" />
+                        <Input type="date" className="pl-10 peer" {...field} />
                       </div>
                     </FormControl>
                     <FormMessage />
