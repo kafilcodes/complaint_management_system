@@ -163,7 +163,7 @@ const toDate = (value: Date | Timestamp | string | undefined): Date | null => {
 
 export function UserList({ onEdit, onDelete }: UserListProps) {
   const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [departmentFilter, setDepartmentFilter] = useState<string>("all");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -173,10 +173,8 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
   // Debounce search term
   const debouncedSearch = useDebounce(search, 500);
 
-  // Fetch users via API
-  const { data: allUsers = [], isLoading } = useUsers({
-    role: roleFilter === "all" ? undefined : (roleFilter as "admin" | "full_developer_admin" | "it_technician" | "customer"),
-  });
+  // Fetch all users via API
+  const { data: allUsers = [], isLoading } = useUsers();
 
   // Loading state
   if (isLoading) {
@@ -208,18 +206,37 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
     );
   }
 
-  // Filter out the current admin user from the list
+  // Filter out the current admin user from the list and apply department filter
   const users = allUsers
     .filter((user) => user.id !== currentUser?.id)
     .filter((user) => {
+      // Department filter
+      if (departmentFilter !== "all") {
+        const userDept = (user.department || "").toLowerCase();
+        return userDept === departmentFilter.toLowerCase();
+      }
+      return true;
+    })
+    .filter((user) => {
+      // Search filter
       if (!debouncedSearch) return true;
       const searchLower = debouncedSearch.toLowerCase();
       return (
         user.name.toLowerCase().includes(searchLower) ||
         user.email.toLowerCase().includes(searchLower) ||
+        (user.department || "").toLowerCase().includes(searchLower) ||
         user.role.toLowerCase().includes(searchLower)
       );
     });
+
+  // Get unique departments for filter
+  const departments = Array.from(
+    new Set(
+      allUsers
+        .map((u) => u.department)
+        .filter((dept): dept is string => dept !== undefined && dept !== null && dept !== "")
+    )
+  ).sort();
 
   return (
     <>
@@ -235,37 +252,21 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
               className="pl-9"
             />
           </div>
-          <Select value={roleFilter} onValueChange={setRoleFilter}>
-            <SelectTrigger className="w-full sm:w-[200px]">
+          <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+            <SelectTrigger className="w-full sm:w-[220px]">
               <Filter className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Filter by role" />
+              <SelectValue placeholder="Filter by department" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Roles</SelectItem>
-              <SelectItem value="user">
-                <div className="flex items-center gap-2">
-                  <UserIcon className="h-4 w-4" />
-                  User
-                </div>
-              </SelectItem>
-              <SelectItem value="it_technician">
-                <div className="flex items-center gap-2">
-                  <Wrench className="h-4 w-4" />
-                  Technician
-                </div>
-              </SelectItem>
-              <SelectItem value="it_admin">
-                <div className="flex items-center gap-2">
-                  <Shield className="h-4 w-4" />
-                  IT Admin
-                </div>
-              </SelectItem>
-              <SelectItem value="full_developer_admin">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4" />
-                  Full Admin
-                </div>
-              </SelectItem>
+              <SelectItem value="all">All Departments</SelectItem>
+              {departments.map((dept) => (
+                <SelectItem key={dept} value={dept}>
+                  <div className="flex items-center gap-2">
+                    {getDepartmentIcon(dept)}
+                    {dept}
+                  </div>
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -291,7 +292,7 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
                       imageUrl="/no_users.svg"
                       title="No Users Found"
                       description={
-                        search || roleFilter !== "all"
+                        search || departmentFilter !== "all"
                           ? "Try adjusting your search or filter criteria."
                           : "Users you create will appear here. Start by adding your first team member."
                       }

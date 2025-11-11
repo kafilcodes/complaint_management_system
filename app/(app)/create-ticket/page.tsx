@@ -74,12 +74,13 @@ export default function CreateTicketPage() {
   // Fetch brands from Firestore with 24-hour cache
   const { data: brands = [], isLoading: brandsLoading } = useBrandList();
   
-  // Fetch all employees for assignee combobox (exclude full_developer_admin and admins)
+  // Fetch all employees for assignee combobox (exclude admins and administration department)
   const { data: allUsers = [], isLoading: usersLoading } = useUsers();
   const employees = allUsers.filter(
     (user) => 
       user.role !== "full_developer_admin" && 
-      user.role !== "it_admin"
+      user.role !== "it_admin" &&
+      user.department !== "Administration"
   );
 
   // Initialize attachment upload hook with temp ID (files will be uploaded to temp path)

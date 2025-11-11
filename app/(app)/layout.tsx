@@ -116,14 +116,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
           {/* Header content */}
           <div className="flex flex-1 items-center justify-between">
-            <div className="flex items-center gap-2 md:hidden">
+            <div className="flex items-center   md:hidden">
               {/* Logo and App name on mobile (since sidebar is hidden) */}
               <Image
-                src="/logo.svg"
-                width={32}
-                height={32}
+                src="/logo.png"
+                width={100}
+                height={100}
                 alt="ServiceFirst Logo"
-                className="h-8 w-8"
+                className="h-12 w-12 m-0 p-0"
                 priority
               />
               <h1 className="text-lg font-semibold">

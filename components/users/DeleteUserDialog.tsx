@@ -68,6 +68,11 @@ export function DeleteUserDialog({
   const isTechnician =
     userToDelete?.role === "it_technician" || userToDelete?.role === "it_admin";
 
+  const isAdminUser =
+    userToDelete?.role === "it_admin" ||
+    userToDelete?.role === "full_developer_admin" ||
+    (userToDelete as any)?.department === "Administration";
+
   const availableTechnicians = technicians?.filter((t) => t.id !== userId) || [];
 
   return (
@@ -85,6 +90,22 @@ export function DeleteUserDialog({
                 <span className="font-semibold">{userToDelete?.name}</span> (
                 {userToDelete?.email})?
               </p>
+
+              {isAdminUser && (
+                <div className="rounded-md bg-yellow-500/10 border border-yellow-500/30 p-3 text-sm">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-yellow-900 dark:text-yellow-200">
+                        Warning: Admin Account
+                      </p>
+                      <p className="mt-1 text-yellow-800 dark:text-yellow-300 text-xs">
+                        You are deleting an admin account. This action may cause issues in the future.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="rounded-md bg-destructive/10 p-3 text-sm">
                 <p className="font-semibold text-destructive">
