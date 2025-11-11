@@ -127,7 +127,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
               src="/logo.png"
               alt="ServiceFirst Logo"
               fill
-              sizes="64px"
+              sizes="100px"
               className="object-contain"
               priority
             />
@@ -161,7 +161,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                   asChild
                   isActive={isActive}
                   tooltip={item.label}
-                  className="h-11"
+                  className="h-11 "
                 >
                   <Link href={item.href} className="flex items-center gap-3">
                     <Icon className="h-6 w-6 flex-shrink-0" />

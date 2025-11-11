@@ -115,6 +115,8 @@ export function useTicketList(filters?: {
                   brand: data.brand,
                   issueDescription: data.issueDescription,
                   comments: data.comments || null,
+                  attachmentUrls: data.attachmentUrls || [],
+                  timeline: data.timeline || [],
                 } as Ticket;
               });
               
@@ -201,6 +203,8 @@ export function useMyTicketList() {
                   brand: data.brand,
                   issueDescription: data.issueDescription,
                   comments: data.comments || null,
+                  attachmentUrls: data.attachmentUrls || [],
+                  timeline: data.timeline || [],
                 } as Ticket;
               });
               
@@ -286,6 +290,8 @@ export function useTicketById(ticketId: string | undefined) {
                 brand: data.brand,
                 issueDescription: data.issueDescription,
                 comments: data.comments || null,
+                attachmentUrls: data.attachmentUrls || [],
+                timeline: data.timeline || [],
               };
               
               resolve(ticket);
