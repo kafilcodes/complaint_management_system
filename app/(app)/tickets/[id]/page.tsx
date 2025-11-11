@@ -273,7 +273,7 @@ ${ticket.assignedTo ? `👨‍🔧 Assigned to technician` : '⚠️ Unassigned'
                         className="h-7 text-xs gap-1.5 hover:text-[#40e0d0]"
                         onClick={() => window.location.href = `tel:${ticket.customerPhone}`}
                       >
-                        <Phone className="h-3 w-3" />
+                        <Phone className="h-3 w-3 hover:text-[#40e0d0]" />
                         Call
                       </Button>
                       <Button

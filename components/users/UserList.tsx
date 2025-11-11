@@ -6,8 +6,6 @@ import { Timestamp } from "firebase/firestore";
 import { User } from "@/lib/types";
 import {
   MoreHorizontal,
-  UserCheck,
-  UserX,
   Pencil,
   Trash2,
   Search,
@@ -26,8 +24,6 @@ import { DeleteUserDialog } from "./DeleteUserDialog";
 import { useUsers } from "@/hooks/useUsers";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useStore } from "@/lib/store";
-import { apiPut } from "@/lib/api-client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -168,13 +164,10 @@ const toDate = (value: Date | Timestamp | string | undefined): Date | null => {
 export function UserList({ onEdit, onDelete }: UserListProps) {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
-  const [toggleUserId, setToggleUserId] = useState<string | null>(null);
-  const [toggleIsActive, setToggleIsActive] = useState(true);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const queryClient = useQueryClient();
   const currentUser = useStore((state) => state.user);
 
   // Debounce search term
@@ -184,47 +177,6 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
   const { data: allUsers = [], isLoading } = useUsers({
     role: roleFilter === "all" ? undefined : (roleFilter as "admin" | "full_developer_admin" | "it_technician" | "customer"),
   });
-
-  // Toggle user status mutation
-  const toggleStatus = useMutation({
-    mutationFn: async (isActive: boolean) => {
-      if (!toggleUserId) throw new Error("No user selected");
-      return await apiPut<{ success: boolean; data: User }>(`/api/users/${toggleUserId}`, { isActive });
-    },
-    onSuccess: (data) => {
-      const user = data.data;
-      toast.success(
-        user.isActive ? "User activated" : "User deactivated",
-        {
-          description: `${user.name} has been ${user.isActive ? "activated" : "deactivated"}`,
-        }
-      );
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      setToggleUserId(null);
-    },
-    onError: (error: Error) => {
-      toast.error("Failed to update user status", {
-        description: error.message,
-      });
-    },
-  });
-
-  const handleToggleStatus = (userId: string, currentDisabled: boolean) => {
-    if (!userId) {
-      toast.error("Failed to deactivate", { description: "No user selected" });
-      return;
-    }
-    setToggleUserId(userId);
-    setToggleIsActive(currentDisabled); // If currently disabled, we want to activate (isActive = true)
-  };
-
-  const confirmToggleStatus = () => {
-    if (!toggleUserId) {
-      toast.error("Failed to update status", { description: "No user selected" });
-      return;
-    }
-    toggleStatus.mutate(toggleIsActive);
-  };
 
   // Loading state
   if (isLoading) {
@@ -404,24 +356,6 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
-                            onClick={() =>
-                              handleToggleStatus(user.id, user.disabled || false)
-                            }
-                          >
-                            {user.disabled ? (
-                              <>
-                                <UserCheck className="mr-2 h-4 w-4" />
-                                Activate User
-                              </>
-                            ) : (
-                              <>
-                                <UserX className="mr-2 h-4 w-4" />
-                                Deactivate User
-                              </>
-                            )}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
                             onClick={() => onDelete(user.id)}
                             className="text-destructive"
                           >
@@ -445,31 +379,6 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
           </p>
         )}
       </div>
-
-      {/* Toggle Status Confirmation Dialog */}
-      <AlertDialog
-        open={toggleUserId !== null}
-        onOpenChange={(open: boolean) => !open && setToggleUserId(null)}
-      >
-        <AlertDialogContent className="bg-background">
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {toggleIsActive ? "Activate User" : "Deactivate User"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {toggleIsActive
-                ? "This user will be able to sign in again."
-                : "This user will not be able to sign in. Their data will remain intact."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmToggleStatus}>
-              {toggleIsActive ? "Activate" : "Deactivate"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
