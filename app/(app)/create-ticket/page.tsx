@@ -456,8 +456,8 @@ export default function CreateTicketPage() {
                         disabled={usersLoading}
                         searchFields={["label", "email", "department"]}
                         renderOption={(option) => (
-                          <div className="flex items-center gap-3 w-full">
-                            <Avatar className="h-9 w-9 flex-shrink-0">
+                          <div className="flex items-center gap-2 sm:gap-3 w-full py-1 sm:py-0">
+                            <Avatar className="h-7 w-7 sm:h-9 sm:w-9 flex-shrink-0">
                               {option.photoURL && (
                                 <AvatarImage src={option.photoURL} alt={option.label} />
                               )}
@@ -466,8 +466,8 @@ export default function CreateTicketPage() {
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col flex-1 min-w-0">
-                              <span className="font-semibold text-sm truncate">{option.label}</span>
-                              <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap mt-0.5">
+                              <span className="font-semibold text-xs sm:text-sm truncate">{option.label}</span>
+                              <div className="hidden sm:flex items-center gap-3 text-xs text-muted-foreground flex-wrap mt-0.5">
                                 <span className="flex items-center gap-1">
                                   <Building2 className="h-3 w-3 flex-shrink-0" />
                                   <span className="truncate">{option.department}</span>
@@ -476,6 +476,11 @@ export default function CreateTicketPage() {
                                   <Mail className="h-3 w-3 flex-shrink-0" />
                                   <span className="truncate">{option.email}</span>
                                 </span>
+                              </div>
+                              {/* Mobile: Show only department */}
+                              <div className="flex sm:hidden items-center gap-1 text-xs text-muted-foreground mt-0.5">
+                                <Building2 className="h-3 w-3 flex-shrink-0" />
+                                <span className="truncate">{option.department}</span>
                               </div>
                             </div>
                           </div>

@@ -123,7 +123,7 @@ export function Combobox({
                     onValueChange?.(currentValue === value ? "" : currentValue);
                     setOpen(false);
                   }}
-                  className="cursor-pointer"
+                  className="cursor-pointer py-2 sm:py-3"
                 >
                   <Check
                     className={cn(
