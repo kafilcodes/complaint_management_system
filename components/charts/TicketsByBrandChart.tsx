@@ -15,11 +15,11 @@ interface TicketsByBrandChartProps {
 }
 
 const COLORS = [
-  "var(--chart-1)", // Primary turquoise
-  "var(--chart-2)", // Darker turquoise
-  "var(--chart-3)", // Even darker turquoise
-  "var(--chart-4)", // Cyan variant
-  "var(--chart-5)", // Blue-green variant
+  "var(--chart-pie-1)", // Lighter turquoise - reduced saturation
+  "var(--chart-pie-2)", // Lighter darker turquoise
+  "var(--chart-pie-3)", // Lighter even darker turquoise
+  "var(--chart-pie-4)", // Lighter cyan variant
+  "var(--chart-pie-5)", // Lighter blue-green variant
 ];
 
 /**
