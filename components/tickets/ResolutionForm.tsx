@@ -25,7 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileUpload } from "@/components/ui/file-upload";
-import { Star, Loader2 } from "lucide-react";
+import { Star, Loader2, Hash, Image, FileText, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SERVICE_RATINGS } from "@/lib/configuration";
 
@@ -97,7 +97,10 @@ export function ResolutionForm({ ticketId, onSubmit, isSubmitting = false }: Res
               name="productSerial"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Product Serial Number</FormLabel>
+                  <FormLabel className="flex items-center gap-2">
+                    <Hash className="h-4 w-4 text-primary" />
+                    Product Serial Number
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="Enter serial number" {...field} />
                   </FormControl>
@@ -179,7 +182,10 @@ export function ResolutionForm({ ticketId, onSubmit, isSubmitting = false }: Res
 
             {/* Product Image */}
             <FormItem>
-              <FormLabel>Product Image</FormLabel>
+              <FormLabel className="flex items-center gap-2">
+                <Image className="h-4 w-4 text-primary" />
+                Product Image
+              </FormLabel>
               <FormControl>
                 <FileUpload
                   onChange={setProductImageFiles}
@@ -198,7 +204,10 @@ export function ResolutionForm({ ticketId, onSubmit, isSubmitting = false }: Res
 
             {/* Warranty Card */}
             <FormItem>
-              <FormLabel>Warranty Card (Optional)</FormLabel>
+              <FormLabel className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                Warranty Card (Optional)
+              </FormLabel>
               <FormControl>
                 <FileUpload
                   onChange={setWarrantyCardFiles}
@@ -218,7 +227,10 @@ export function ResolutionForm({ ticketId, onSubmit, isSubmitting = false }: Res
 
             {/* Parts Consumed Image */}
             <FormItem>
-              <FormLabel>Parts Consumed (Optional)</FormLabel>
+              <FormLabel className="flex items-center gap-2">
+                <Wrench className="h-4 w-4 text-primary" />
+                Parts Consumed (Optional)
+              </FormLabel>
               <FormControl>
                 <FileUpload
                   onChange={setPartConsumedFiles}
