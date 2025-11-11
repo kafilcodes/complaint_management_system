@@ -32,8 +32,11 @@ export const FileUpload = ({
   maxFiles = 3,
   maxSize = 10 * 1024 * 1024, // 10MB default
   accept = {
-    "image/*": [".png", ".jpg", ".jpeg", ".gif"],
-    "application/pdf": [".pdf"],
+    "application/pdf": [],
+    "image/jpeg": [],
+    "image/png": [],
+    "image/heic": [],
+    "image/webp": [],
   },
 }: {
   onChange?: (files: File[]) => void;
@@ -48,7 +51,10 @@ export const FileUpload = ({
     setFiles((prevFiles) => {
       const combined = [...prevFiles, ...newFiles];
       const limited = combined.slice(0, maxFiles);
-      onChange && onChange(limited);
+      // Call onChange in next tick to avoid setState during render
+      if (onChange) {
+        setTimeout(() => onChange(limited), 0);
+      }
       return limited;
     });
   };
@@ -72,7 +78,10 @@ export const FileUpload = ({
   const removeFile = (index: number) => {
     setFiles((prevFiles) => {
       const newFiles = prevFiles.filter((_, i) => i !== index);
-      onChange && onChange(newFiles);
+      // Call onChange in next tick to avoid setState during render
+      if (onChange) {
+        setTimeout(() => onChange(newFiles), 0);
+      }
       return newFiles;
     });
   };

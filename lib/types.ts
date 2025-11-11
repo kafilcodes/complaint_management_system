@@ -41,6 +41,7 @@ export interface User {
   phone?: string;
   photoURL?: string; // Profile photo URL from Firebase Storage
   role: UserRole;
+  department?: string; // Department (e.g., "Customer Service", "IT Support")
   storeId?: string; // Store identifier for store employees/managers
   storeName?: string; // Store name for display
   brand?: string; // Brand (KFC, Pizza Hut, Taco Bell)

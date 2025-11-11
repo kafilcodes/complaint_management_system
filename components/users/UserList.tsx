@@ -17,6 +17,8 @@ import {
   Store,
   User as UserIcon,
   ShieldCheck,
+  Building2,
+  Users,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EditUserDialog } from "./EditUserDialog";
@@ -125,6 +127,23 @@ const getRoleDescription = (role: string): string => {
     default:
       return "Standard user";
   }
+};
+
+// Helper to get department icon
+const getDepartmentIcon = (department: string | undefined) => {
+  if (!department) return <Building2 className="h-4 w-4" />;
+  
+  const dept = department.toLowerCase();
+  if (dept.includes("customer") || dept.includes("service")) {
+    return <Users className="h-4 w-4" />;
+  }
+  if (dept.includes("it") || dept.includes("tech")) {
+    return <Wrench className="h-4 w-4" />;
+  }
+  if (dept.includes("admin")) {
+    return <Shield className="h-4 w-4" />;
+  }
+  return <Building2 className="h-4 w-4" />;
 };
 
 // Helper to get user initials for avatar
@@ -302,16 +321,15 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
                 <TableHead className="w-[50px]"></TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
+                <TableHead>Department</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Last Login</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {!users || users.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="p-0">
+                  <TableCell colSpan={6} className="p-0">
                     <EmptyState
                       imageUrl="/no_users.svg"
                       title="No Users Found"
@@ -342,13 +360,18 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted hover:bg-muted/80 transition-colors cursor-help w-fit">
-                              {getRoleIcon(user.role)}
-                              <span className="text-sm font-medium">{roleLabels[user.role]}</span>
+                              {getDepartmentIcon(user.department)}
+                              <span className="text-sm font-medium">
+                                {user.department || "No Department"}
+                              </span>
                             </div>
                           </TooltipTrigger>
                           <TooltipContent side="right" className="max-w-xs">
-                            <p className="font-semibold">{roleLabels[user.role]}</p>
+                            <p className="font-semibold">{user.department || "No Department Assigned"}</p>
                             <p className="text-sm text-muted-foreground mt-1">
+                              Role: {roleLabels[user.role]}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
                               {getRoleDescription(user.role)}
                             </p>
                           </TooltipContent>
@@ -364,11 +387,6 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {user.lastLogin
-                        ? formatDistanceToNow(new Date(user.lastLogin), { addSuffix: true })
-                        : "Never"}
-                    </TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -380,10 +398,6 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => onEdit(user.id)}>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Edit User
-                          </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() =>
                               handleToggleStatus(user.id, user.disabled || false)

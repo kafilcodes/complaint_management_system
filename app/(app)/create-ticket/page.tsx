@@ -31,7 +31,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCreateTicket } from "@/hooks/useTicketData";
 import { useBrandList } from "@/hooks/useConfig";
 import { useUsers } from "@/hooks/useUsers";
-import { Loader2, ArrowLeft, Wrench, Upload, X, FileIcon } from "lucide-react";
+import { Loader2, ArrowLeft, Wrench, Upload, X, FileIcon, User, MapPin, Package, FileText } from "lucide-react";
 import type { TicketCreateInput } from "@/lib/types";
 import { toast } from "sonner";
 import { FileUpload } from "@/components/ui/file-upload";
@@ -52,7 +52,7 @@ const ticketFormSchema = z.object({
   issueDescription: z.string().min(10, "Issue description must be at least 10 characters"),
   comments: z.string().optional(),
   link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  assignedTo: z.string().min(1, "Please assign this ticket to a technician"),
+  assignedTo: z.string().min(1, "Please assign this ticket to an employee"),
 });
 
 type TicketFormValues = z.infer<typeof ticketFormSchema>;
@@ -68,9 +68,11 @@ export default function CreateTicketPage() {
   // Fetch brands from Firestore with 24-hour cache
   const { data: brands = [], isLoading: brandsLoading } = useBrandList();
   
-  // Fetch technicians for assignee combobox
-  const { data: allUsers = [], isLoading: usersLoading } = useUsers({ role: "it_technician" });
-  const technicians = allUsers;
+  // Fetch all employees for assignee combobox (exclude full_developer_admin)
+  const { data: allUsers = [], isLoading: usersLoading } = useUsers();
+  const employees = allUsers.filter(
+    (user) => user.role !== "full_developer_admin"
+  );
 
   const form = useForm<TicketFormValues>({
     resolver: zodResolver(ticketFormSchema),
@@ -149,12 +151,12 @@ export default function CreateTicketPage() {
     }
   }
   
-  // Convert technicians to combobox options
-  const technicianOptions: ComboboxOption[] = technicians.map((tech) => ({
-    value: tech.id,
-    label: tech.name,
-    email: tech.email,
-    role: tech.role,
+  // Convert employees to combobox options
+  const employeeOptions: ComboboxOption[] = employees.map((emp) => ({
+    value: emp.id,
+    label: emp.name,
+    email: emp.email,
+    role: emp.role,
   }));
 
   return (
@@ -176,7 +178,10 @@ export default function CreateTicketPage() {
           {/* Customer Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Customer Information</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Customer Information
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <FormField
@@ -243,7 +248,10 @@ export default function CreateTicketPage() {
           {/* Product Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Product Information</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                Product Information
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <FormField
@@ -324,7 +332,10 @@ export default function CreateTicketPage() {
           {/* Assignment & Link */}
           <Card>
             <CardHeader>
-              <CardTitle>Assignment & Reference</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Wrench className="h-5 w-5" />
+                Assignment & Reference
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <FormField
@@ -332,27 +343,27 @@ export default function CreateTicketPage() {
                 name="assignedTo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Assigned To <span className="text-destructive">*</span></FormLabel>
+                    <FormLabel>Assign to Employee <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Combobox
-                        options={technicianOptions}
+                        options={employeeOptions}
                         value={field.value}
                         onValueChange={field.onChange}
-                        placeholder="Select a technician..."
-                        searchPlaceholder="Search technicians..."
-                        emptyText="No technicians found."
+                        placeholder="Select an employee..."
+                        searchPlaceholder="Search employees..."
+                        emptyText="No employees found."
                         disabled={usersLoading}
                         renderOption={(option) => (
                           <div className="flex items-center gap-3">
                             <Avatar className="h-8 w-8">
                               <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                                <Wrench className="h-4 w-4" />
+                                {option.label.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col">
                               <span className="font-medium">{option.label}</span>
                               <span className="text-xs text-muted-foreground">
-                                {option.email}
+                                {option.role} • {option.email}
                               </span>
                             </div>
                           </div>
@@ -360,7 +371,7 @@ export default function CreateTicketPage() {
                       />
                     </FormControl>
                     <FormDescription>
-                      Select a technician to assign this ticket to
+                      Select an employee to assign this ticket to
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -393,7 +404,10 @@ export default function CreateTicketPage() {
           {/* Issue Details */}
           <Card>
             <CardHeader>
-              <CardTitle>Issue Details</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Issue Details
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <FormField
@@ -440,7 +454,10 @@ export default function CreateTicketPage() {
           {/* Attachments */}
           <Card>
             <CardHeader>
-              <CardTitle>Attachments (Optional)</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Upload className="h-5 w-5" />
+                Attachments (Optional)
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
@@ -470,7 +487,10 @@ export default function CreateTicketPage() {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={createTicket.isPending || isUploading}>
+            <Button 
+              type="submit" 
+              disabled={createTicket.isPending || isUploading || !form.formState.isValid}
+            >
               {(createTicket.isPending || isUploading) && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}

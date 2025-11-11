@@ -1,22 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/firebase/admin";
 
-interface RouteContext {
-  params: {
-    id: string;
-  };
-}
-
 /**
  * GET /api/users/[id]
  * Get a single user by ID (admin only)
  */
 export async function GET(
   request: NextRequest,
-  context: RouteContext
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = context.params;
+    const { id } = await params;
 
     // Fetch user from Firestore
     const userDoc = await adminDb.collection("users").doc(id).get();
@@ -57,10 +51,10 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  context: RouteContext
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = context.params;
+    const { id } = await params;
 
     // Parse request body
     const body = await request.json();
@@ -171,10 +165,10 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  context: RouteContext
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = context.params;
+    const { id } = await params;
 
     // Get reassign parameter
     const { searchParams } = new URL(request.url);
@@ -288,7 +282,8 @@ export async function DELETE(
     if (error.code === "auth/user-not-found") {
       // If auth user not found but Firestore exists, delete Firestore doc
       try {
-        await adminDb.collection("users").doc(context.params.id).delete();
+        const { id: fallbackId } = await params;
+        await adminDb.collection("users").doc(fallbackId).delete();
         return NextResponse.json({
           success: true,
           message: "User deleted from Firestore (Auth record not found)",
