@@ -52,6 +52,38 @@ export interface TicketReportData {
     count: number;
     percentage: number;
   }>;
+  
+  // Monthly stats
+  monthlyStats?: {
+    total: number;
+    open: number;
+    closed: number;
+    tickets: Array<{
+      id: string;
+      productName: string;
+      customerName: string;
+      status: string;
+      brand: string;
+      createdAt: string;
+      assignedToName?: string | null;
+    }>;
+  };
+  
+  // Yearly stats
+  yearlyStats?: {
+    total: number;
+    open: number;
+    closed: number;
+    tickets: Array<{
+      id: string;
+      productName: string;
+      customerName: string;
+      status: string;
+      brand: string;
+      createdAt: string;
+      assignedToName?: string | null;
+    }>;
+  };
 }
 
 // ==============================================================================
@@ -336,7 +368,7 @@ export const TicketReport: React.FC<{ data: TicketReportData }> = ({ data }) => 
 
         {/* Statistics Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📊 Key Statistics</Text>
+          <Text style={styles.sectionTitle}>Key Statistics</Text>
           <View style={styles.statsGrid}>
             {/* Total Tickets */}
             <View style={styles.statCard}>
@@ -384,7 +416,7 @@ export const TicketReport: React.FC<{ data: TicketReportData }> = ({ data }) => 
           {/* Summary Box */}
           <View style={styles.summaryBox}>
             <Text style={styles.summaryText}>
-              📈 Overview: Currently managing {data.totalTickets} total tickets
+              Overview: Currently managing {data.totalTickets} total tickets
               with {data.openTickets} active cases requiring attention.{" "}
               {data.closedTickets} tickets have been successfully resolved,
               achieving a {resolutionRate}% resolution rate. This week saw{" "}
@@ -397,7 +429,7 @@ export const TicketReport: React.FC<{ data: TicketReportData }> = ({ data }) => 
         {/* Brand Breakdown Chart */}
         {data.brandBreakdown.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>📊 Tickets by Brand</Text>
+            <Text style={styles.sectionTitle}>Tickets by Brand</Text>
             <View style={styles.chartContainer}>
               <Text style={styles.chartTitle}>Distribution Breakdown</Text>
               {data.brandBreakdown.map((item, index) => (
@@ -423,7 +455,7 @@ export const TicketReport: React.FC<{ data: TicketReportData }> = ({ data }) => 
         {/* Tickets List */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
-            📋 Recent Tickets ({data.tickets.length})
+            Recent Tickets ({data.tickets.length})
           </Text>
           <View style={styles.table}>
             {/* Table Header */}
@@ -496,10 +528,164 @@ export const TicketReport: React.FC<{ data: TicketReportData }> = ({ data }) => 
         <View style={styles.footer}>
           <Text>
             {data.appName} © {new Date().getFullYear()} - Confidential Document
-            - Page 1 of 1
+            - Page 1 of 2
           </Text>
         </View>
       </Page>
+
+      {/* Page 2: Monthly & Yearly Details */}
+      {(data.monthlyStats || data.yearlyStats) && (
+        <Page size="A4" style={styles.page}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.logoContainer}>
+              <Image src="/logo.png" style={styles.logo} />
+              <View>
+                <Text style={styles.headerTitle}>
+                  {data.appName} - Monthly & Yearly Analysis
+                </Text>
+                <Text style={styles.headerSubtitle}>
+                  Detailed Breakdown by Time Period
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.generatedDate}>
+              Report Period: {new Date().toLocaleDateString("en-US", {
+                month: "long",
+                year: "numeric",
+              })}
+            </Text>
+          </View>
+
+          {/* Monthly Statistics */}
+          {data.monthlyStats && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>
+                Current Month ({new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })})
+              </Text>
+              <View style={styles.statsGrid}>
+                <View style={styles.statCard}>
+                  <Text style={styles.statLabel}>Total This Month</Text>
+                  <Text style={styles.statValue}>{data.monthlyStats.total}</Text>
+                  <Text style={styles.statDescription}>All tickets</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Text style={styles.statLabel}>Open</Text>
+                  <Text style={styles.statValue}>{data.monthlyStats.open}</Text>
+                  <Text style={styles.statDescription}>Active cases</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Text style={styles.statLabel}>Closed</Text>
+                  <Text style={styles.statValue}>{data.monthlyStats.closed}</Text>
+                  <Text style={styles.statDescription}>
+                    {data.monthlyStats.total > 0
+                      ? Math.round((data.monthlyStats.closed / data.monthlyStats.total) * 100)
+                      : 0}% resolved
+                  </Text>
+                </View>
+              </View>
+
+              {/* Monthly Tickets Table */}
+              {data.monthlyStats.tickets.length > 0 && (
+                <View style={styles.table}>
+                  <Text style={styles.chartTitle}>Recent Tickets This Month</Text>
+                  <View style={styles.tableHeader}>
+                    <Text style={[styles.tableHeaderCell, styles.colId]}>Ticket ID</Text>
+                    <Text style={[styles.tableHeaderCell, styles.colProduct]}>Product</Text>
+                    <Text style={[styles.tableHeaderCell, styles.colCustomer]}>Customer</Text>
+                    <Text style={[styles.tableHeaderCell, styles.colBrand]}>Brand</Text>
+                    <Text style={[styles.tableHeaderCell, styles.colStatus]}>Status</Text>
+                    <Text style={[styles.tableHeaderCell, styles.colDate]}>Date</Text>
+                  </View>
+                  {data.monthlyStats.tickets.slice(0, 15).map((ticket, index) => (
+                    <View
+                      key={ticket.id}
+                      style={[
+                        styles.tableRow,
+                        index % 2 === 1 ? styles.tableRowOdd : {},
+                      ]}
+                    >
+                      <Text style={[styles.tableCell, styles.colId]}>
+                        {formatTicketId(ticket.id)}
+                      </Text>
+                      <Text style={[styles.tableCell, styles.colProduct]}>
+                        {ticket.productName}
+                      </Text>
+                      <Text style={[styles.tableCell, styles.colCustomer]}>
+                        {ticket.customerName}
+                      </Text>
+                      <Text style={[styles.tableCell, styles.colBrand]}>
+                        {ticket.brand}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.tableCell,
+                          styles.colStatus,
+                          ticket.status === "open"
+                            ? styles.statusOpen
+                            : styles.statusClosed,
+                        ]}
+                      >
+                        {ticket.status.toUpperCase()}
+                      </Text>
+                      <Text style={[styles.tableCell, styles.colDate]}>
+                        {formatDate(ticket.createdAt)}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Yearly Statistics */}
+          {data.yearlyStats && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>
+                Year {new Date().getFullYear()} Summary
+              </Text>
+              <View style={styles.statsGrid}>
+                <View style={styles.statCard}>
+                  <Text style={styles.statLabel}>Total This Year</Text>
+                  <Text style={styles.statValue}>{data.yearlyStats.total}</Text>
+                  <Text style={styles.statDescription}>All tickets</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Text style={styles.statLabel}>Open</Text>
+                  <Text style={styles.statValue}>{data.yearlyStats.open}</Text>
+                  <Text style={styles.statDescription}>Active cases</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Text style={styles.statLabel}>Closed</Text>
+                  <Text style={styles.statValue}>{data.yearlyStats.closed}</Text>
+                  <Text style={styles.statDescription}>
+                    {data.yearlyStats.total > 0
+                      ? Math.round((data.yearlyStats.closed / data.yearlyStats.total) * 100)
+                      : 0}% resolved
+                  </Text>
+                </View>
+              </View>
+
+              {/* Summary box for yearly */}
+              <View style={styles.summaryBox}>
+                <Text style={styles.summaryText}>
+                  Year-to-Date Performance: {data.yearlyStats.total} tickets processed with{" "}
+                  {data.yearlyStats.closed} successfully resolved. Average monthly volume:{" "}
+                  {Math.round(data.yearlyStats.total / (new Date().getMonth() + 1))} tickets.
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text>
+              {data.appName} © {new Date().getFullYear()} - Confidential Document
+              - Page 2 of 2
+            </Text>
+          </View>
+        </Page>
+      )}
     </Document>
   );
 };

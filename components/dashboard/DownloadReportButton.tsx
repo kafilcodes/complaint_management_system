@@ -42,6 +42,11 @@ export function DownloadReportButton({ stats, tickets }: DownloadReportButtonPro
   const reportData = useMemo<TicketReportData>(() => {
     // Get app name from environment or default
     const appName = process.env.NEXT_PUBLIC_APP_NAME || "ServiceFirst";
+    
+    // Get current month and year
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
 
     // Calculate brand breakdown
     const brandCounts: Record<string, number> = {};
@@ -58,10 +63,33 @@ export function DownloadReportButton({ stats, tickets }: DownloadReportButtonPro
       }))
       .sort((a, b) => b.count - a.count);
 
-    // Prepare tickets list with user names
-    const ticketsWithNames = tickets
-      .slice(0, 50) // Limit to 50 for PDF size
-      .map((ticket) => {
+    // Helper function to convert ticket date
+    const getTicketDate = (ticket: Ticket): Date => {
+      if (typeof ticket.createdAt === "string") {
+        return new Date(ticket.createdAt);
+      } else if (ticket.createdAt instanceof Date) {
+        return ticket.createdAt;
+      } else if (ticket.createdAt && typeof (ticket.createdAt as Timestamp).toDate === "function") {
+        return (ticket.createdAt as Timestamp).toDate();
+      }
+      return new Date();
+    };
+
+    // Filter tickets for current month
+    const monthTickets = tickets.filter((ticket) => {
+      const ticketDate = getTicketDate(ticket);
+      return ticketDate.getMonth() === currentMonth && ticketDate.getFullYear() === currentYear;
+    });
+
+    // Filter tickets for current year
+    const yearTickets = tickets.filter((ticket) => {
+      const ticketDate = getTicketDate(ticket);
+      return ticketDate.getFullYear() === currentYear;
+    });
+
+    // Prepare tickets list with user names (recent 30)
+    const prepareTicketData = (ticketsList: Ticket[], limit: number = 30) => {
+      return ticketsList.slice(0, limit).map((ticket) => {
         const assignedUser = ticket.assignedTo
           ? users.find((u) => u.id === ticket.assignedTo)
           : null;
@@ -88,6 +116,7 @@ export function DownloadReportButton({ stats, tickets }: DownloadReportButtonPro
           assignedToName: assignedUser?.name || null,
         };
       });
+    };
 
     return {
       generatedAt: new Date().toISOString(),
@@ -98,8 +127,22 @@ export function DownloadReportButton({ stats, tickets }: DownloadReportButtonPro
       newThisWeek: stats.trends.newTickets,
       resolvedThisWeek: stats.trends.resolvedTickets,
       newTicketsChange: stats.trends.newTicketsChange,
-      tickets: ticketsWithNames,
+      tickets: prepareTicketData(tickets, 30),
       brandBreakdown,
+      // Monthly data
+      monthlyStats: {
+        total: monthTickets.length,
+        open: monthTickets.filter((t) => t.status === "open").length,
+        closed: monthTickets.filter((t) => t.status === "closed").length,
+        tickets: prepareTicketData(monthTickets, 20),
+      },
+      // Yearly data
+      yearlyStats: {
+        total: yearTickets.length,
+        open: yearTickets.filter((t) => t.status === "open").length,
+        closed: yearTickets.filter((t) => t.status === "closed").length,
+        tickets: prepareTicketData(yearTickets, 30),
+      },
     };
   }, [stats, tickets, users]);
 
@@ -126,7 +169,7 @@ export function DownloadReportButton({ stats, tickets }: DownloadReportButtonPro
           disabled={loading}
           variant="outline"
           size="sm"
-          className="gap-2 text-green"
+          className="gap-2 hover:bg-primary hover:text-primary-foreground hover:border-primary group transition-colors"
         >
           {loading ? (
             <>
@@ -135,7 +178,7 @@ export function DownloadReportButton({ stats, tickets }: DownloadReportButtonPro
             </>
           ) : (
             <>
-              <Download className="h-4 w-4 hover:text-[#40e0d0]" />
+              <Download className="h-4 w-4 group-hover:text-inherit transition-colors" />
               Download Report
             </>
           )}
