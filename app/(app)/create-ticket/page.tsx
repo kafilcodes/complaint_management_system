@@ -26,17 +26,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCreateTicket } from "@/hooks/useTicketData";
 import { useBrandList } from "@/hooks/useConfig";
 import { useUsers } from "@/hooks/useUsers";
-import { Loader2, ArrowLeft, Wrench, Upload, X, FileIcon, User, MapPin, Package, FileText, Building2, Mail } from "lucide-react";
+import { useAttachmentUpload } from "@/hooks/use-attachment-upload";
+import { useStore } from "@/lib/store";
+import { Loader2, ArrowLeft, Wrench, Upload, X, FileIcon, User, MapPin, Package, FileText, Building2, Mail, Phone, Calendar } from "lucide-react";
 import type { TicketCreateInput } from "@/lib/types";
 import { toast } from "sonner";
 import { FileUpload } from "@/components/ui/file-upload";
-import { uploadFiles } from "@/lib/upload-helpers";
-import { doc, updateDoc } from "firebase/firestore";
+import { UploadProgressDisplay } from "@/components/ui/upload-progress";
+import { doc, updateDoc, Timestamp } from "firebase/firestore";
 import { db } from "@/firebase/client";
 
 // Form validation schema
@@ -59,11 +61,15 @@ type TicketFormValues = z.infer<typeof ticketFormSchema>;
 
 export default function CreateTicketPage() {
   const router = useRouter();
+  const currentUser = useStore((state) => state.user);
   const createTicket = useCreateTicket();
   
-  // File attachments state (max 3 files, max 10MB each)
+  // File attachments state
   const [attachments, setAttachments] = useState<File[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Generate a temporary ticket ID for storage path (will be used if ticket is created)
+  const [tempTicketId] = useState(() => `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   
   // Fetch brands from Firestore with 24-hour cache
   const { data: brands = [], isLoading: brandsLoading } = useBrandList();
@@ -75,6 +81,13 @@ export default function CreateTicketPage() {
       user.role !== "full_developer_admin" && 
       user.role !== "it_admin"
   );
+
+  // Initialize attachment upload hook with temp ID (files will be uploaded to temp path)
+  const attachmentUpload = useAttachmentUpload({
+    maxFiles: 5,
+    maxSizePerFile: 10, // 10MB
+    storagePath: `ticket-attachments/${tempTicketId}`,
+  });
 
   const form = useForm<TicketFormValues>({
     resolver: zodResolver(ticketFormSchema),
@@ -95,10 +108,51 @@ export default function CreateTicketPage() {
   });
 
   async function onSubmit(values: TicketFormValues) {
+    if (isSubmitting) return;
+    
     try {
-      setIsUploading(true);
+      setIsSubmitting(true);
       
-      // Step 1: Create the ticket first
+      // Step 1: Validate attachments first (before creating ticket)
+      if (attachments.length > 0) {
+        for (const file of attachments) {
+          const validation = attachmentUpload.validateFile(file);
+          if (!validation.valid) {
+            toast.error("Invalid file", { description: validation.error });
+            setIsSubmitting(false);
+            return;
+          }
+        }
+      }
+      
+      // Step 2: Upload attachments first (if any) to temp location
+      let uploadedMetadata: Array<{
+        fileName: string;
+        fileSize: number;
+        fileType: string;
+        downloadURL: string;
+        storagePath: string;
+        uploadedAt: Date;
+      }> = [];
+      
+      if (attachments.length > 0) {
+        try {
+          uploadedMetadata = await attachmentUpload.uploadFiles(attachments);
+          
+          if (uploadedMetadata.length === 0) {
+            throw new Error("No files were uploaded successfully");
+          }
+        } catch (uploadError: any) {
+          console.error("Error uploading attachments:", uploadError);
+          toast.error("Failed to upload attachments", {
+            description: uploadError.message || "Please try again",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      }
+      
+      // Step 3: Create the ticket with attachment data
       const ticketData: TicketCreateInput = {
         customerName: values.customerName,
         customerPhone: values.customerPhone,
@@ -115,37 +169,60 @@ export default function CreateTicketPage() {
 
       const result = await createTicket.mutateAsync(ticketData);
       
-      // Step 2: Upload attachments if any
-      if (attachments.length > 0 && result?.ticketId) {
-        const ticketId = result.ticketId;
-        const storagePath = `ticket-attachments/${ticketId}`;
-        
+      if (!result?.ticketId) {
+        throw new Error("Failed to create ticket - no ticket ID returned");
+      }
+
+      const newTicketId = result.ticketId;
+      
+      // Step 4: Update ticket document with attachment metadata if uploads succeeded
+      if (uploadedMetadata.length > 0) {
         try {
-          // Upload files to Firebase Storage
-          const downloadURLs = await uploadFiles(attachments, storagePath);
-          
-          // Step 3: Update the ticket document with attachment URLs
-          const ticketRef = doc(db, "tickets", ticketId);
+          const ticketRef = doc(db, "tickets", newTicketId);
           await updateDoc(ticketRef, {
-            attachmentUrls: downloadURLs,
-            updatedAt: new Date(),
+            attachments: uploadedMetadata.map((meta) => ({
+              fileName: meta.fileName,
+              fileSize: meta.fileSize,
+              fileType: meta.fileType,
+              downloadURL: meta.downloadURL,
+              storagePath: meta.storagePath,
+              uploadedAt: Timestamp.now(),
+              uploadedBy: currentUser?.id || "unknown",
+            })),
+            attachmentUrls: uploadedMetadata.map((meta) => meta.downloadURL),
+            updatedAt: Timestamp.now(),
           });
           
-          // Success toast already shown by createTicket hook, don't duplicate
-        } catch (uploadError) {
-          console.error("Error uploading attachments:", uploadError);
-          toast.warning("Ticket created but attachments failed to upload");
+          console.log(`✅ Uploaded ${uploadedMetadata.length} attachments for ticket ${newTicketId}`);
+        } catch (updateError: any) {
+          console.error("Error updating ticket with attachments:", updateError);
+          toast.warning("Ticket created but failed to attach files", {
+            description: "You can try adding attachments later",
+          });
         }
       }
-      // Note: Success toast is handled by the useCreateTicket hook
       
-      // Navigate to tickets page on success
+      // Step 5: Success - navigate to tickets page
+      toast.success("Ticket created successfully", {
+        description: uploadedMetadata.length > 0 
+          ? `With ${uploadedMetadata.length} attachment(s)` 
+          : undefined,
+      });
+      
+      // Reset form and attachments
+      form.reset();
+      setAttachments([]);
+      attachmentUpload.reset();
+      
       router.push("/tickets");
-    } catch (error) {
-      // Error handling is done in the hook - don't show duplicate error toast
+      
+    } catch (error: any) {
       console.error("Error creating ticket:", error);
+      toast.error("Failed to create ticket", {
+        description: error.message || "Please try again",
+      });
     } finally {
-      setIsUploading(false);
+      setIsSubmitting(false);
     }
   }
   
@@ -471,19 +548,29 @@ export default function CreateTicketPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
+              <div className="space-y-4">
                 <FileUpload
                   onChange={(files) => setAttachments(files)}
-                  maxFiles={3}
+                  maxFiles={5}
                   maxSize={10 * 1024 * 1024} // 10MB
                   accept={{
-                    "image/*": [".png", ".jpg", ".jpeg", ".gif"],
+                    "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp", ".heic"],
                     "application/pdf": [".pdf"],
+                    "application/msword": [".doc"],
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
                   }}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Upload up to 3 files (images or PDFs, max 10MB each)
+                  Upload up to 5 files (images, PDFs, or documents - max 10MB each)
                 </p>
+                
+                {/* Upload Progress */}
+                {attachmentUpload.isUploading && (
+                  <UploadProgressDisplay
+                    uploads={attachmentUpload.uploads}
+                    overallProgress={attachmentUpload.overallProgress}
+                  />
+                )}
               </div>
             </CardContent>
           </Card>
@@ -494,18 +581,18 @@ export default function CreateTicketPage() {
               type="button"
               variant="outline"
               onClick={() => router.back()}
-              disabled={createTicket.isPending || isUploading}
+              disabled={createTicket.isPending || isSubmitting || attachmentUpload.isUploading}
             >
               Cancel
             </Button>
             <Button 
               type="submit" 
-              disabled={createTicket.isPending || isUploading || !form.formState.isValid}
+              disabled={createTicket.isPending || isSubmitting || attachmentUpload.isUploading || !form.formState.isValid}
             >
-              {(createTicket.isPending || isUploading) && (
+              {(createTicket.isPending || isSubmitting || attachmentUpload.isUploading) && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              {isUploading ? "Uploading..." : "Create Ticket"}
+              {attachmentUpload.isUploading ? "Uploading..." : isSubmitting ? "Creating..." : "Create Ticket"}
             </Button>
           </div>
         </form>

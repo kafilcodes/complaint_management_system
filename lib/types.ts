@@ -134,11 +134,26 @@ export interface Ticket {
   issueDescription: string;
   comments?: string | null;
   
-  // Attachments (Firebase Storage URLs)
+  // Attachments (Firebase Storage URLs or metadata)
   attachmentUrls?: string[];
+  attachments?: TicketAttachment[];
   
   // Timeline (Activity log)
   timeline?: TimelineEvent[];
+}
+
+/**
+ * Ticket Attachment metadata
+ * Stored as array in ticket document or as subcollection
+ */
+export interface TicketAttachment {
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  downloadURL: string;
+  storagePath: string;
+  uploadedAt: Timestamp | Date;
+  uploadedBy: string; // UID
 }
 
 /**
