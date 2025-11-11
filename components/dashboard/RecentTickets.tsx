@@ -82,17 +82,22 @@ export function RecentTickets({ tickets, isLoading }: RecentTicketsProps) {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Recent Tickets</CardTitle>
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/tickets">
+      <CardHeader className="flex flex-row items-center justify-between pb-3">
+        <div className="flex items-center gap-2">
+          <div className="rounded-full bg-primary/10 p-2">
+            <Clock className="h-4 w-4 text-primary" />
+          </div>
+          <CardTitle className="text-lg font-semibold">Recent Tickets</CardTitle>
+        </div>
+        <Button variant="ghost" size="sm" asChild className="text-primary hover:text-primary/80">
+          <Link href="/tickets" className="flex items-center gap-1.5">
             View all
-            <ArrowRight className="h-4 w-4 ml-2" />
+            <ArrowRight className="h-4 w-4" />
           </Link>
         </Button>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {tickets.map((ticket) => {
+      <CardContent className="space-y-2">
+        {tickets.slice(0, 5).map((ticket, index) => {
           const statusColor = getColorByValue(TICKET_STATUSES, ticket.status);
           const timeAgo = formatDistanceToNow(new Date(ticket.createdAt), {
             addSuffix: true,
@@ -104,31 +109,36 @@ export function RecentTickets({ tickets, isLoading }: RecentTicketsProps) {
               href={`/tickets/${ticket.id}`}
               className="block group"
             >
-              <div className="flex items-start gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
-                <div className="flex-1 min-w-0 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-sm truncate group-hover:text-primary transition-colors">
+              <div className="flex items-start gap-3 p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-muted/50 transition-all">
+                {/* Ticket Number Badge */}
+                <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-xs">
+                  {index + 1}
+                </div>
+
+                <div className="flex-1 min-w-0 space-y-1.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-semibold text-sm truncate group-hover:text-primary transition-colors">
                       {ticket.productName}
                     </p>
-                    <Badge className={cn("text-xs flex items-center gap-1", statusColor)}>
+                    <Badge className={cn("text-xs flex items-center gap-1 flex-shrink-0", statusColor)}>
                       {getStatusIcon(ticket.status)}
                       {getLabelByValue(TICKET_STATUSES, ticket.status)}
                     </Badge>
                   </div>
                   
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <User className="h-3 w-3" />
-                      <span className="truncate">{ticket.customerName}</span>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                      <User className="h-3.5 w-3.5" />
+                      <span className="truncate max-w-[150px]">{ticket.customerName}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5" />
                       <span>{timeAgo}</span>
                     </div>
                   </div>
                 </div>
 
-                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0 mt-1" />
+                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all flex-shrink-0 mt-1" />
               </div>
             </Link>
           );
