@@ -45,7 +45,7 @@
 
 :root {
   --radius: 0.625rem;
-  --background: 210 40% 96.1%;
+  --background: oklch(0.945 0.01 240); /* Darker white shade - was 96.1% lightness, now 94.5% */
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -81,7 +81,7 @@
 }
 
 .dark {
-  --background: 224 71% 4%;
+  --background: oklch(0.15 0.01 240); /* Dark mode background */
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
