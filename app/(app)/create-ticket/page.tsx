@@ -31,7 +31,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCreateTicket } from "@/hooks/useTicketData";
 import { useBrandList } from "@/hooks/useConfig";
 import { useUsers } from "@/hooks/useUsers";
-import { Loader2, ArrowLeft, Wrench, Upload, X, FileIcon, User, MapPin, Package, FileText } from "lucide-react";
+import { Loader2, ArrowLeft, Wrench, Upload, X, FileIcon, User, MapPin, Package, FileText, Building2, Mail } from "lucide-react";
 import type { TicketCreateInput } from "@/lib/types";
 import { toast } from "sonner";
 import { FileUpload } from "@/components/ui/file-upload";
@@ -68,10 +68,12 @@ export default function CreateTicketPage() {
   // Fetch brands from Firestore with 24-hour cache
   const { data: brands = [], isLoading: brandsLoading } = useBrandList();
   
-  // Fetch all employees for assignee combobox (exclude full_developer_admin)
+  // Fetch all employees for assignee combobox (exclude full_developer_admin and admins)
   const { data: allUsers = [], isLoading: usersLoading } = useUsers();
   const employees = allUsers.filter(
-    (user) => user.role !== "full_developer_admin"
+    (user) => 
+      user.role !== "full_developer_admin" && 
+      user.role !== "it_admin"
   );
 
   const form = useForm<TicketFormValues>({
@@ -115,8 +117,6 @@ export default function CreateTicketPage() {
       
       // Step 2: Upload attachments if any
       if (attachments.length > 0 && result?.ticketId) {
-        toast.info(`Uploading ${attachments.length} file(s)...`);
-        
         const ticketId = result.ticketId;
         const storagePath = `ticket-attachments/${ticketId}`;
         
@@ -131,21 +131,19 @@ export default function CreateTicketPage() {
             updatedAt: new Date(),
           });
           
-          toast.success(`Ticket created with ${downloadURLs.length} attachment(s)`);
+          // Success toast already shown by createTicket hook, don't duplicate
         } catch (uploadError) {
           console.error("Error uploading attachments:", uploadError);
           toast.warning("Ticket created but attachments failed to upload");
         }
-      } else {
-        toast.success("Ticket created successfully");
       }
+      // Note: Success toast is handled by the useCreateTicket hook
       
       // Navigate to tickets page on success
       router.push("/tickets");
     } catch (error) {
-      // Error handling is done in the hook
+      // Error handling is done in the hook - don't show duplicate error toast
       console.error("Error creating ticket:", error);
-      toast.error("Failed to create ticket");
     } finally {
       setIsUploading(false);
     }
@@ -157,6 +155,7 @@ export default function CreateTicketPage() {
     label: emp.name,
     email: emp.email,
     role: emp.role,
+    department: emp.department || "No Department",
   }));
 
   return (
@@ -191,7 +190,7 @@ export default function CreateTicketPage() {
                   <FormItem>
                     <FormLabel>Customer Name <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
-                      <Input placeholder="John Doe" {...field} />
+                      <Input placeholder="John Doe" maxLength={100} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -205,7 +204,7 @@ export default function CreateTicketPage() {
                   <FormItem>
                     <FormLabel>Phone Number <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
-                      <Input placeholder="+1234567890" {...field} />
+                      <Input placeholder="+1234567890" maxLength={20} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -221,6 +220,7 @@ export default function CreateTicketPage() {
                     <FormControl>
                       <Textarea 
                         placeholder="123 Main St, City, State" 
+                        maxLength={500}
                         {...field} 
                       />
                     </FormControl>
@@ -236,7 +236,7 @@ export default function CreateTicketPage() {
                   <FormItem>
                     <FormLabel>Pincode <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
-                      <Input placeholder="12345" {...field} />
+                      <Input placeholder="12345" maxLength={10} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -292,7 +292,7 @@ export default function CreateTicketPage() {
                   <FormItem>
                     <FormLabel>Product Name <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Point of Sale System" {...field} />
+                      <Input placeholder="e.g., Point of Sale System" maxLength={200} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -306,7 +306,7 @@ export default function CreateTicketPage() {
                   <FormItem>
                     <FormLabel>Product Model</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., POS-2024-X" {...field} />
+                      <Input placeholder="e.g., POS-2024-X" maxLength={100} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -350,9 +350,10 @@ export default function CreateTicketPage() {
                         value={field.value}
                         onValueChange={field.onChange}
                         placeholder="Select an employee..."
-                        searchPlaceholder="Search employees..."
+                        searchPlaceholder="Search by name, email, or department..."
                         emptyText="No employees found."
                         disabled={usersLoading}
+                        searchFields={["label", "email", "department"]}
                         renderOption={(option) => (
                           <div className="flex items-center gap-3">
                             <Avatar className="h-8 w-8">
@@ -360,11 +361,18 @@ export default function CreateTicketPage() {
                                 {option.label.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
                               </AvatarFallback>
                             </Avatar>
-                            <div className="flex flex-col">
-                              <span className="font-medium">{option.label}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {option.role} • {option.email}
-                              </span>
+                            <div className="flex flex-col flex-1 min-w-0">
+                              <span className="font-medium truncate">{option.label}</span>
+                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <Building2 className="h-3 w-3" />
+                                  {option.department}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Mail className="h-3 w-3" />
+                                  {option.email}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         )}
@@ -388,6 +396,7 @@ export default function CreateTicketPage() {
                       <Input 
                         type="url"
                         placeholder="https://example.com/reference" 
+                        maxLength={500}
                         {...field} 
                       />
                     </FormControl>
@@ -420,6 +429,7 @@ export default function CreateTicketPage() {
                       <Textarea 
                         placeholder="Describe the issue in detail..."
                         rows={4}
+                        maxLength={2000}
                         {...field} 
                       />
                     </FormControl>
@@ -441,6 +451,7 @@ export default function CreateTicketPage() {
                       <Textarea 
                         placeholder="Any additional information..."
                         rows={3}
+                        maxLength={1000}
                         {...field} 
                       />
                     </FormControl>

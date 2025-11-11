@@ -49,6 +49,7 @@ interface ComboboxProps {
   className?: string;
   disabled?: boolean;
   renderOption?: (option: ComboboxOption) => React.ReactNode;
+  searchFields?: string[]; // Fields to search across
 }
 
 export function Combobox({
@@ -61,10 +62,28 @@ export function Combobox({
   className,
   disabled = false,
   renderOption,
+  searchFields = ["label"], // Default to searching label only
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
+  const [searchTerm, setSearchTerm] = React.useState("");
 
   const selectedOption = options.find((option) => option.value === value);
+
+  // Multi-field search filter
+  const filteredOptions = React.useMemo(() => {
+    if (!searchTerm) return options;
+
+    const lowerSearch = searchTerm.toLowerCase();
+    return options.filter((option) => {
+      return searchFields.some((field) => {
+        const fieldValue = option[field];
+        if (typeof fieldValue === "string") {
+          return fieldValue.toLowerCase().includes(lowerSearch);
+        }
+        return false;
+      });
+    });
+  }, [options, searchTerm, searchFields]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -87,12 +106,16 @@ export function Combobox({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
-        <Command>
-          <CommandInput placeholder={searchPlaceholder} />
+        <Command shouldFilter={false}>
+          <CommandInput 
+            placeholder={searchPlaceholder} 
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+          />
           <CommandList>
             <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup>
-              {options.map((option) => (
+              {filteredOptions.map((option) => (
                 <CommandItem
                   key={option.value}
                   value={option.value}

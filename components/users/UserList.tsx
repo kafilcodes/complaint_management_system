@@ -210,15 +210,20 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
   });
 
   const handleToggleStatus = (userId: string, currentDisabled: boolean) => {
+    if (!userId) {
+      toast.error("Failed to deactivate", { description: "No user selected" });
+      return;
+    }
     setToggleUserId(userId);
     setToggleIsActive(currentDisabled); // If currently disabled, we want to activate (isActive = true)
   };
 
   const confirmToggleStatus = () => {
-    if (toggleUserId) {
-      toggleStatus.mutate(toggleIsActive);
-      setToggleUserId(null);
+    if (!toggleUserId) {
+      toast.error("Failed to update status", { description: "No user selected" });
+      return;
     }
+    toggleStatus.mutate(toggleIsActive);
   };
 
   // Loading state
@@ -446,7 +451,7 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
         open={toggleUserId !== null}
         onOpenChange={(open: boolean) => !open && setToggleUserId(null)}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-background">
           <AlertDialogHeader>
             <AlertDialogTitle>
               {toggleIsActive ? "Activate User" : "Deactivate User"}
