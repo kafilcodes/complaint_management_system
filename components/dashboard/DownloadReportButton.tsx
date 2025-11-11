@@ -126,7 +126,7 @@ export function DownloadReportButton({ stats, tickets }: DownloadReportButtonPro
           disabled={loading}
           variant="outline"
           size="sm"
-          className="gap-2"
+          className="gap-2 text-green"
         >
           {loading ? (
             <>
@@ -135,7 +135,7 @@ export function DownloadReportButton({ stats, tickets }: DownloadReportButtonPro
             </>
           ) : (
             <>
-              <Download className="h-4 w-4" />
+              <Download className="h-4 w-4 hover:text-[#40e0d0]" />
               Download Report
             </>
           )}

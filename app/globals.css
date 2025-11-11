@@ -50,7 +50,7 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(0.945 0.01 240); /* Darker white shade - was 96.1% lightness, now 94.5% */
+  --background: oklch(0.961 0.01 240); /* Light white shade - reverted to 96.1% lightness */
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
