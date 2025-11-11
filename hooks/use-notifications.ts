@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/store";
 import type { Notification } from "@/app/api/notifications/route";
 
 interface UseNotificationsOptions {
@@ -18,10 +19,19 @@ interface NotificationsResponse {
  * Hook to fetch notifications for the current user
  */
 export function useNotifications(options: UseNotificationsOptions = {}) {
+  const { user } = useAuth();
+  
   return useQuery<NotificationsResponse>({
-    queryKey: ["notifications", options],
+    queryKey: ["notifications", user?.id, options],
     queryFn: async () => {
+      console.log('[useNotifications] Fetching notifications for user:', user?.id);
+      
+      if (!user?.id) {
+        throw new Error("User not authenticated");
+      }
+      
       const params = new URLSearchParams();
+      params.append("userId", user.id);
       
       if (options.read !== undefined) {
         params.append("read", String(options.read));
@@ -35,10 +45,14 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
 
       const response = await fetch(`/api/notifications?${params}`);
       if (!response.ok) {
+        console.error('[useNotifications] Fetch failed:', response.status);
         throw new Error("Failed to fetch notifications");
       }
-      return response.json();
+      const data = await response.json();
+      console.log('[useNotifications] Fetched notifications:', data.data?.length || 0);
+      return data;
     },
+    enabled: !!user?.id,
     refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
   });
 }
@@ -47,16 +61,32 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
  * Hook to fetch unread notification count only
  */
 export function useUnreadCount() {
+  const { user } = useAuth();
+  
   return useQuery<number>({
-    queryKey: ["notifications", "unread-count"],
+    queryKey: ["notifications", "unread-count", user?.id],
     queryFn: async () => {
-      const response = await fetch("/api/notifications?read=false&limit=1");
+      console.log('[useUnreadCount] Fetching unread count for user:', user?.id);
+      
+      if (!user?.id) {
+        return 0;
+      }
+      
+      const params = new URLSearchParams();
+      params.append("userId", user.id);
+      params.append("read", "false");
+      params.append("limit", "1");
+      
+      const response = await fetch(`/api/notifications?${params}`);
       if (!response.ok) {
+        console.error('[useUnreadCount] Fetch failed:', response.status);
         throw new Error("Failed to fetch unread count");
       }
       const data = await response.json();
+      console.log('[useUnreadCount] Unread count:', data.unreadCount);
       return data.unreadCount || 0;
     },
+    enabled: !!user?.id,
     refetchInterval: 15000, // Refetch every 15 seconds
   });
 }
@@ -66,19 +96,31 @@ export function useUnreadCount() {
  */
 export function useMarkAsRead() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (notificationId: string) => {
+      console.log('[useMarkAsRead] Marking notification as read:', notificationId, 'userId:', user?.id);
+      
+      if (!user?.id) {
+        throw new Error("User not authenticated");
+      }
+      
       const response = await fetch(`/api/notifications/${notificationId}`, {
         method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id }),
       });
 
       if (!response.ok) {
         const error = await response.json();
+        console.error('[useMarkAsRead] Failed:', error);
         throw new Error(error.error || "Failed to mark notification as read");
       }
 
-      return response.json();
+      const data = await response.json();
+      console.log('[useMarkAsRead] Success:', data);
+      return data;
     },
     onSuccess: () => {
       // Invalidate notifications queries to refetch
@@ -96,19 +138,31 @@ export function useMarkAsRead() {
  */
 export function useMarkAllAsRead() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async () => {
+      console.log('[useMarkAllAsRead] Marking all notifications as read for user:', user?.id);
+      
+      if (!user?.id) {
+        throw new Error("User not authenticated");
+      }
+      
       const response = await fetch("/api/notifications/mark-all-read", {
         method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id }),
       });
 
       if (!response.ok) {
         const error = await response.json();
+        console.error('[useMarkAllAsRead] Failed:', error);
         throw new Error(error.error || "Failed to mark all as read");
       }
 
-      return response.json();
+      const data = await response.json();
+      console.log('[useMarkAllAsRead] Success:', data);
+      return data;
     },
     onSuccess: (data) => {
       toast.success(data.message || "All notifications marked as read");
@@ -126,19 +180,29 @@ export function useMarkAllAsRead() {
  */
 export function useDeleteNotification() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (notificationId: string) => {
-      const response = await fetch(`/api/notifications/${notificationId}`, {
+      console.log('[useDeleteNotification] Deleting notification:', notificationId, 'userId:', user?.id);
+      
+      if (!user?.id) {
+        throw new Error("User not authenticated");
+      }
+      
+      const response = await fetch(`/api/notifications/${notificationId}?userId=${user.id}`, {
         method: "DELETE",
       });
 
       if (!response.ok) {
         const error = await response.json();
+        console.error('[useDeleteNotification] Failed:', error);
         throw new Error(error.error || "Failed to delete notification");
       }
 
-      return response.json();
+      const data = await response.json();
+      console.log('[useDeleteNotification] Success:', data);
+      return data;
     },
     onSuccess: () => {
       toast.success("Notification deleted");
@@ -156,19 +220,29 @@ export function useDeleteNotification() {
  */
 export function useClearReadNotifications() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async () => {
-      const response = await fetch("/api/notifications", {
+      console.log('[useClearReadNotifications] Clearing read notifications for user:', user?.id);
+      
+      if (!user?.id) {
+        throw new Error("User not authenticated");
+      }
+      
+      const response = await fetch(`/api/notifications?userId=${user.id}`, {
         method: "DELETE",
       });
 
       if (!response.ok) {
         const error = await response.json();
+        console.error('[useClearReadNotifications] Failed:', error);
         throw new Error(error.error || "Failed to clear notifications");
       }
 
-      return response.json();
+      const data = await response.json();
+      console.log('[useClearReadNotifications] Success:', data);
+      return data;
     },
     onSuccess: (data) => {
       toast.success(data.message || "Read notifications cleared");

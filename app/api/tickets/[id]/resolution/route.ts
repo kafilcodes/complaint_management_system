@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAuth } from "@/lib/auth";
 import { adminDb } from "@/firebase/admin";
 
 interface RouteContext {
@@ -11,17 +10,13 @@ interface RouteContext {
  * Fetch resolution details for a ticket
  */
 export async function GET(request: NextRequest, context: RouteContext) {
+  const requestId = Math.random().toString(36).substring(7);
+  console.log(`[tickets/[id]/resolution:${requestId}] GET request started`);
+  
   try {
     const { id: ticketId } = await context.params;
 
-    // Verify authentication
-    const { authenticated, user, error } = await verifyAuth(request);
-    if (!authenticated || !user) {
-      return NextResponse.json(
-        { error: error || "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    console.log(`[tickets/[id]/resolution:${requestId}] ticketId: ${ticketId}`);
 
     // Fetch resolution document
     const resolutionDoc = await adminDb
@@ -30,6 +25,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       .get();
 
     if (!resolutionDoc.exists) {
+      console.log(`[tickets/[id]/resolution:${requestId}] Resolution not found`);
       return NextResponse.json(
         { error: "Resolution not found" },
         { status: 404 }
@@ -37,10 +33,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     }
 
     const resolutionData = resolutionDoc.data();
-
-    // Optionally check permissions (admins can see all, users can see their own tickets)
-    // For now, allowing all authenticated users to see resolutions
-    // You could add ticket ownership check here if needed
+    console.log(`[tickets/[id]/resolution:${requestId}] Resolution found for ticket ${ticketId}`);
 
     return NextResponse.json({
       success: true,
@@ -50,7 +43,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       },
     });
   } catch (error: any) {
-    console.error("Error fetching resolution:", error);
+    console.error(`[tickets/[id]/resolution:${requestId}] Error:`, error);
     return NextResponse.json(
       { error: error.message || "Internal server error" },
       { status: 500 }

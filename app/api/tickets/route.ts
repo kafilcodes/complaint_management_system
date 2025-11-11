@@ -21,6 +21,9 @@ import type { Ticket, TicketCreateInput, TimelineEvent, ApiSuccessResponse, ApiE
  * List tickets based on user role and filters
  */
 export async function GET(request: NextRequest) {
+  const requestId = Math.random().toString(36).substring(7);
+  console.log(`[tickets:${requestId}] GET request started`);
+  
   try {
     // Get query parameters
     const { searchParams } = new URL(request.url);
@@ -29,20 +32,25 @@ export async function GET(request: NextRequest) {
     const assignedTo = searchParams.get("assignedTo");
     const limit = parseInt(searchParams.get("limit") || "20");
 
+    console.log(`[tickets:${requestId}] Query params:`, { status, brand, assignedTo, limit });
+
     // Build query
     let query = adminDb.collection("tickets");
 
     // Apply filters
     if (status) {
       query = query.where("status", "==", status) as any;
+      console.log(`[tickets:${requestId}] Applied status filter: ${status}`);
     }
 
     if (brand) {
       query = query.where("brand", "==", brand) as any;
+      console.log(`[tickets:${requestId}] Applied brand filter: ${brand}`);
     }
 
     if (assignedTo) {
       query = query.where("assignedTo", "==", assignedTo) as any;
+      console.log(`[tickets:${requestId}] Applied assignedTo filter: ${assignedTo}`);
     }
 
     // Order by creation date (newest first)
@@ -50,6 +58,8 @@ export async function GET(request: NextRequest) {
 
     // Execute query
     const snapshot = await query.get();
+    console.log(`[tickets:${requestId}] Query returned ${snapshot.size} tickets`);
+    
     const tickets: Ticket[] = [];
 
     snapshot.forEach((doc) => {
@@ -59,12 +69,14 @@ export async function GET(request: NextRequest) {
       } as Ticket);
     });
 
+    console.log(`[tickets:${requestId}] Successfully fetched ${tickets.length} tickets`);
+
     return NextResponse.json<ApiSuccessResponse<Ticket[]>>({
       success: true,
       data: tickets,
     });
   } catch (error: any) {
-    console.error("Error fetching tickets:", error);
+    console.error(`[tickets:${requestId}] Error:`, error);
     return NextResponse.json<ApiErrorResponse>(
       {
         success: false,
@@ -81,6 +93,9 @@ export async function GET(request: NextRequest) {
  * Create a new ticket
  */
 export async function POST(request: NextRequest) {
+  const requestId = Math.random().toString(36).substring(7);
+  console.log(`[tickets:${requestId}] POST request started`);
+  
   try {
     // Parse request body
     const body = await request.json();
@@ -88,8 +103,16 @@ export async function POST(request: NextRequest) {
     const createdBy = body.createdBy || null;
     const creatorName = body.creatorName || "User";
 
+    console.log(`[tickets:${requestId}] Creating ticket:`, {
+      customerName: data.customerName,
+      productName: data.productName,
+      createdBy,
+      assignedTo: data.assignedTo,
+    });
+
     // Validate required fields
     if (!data.customerName || !data.customerPhone || !data.productName || !data.issueDescription) {
+      console.log(`[tickets:${requestId}] Validation failed: missing required fields`);
       return NextResponse.json<ApiErrorResponse>(
         { success: false, error: "Missing required fields" },
         { status: 400 }
@@ -154,6 +177,7 @@ export async function POST(request: NextRequest) {
 
     // Add ticket to Firestore
     const ticketRef = await adminDb.collection("tickets").add(ticketData);
+    console.log(`[tickets:${requestId}] Ticket created with ID: ${ticketRef.id}`);
 
     // Create notification if ticket is assigned
     if (ticketData.assignedTo) {
@@ -167,6 +191,7 @@ export async function POST(request: NextRequest) {
         ticketId: ticketRef.id,
         type: "ticket_assigned",
       });
+      console.log(`[tickets:${requestId}] Notification created for assignee: ${ticketData.assignedTo}`);
     }
 
     // Return created ticket
@@ -174,6 +199,8 @@ export async function POST(request: NextRequest) {
       id: ticketRef.id,
       ...ticketData,
     };
+
+    console.log(`[tickets:${requestId}] Successfully created ticket ${ticketRef.id}`);
 
     return NextResponse.json<ApiSuccessResponse<Ticket>>(
       {
@@ -184,7 +211,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error: any) {
-    console.error("Error creating ticket:", error);
+    console.error(`[tickets:${requestId}] Error:`, error);
     return NextResponse.json<ApiErrorResponse>(
       {
         success: false,

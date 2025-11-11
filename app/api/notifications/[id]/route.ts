@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Timestamp } from "firebase-admin/firestore";
 import { adminDb } from "@/firebase/admin";
-import { verifyAuth } from "@/lib/auth";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -10,17 +9,25 @@ interface RouteContext {
 /**
  * PUT /api/notifications/[id]
  * Mark a specific notification as read
+ * 
+ * Body: { userId: string }
  */
 export async function PUT(request: NextRequest, context: RouteContext) {
+  const requestId = Math.random().toString(36).substring(7);
+  console.log(`[notifications/[id]:${requestId}] PUT request started`);
+  
   try {
     const { id: notificationId } = await context.params;
+    const body = await request.json();
+    const { userId } = body;
 
-    // Verify authentication
-    const { authenticated, user, error } = await verifyAuth(request);
-    if (!authenticated || !user) {
+    console.log(`[notifications/[id]:${requestId}] notificationId: ${notificationId}, userId: ${userId}`);
+
+    if (!userId) {
+      console.log(`[notifications/[id]:${requestId}] Missing userId in request body`);
       return NextResponse.json(
-        { error: error || "Unauthorized" },
-        { status: 401 }
+        { error: "userId is required in request body" },
+        { status: 400 }
       );
     }
 
@@ -29,6 +36,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     const notificationDoc = await notificationRef.get();
 
     if (!notificationDoc.exists) {
+      console.log(`[notifications/[id]:${requestId}] Notification not found`);
       return NextResponse.json(
         { error: "Notification not found" },
         { status: 404 }
@@ -38,7 +46,8 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     const notificationData = notificationDoc.data();
 
     // Verify ownership
-    if (notificationData?.userId !== user.id) {
+    if (notificationData?.userId !== userId) {
+      console.log(`[notifications/[id]:${requestId}] Ownership verification failed. Expected: ${notificationData?.userId}, Got: ${userId}`);
       return NextResponse.json(
         { error: "Forbidden - You can only modify your own notifications" },
         { status: 403 }
@@ -51,12 +60,14 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       readAt: Timestamp.now(),
     });
 
+    console.log(`[notifications/[id]:${requestId}] Successfully marked as read`);
+
     return NextResponse.json({
       success: true,
       message: "Notification marked as read",
     });
   } catch (error: any) {
-    console.error("Error marking notification as read:", error);
+    console.error(`[notifications/[id]:${requestId}] Error:`, error);
     return NextResponse.json(
       { error: error.message || "Internal server error" },
       { status: 500 }
@@ -67,17 +78,25 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 /**
  * DELETE /api/notifications/[id]
  * Delete a specific notification
+ * 
+ * Query params: userId=xxx
  */
 export async function DELETE(request: NextRequest, context: RouteContext) {
+  const requestId = Math.random().toString(36).substring(7);
+  console.log(`[notifications/[id]:${requestId}] DELETE request started`);
+  
   try {
     const { id: notificationId } = await context.params;
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
 
-    // Verify authentication
-    const { authenticated, user, error } = await verifyAuth(request);
-    if (!authenticated || !user) {
+    console.log(`[notifications/[id]:${requestId}] notificationId: ${notificationId}, userId: ${userId}`);
+
+    if (!userId) {
+      console.log(`[notifications/[id]:${requestId}] Missing userId parameter`);
       return NextResponse.json(
-        { error: error || "Unauthorized" },
-        { status: 401 }
+        { error: "userId parameter is required" },
+        { status: 400 }
       );
     }
 
@@ -86,6 +105,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     const notificationDoc = await notificationRef.get();
 
     if (!notificationDoc.exists) {
+      console.log(`[notifications/[id]:${requestId}] Notification not found`);
       return NextResponse.json(
         { error: "Notification not found" },
         { status: 404 }
@@ -95,7 +115,8 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     const notificationData = notificationDoc.data();
 
     // Verify ownership
-    if (notificationData?.userId !== user.id) {
+    if (notificationData?.userId !== userId) {
+      console.log(`[notifications/[id]:${requestId}] Ownership verification failed`);
       return NextResponse.json(
         { error: "Forbidden - You can only delete your own notifications" },
         { status: 403 }
@@ -105,12 +126,14 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     // Delete notification
     await notificationRef.delete();
 
+    console.log(`[notifications/[id]:${requestId}] Successfully deleted`);
+
     return NextResponse.json({
       success: true,
       message: "Notification deleted",
     });
   } catch (error: any) {
-    console.error("Error deleting notification:", error);
+    console.error(`[notifications/[id]:${requestId}] Error:`, error);
     return NextResponse.json(
       { error: error.message || "Internal server error" },
       { status: 500 }
