@@ -26,7 +26,8 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import Image from "next/image";
+import { Loader2, LogOut } from "lucide-react";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { AppFloatingDock } from "@/components/layout/AppFloatingDock";
 import {
@@ -34,8 +35,12 @@ import {
   SidebarInset,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/lib/store";
+import { signOut } from "firebase/auth";
+import { auth } from "@/firebase/client";
+import { toast } from "sonner";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -58,6 +63,21 @@ interface AppLayoutProps {
 export default function AppLayout({ children }: AppLayoutProps) {
   const router = useRouter();
   const { user, isAuthLoading } = useAuth();
+
+  /**
+   * Handle logout
+   * Signs out the user and redirects to login page
+   */
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      toast.success("Logged out successfully");
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error("Failed to logout. Please try again.");
+    }
+  };
 
   // Redirect to login if not authenticated
   React.useEffect(() => {
@@ -94,18 +114,34 @@ export default function AppLayout({ children }: AppLayoutProps) {
             <SidebarTrigger className="-ml-1 hidden md:flex" />
           </div>
 
-          {/* Header content can be added here */}
+          {/* Header content */}
           <div className="flex flex-1 items-center justify-between">
-            <div className="flex items-center gap-2">
-              {/* App name on mobile (since sidebar is hidden) */}
-              <h1 className="text-lg font-semibold md:hidden">
+            <div className="flex items-center gap-2 md:hidden">
+              {/* Logo and App name on mobile (since sidebar is hidden) */}
+              <Image
+                src="/logo.svg"
+                width={32}
+                height={32}
+                alt="ServiceFirst Logo"
+                className="h-8 w-8"
+                priority
+              />
+              <h1 className="text-lg font-semibold">
                 {process.env.NEXT_PUBLIC_APP_NAME || "ServiceFirst"}
               </h1>
             </div>
 
-            {/* Future: Add notification bell, theme toggle, etc. */}
-            <div className="flex items-center gap-2">
-              {/* Placeholder for future header actions */}
+            {/* Logout button (mobile only) */}
+            <div className="flex items-center gap-2 md:hidden">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleLogout}
+                className="h-9 w-9"
+                title="Logout"
+              >
+                <LogOut className="h-5 w-5" />
+              </Button>
             </div>
           </div>
         </header>
