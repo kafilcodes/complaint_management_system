@@ -52,6 +52,21 @@ export function TicketList({
   // Fetch all users for assigned employee search
   const { data: allUsers = [] } = useUsers();
 
+  // Get all unique brands from tickets (including custom brands)
+  const allBrands = useMemo(() => {
+    const uniqueBrands = new Set<string>();
+    
+    // Add all ticket brands
+    tickets.forEach((ticket) => {
+      if (ticket.brand) {
+        uniqueBrands.add(ticket.brand);
+      }
+    });
+    
+    // Convert to array and sort
+    return Array.from(uniqueBrands).sort();
+  }, [tickets]);
+
   // Create a map of user IDs to user data for faster lookup
   const userMap = useMemo(() => {
     const map = new Map();
@@ -179,9 +194,9 @@ export function TicketList({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Brands</SelectItem>
-            {brands.map((brand) => (
-              <SelectItem key={brand.value} value={brand.value}>
-                {brand.label}
+            {allBrands.map((brand) => (
+              <SelectItem key={brand} value={brand}>
+                {brand}
               </SelectItem>
             ))}
           </SelectContent>

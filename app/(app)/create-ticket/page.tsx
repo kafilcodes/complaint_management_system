@@ -51,10 +51,20 @@ const ticketFormSchema = z.object({
   productModel: z.string().optional(),
   purchaseDate: z.string().min(1, "Purchase date is required"),
   brand: z.string().min(1, "Brand is required"),
+  customBrand: z.string().optional(),
   issueDescription: z.string().min(10, "Issue description must be at least 10 characters"),
   comments: z.string().optional(),
   link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   assignedTo: z.string().min(1, "Please assign this ticket to an employee"),
+}).refine((data) => {
+  // If brand is "Other", customBrand must be provided
+  if (data.brand === "Other" && (!data.customBrand || data.customBrand.trim() === "")) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Custom brand name is required when 'Other' is selected",
+  path: ["customBrand"],
 });
 
 type TicketFormValues = z.infer<typeof ticketFormSchema>;
@@ -101,6 +111,7 @@ export default function CreateTicketPage() {
       productModel: "",
       purchaseDate: "",
       brand: "",
+      customBrand: "",
       issueDescription: "",
       comments: "",
       link: "",
@@ -162,7 +173,7 @@ export default function CreateTicketPage() {
         productName: values.productName,
         productModel: values.productModel || "",
         purchaseDate: new Date(values.purchaseDate),
-        brand: values.brand,
+        brand: values.brand === "Other" && values.customBrand ? values.customBrand : values.brand,
         issueDescription: values.issueDescription,
         comments: values.comments,
         assignedTo: values.assignedTo || undefined,
@@ -352,7 +363,16 @@ export default function CreateTicketPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Brand <span className="text-destructive">*</span></FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select 
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        // Clear custom brand if switching away from "Other"
+                        if (value !== "Other") {
+                          form.setValue("customBrand", "");
+                        }
+                      }} 
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a brand" />
@@ -364,11 +384,14 @@ export default function CreateTicketPage() {
                             Loading brands...
                           </SelectItem>
                         ) : (
-                          brands.map((brand) => (
-                            <SelectItem key={brand.value} value={brand.value}>
-                              {brand.label}
-                            </SelectItem>
-                          ))
+                          <>
+                            {brands.map((brand) => (
+                              <SelectItem key={brand.value} value={brand.value}>
+                                {brand.label}
+                              </SelectItem>
+                            ))}
+                            <SelectItem value="Other">Other (Custom Brand)</SelectItem>
+                          </>
                         )}
                       </SelectContent>
                     </Select>
@@ -376,6 +399,34 @@ export default function CreateTicketPage() {
                   </FormItem>
                 )}
               />
+
+              {/* Custom Brand Input - shown only when "Other" is selected */}
+              {form.watch("brand") === "Other" && (
+                <FormField
+                  control={form.control}
+                  name="customBrand"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Custom Brand Name <span className="text-destructive">*</span></FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Package className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input 
+                            placeholder="Enter brand name" 
+                            maxLength={100} 
+                            className="pl-10" 
+                            {...field} 
+                          />
+                        </div>
+                      </FormControl>
+                      <FormDescription>
+                        Enter the brand name manually
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <FormField
                 control={form.control}
