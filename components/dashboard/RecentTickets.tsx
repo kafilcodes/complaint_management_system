@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, Clock, User, Plus, CircleDot, CheckCircle, XCircle, AlertCircle, UserCircle } from "lucide-react";
+import { ArrowRight, Clock, User, Plus, CircleDot, CheckCircle, XCircle, AlertCircle, UserCircle, UserCheck } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { TICKET_STATUSES, getLabelByValue, getColorByValue } from "@/lib/configuration";
 import { cn } from "@/lib/utils";
@@ -74,11 +74,17 @@ function TicketRow({ ticket, getStatusIcon }: { ticket: RecentTicket; getStatusI
             </Badge>
           </div>
           
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
             <div className="flex items-center gap-1.5">
               <User className="h-3.5 w-3.5 flex-shrink-0" />
               <span className="truncate max-w-[150px]">{ticket.customerName}</span>
             </div>
+            {ticket.assignedTo && assignedEmployee && (
+              <div className="flex items-center gap-1.5">
+                <UserCheck className="h-3.5 w-3.5 flex-shrink-0 text-primary" />
+                <span className="truncate max-w-[120px] text-primary">{assignedEmployee.name}</span>
+              </div>
+            )}
             <div className="flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5 flex-shrink-0" />
               <span className="whitespace-nowrap">{timeAgo}</span>
