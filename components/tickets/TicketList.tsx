@@ -6,7 +6,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { TicketCard } from "./TicketCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,8 +21,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Filter, Grid, List as ListIcon, Plus, Clock, Loader2, Package, CheckCircle, XCircle } from "lucide-react";
 import type { Ticket } from "@/lib/types";
-import { TICKET_STATUSES } from "@/lib/configuration";
+import { TICKET_STATUSES, getLabelByValue } from "@/lib/configuration";
 import { useBrandList } from "@/hooks/useConfig";
+import { useUsers } from "@/hooks/use-users";
 import { EmptyState } from "@/components/common/EmptyState";
 
 interface TicketListProps {
@@ -47,13 +48,69 @@ export function TicketList({
 
   // Fetch brands from Firestore with 24-hour cache
   const { data: brands = [], isLoading: brandsLoading } = useBrandList();
+  
+  // Fetch all users for assigned employee search
+  const { data: allUsers = [] } = useUsers();
 
-  // Filter tickets based on search and filters
+  // Create a map of user IDs to user data for faster lookup
+  const userMap = useMemo(() => {
+    const map = new Map();
+    allUsers.forEach((user) => {
+      map.set(user.id, user);
+    });
+    return map;
+  }, [allUsers]);
+
+  // Enhanced hybrid filter for tickets
   const filteredTickets = tickets.filter((ticket) => {
-    const matchesSearch =
-      ticket.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ticket.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ticket.issueDescription.toLowerCase().includes(searchQuery.toLowerCase());
+    const query = searchQuery.toLowerCase().trim();
+    
+    // If no search query, only apply status and brand filters
+    if (!query) {
+      const matchesStatus = statusFilter === "all" || ticket.status === statusFilter;
+      const matchesBrand = brandFilter === "all" || ticket.brand === brandFilter;
+      return matchesStatus && matchesBrand;
+    }
+
+    // Hybrid search across multiple fields
+    const searchableFields = [
+      // Product information
+      ticket.productName?.toLowerCase() || "",
+      ticket.productModel?.toLowerCase() || "",
+      ticket.brand?.toLowerCase() || "",
+      
+      // Customer information
+      ticket.customerName?.toLowerCase() || "",
+      ticket.customerPhone?.toLowerCase() || "",
+      
+      // Address information
+      ticket.address?.toLowerCase() || "",
+      ticket.pincode?.toLowerCase() || "",
+      
+      // Issue details
+      ticket.issueDescription?.toLowerCase() || "",
+      ticket.comments?.toLowerCase() || "",
+      
+      // Status (search by status label)
+      getLabelByValue(TICKET_STATUSES, ticket.status)?.toLowerCase() || "",
+      ticket.status?.toLowerCase() || "",
+    ];
+
+    // Get assigned employee data if available
+    if (ticket.assignedTo && userMap.has(ticket.assignedTo)) {
+      const assignedUser = userMap.get(ticket.assignedTo);
+      searchableFields.push(
+        assignedUser.name?.toLowerCase() || "",
+        assignedUser.email?.toLowerCase() || "",
+        (assignedUser as any).department?.toLowerCase() || "",
+        assignedUser.phone?.toLowerCase() || ""
+      );
+    }
+
+    // Check if query matches any searchable field
+    const matchesSearch = searchableFields.some((field) => 
+      field.includes(query)
+    );
 
     const matchesStatus = statusFilter === "all" || ticket.status === statusFilter;
     const matchesBrand = brandFilter === "all" || ticket.brand === brandFilter;
@@ -86,7 +143,7 @@ export function TicketList({
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search tickets..."
+            placeholder="Search by product, model, brand, customer, employee, address, status..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
