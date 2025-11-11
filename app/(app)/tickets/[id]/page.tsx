@@ -270,7 +270,7 @@ ${ticket.assignedTo ? `👨‍🔧 Assigned to technician` : '⚠️ Unassigned'
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-7 text-xs gap-1.5"
+                        className="h-7 text-xs gap-1.5 hover:text-[#40e0d0]"
                         onClick={() => window.location.href = `tel:${ticket.customerPhone}`}
                       >
                         <Phone className="h-3 w-3" />
@@ -279,10 +279,10 @@ ${ticket.assignedTo ? `👨‍🔧 Assigned to technician` : '⚠️ Unassigned'
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-7 text-xs gap-1.5"
+                        className="h-7 text-xs gap-1.5 hover:text-[#40e0d0]"
                         onClick={() => window.location.href = `sms:${ticket.customerPhone}`}
                       >
-                        <MessageSquare className="h-3 w-3" />
+                        <MessageSquare className="h-3 w-3 hover:text-[#40e0d0]" />
                         Message
                       </Button>
                     </div>

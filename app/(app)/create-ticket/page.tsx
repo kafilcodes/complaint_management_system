@@ -233,6 +233,7 @@ export default function CreateTicketPage() {
     email: emp.email,
     role: emp.role,
     department: emp.department || "No Department",
+    photoURL: emp.photoURL,
   }));
 
   return (
@@ -267,7 +268,10 @@ export default function CreateTicketPage() {
                   <FormItem>
                     <FormLabel>Customer Name <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
-                      <Input placeholder="John Doe" maxLength={100} {...field} />
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input placeholder="John Doe" maxLength={100} className="pl-10" {...field} />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -281,7 +285,10 @@ export default function CreateTicketPage() {
                   <FormItem>
                     <FormLabel>Phone Number <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
-                      <Input placeholder="+1234567890" maxLength={20} {...field} />
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input placeholder="+1234567890" maxLength={20} className="pl-10" {...field} />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -295,11 +302,15 @@ export default function CreateTicketPage() {
                   <FormItem>
                     <FormLabel>Address <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
-                      <Textarea 
-                        placeholder="123 Main St, City, State" 
-                        maxLength={500}
-                        {...field} 
-                      />
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Textarea 
+                          placeholder="123 Main St, City, State" 
+                          maxLength={500}
+                          className="pl-10"
+                          {...field} 
+                        />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -313,7 +324,10 @@ export default function CreateTicketPage() {
                   <FormItem>
                     <FormLabel>Pincode <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
-                      <Input placeholder="12345" maxLength={10} {...field} />
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input placeholder="12345" maxLength={10} className="pl-10" {...field} />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -369,7 +383,10 @@ export default function CreateTicketPage() {
                   <FormItem>
                     <FormLabel>Product Name <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Point of Sale System" maxLength={200} {...field} />
+                      <div className="relative">
+                        <Package className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input placeholder="e.g., Point of Sale System" maxLength={200} className="pl-10" {...field} />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -383,7 +400,10 @@ export default function CreateTicketPage() {
                   <FormItem>
                     <FormLabel>Product Model</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., POS-2024-X" maxLength={100} {...field} />
+                      <div className="relative">
+                        <Package className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input placeholder="e.g., POS-2024-X" maxLength={100} className="pl-10" {...field} />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -397,7 +417,10 @@ export default function CreateTicketPage() {
                   <FormItem>
                     <FormLabel>Purchase Date <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <div className="relative">
+                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input type="date" className="pl-10" {...field} />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -432,22 +455,25 @@ export default function CreateTicketPage() {
                         disabled={usersLoading}
                         searchFields={["label", "email", "department"]}
                         renderOption={(option) => (
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-8 w-8">
-                              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                          <div className="flex items-center gap-3 w-full">
+                            <Avatar className="h-9 w-9 flex-shrink-0">
+                              {option.photoURL && (
+                                <AvatarImage src={option.photoURL} alt={option.label} />
+                              )}
+                              <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
                                 {option.label.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col flex-1 min-w-0">
-                              <span className="font-medium truncate">{option.label}</span>
-                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                              <span className="font-semibold text-sm truncate">{option.label}</span>
+                              <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap mt-0.5">
                                 <span className="flex items-center gap-1">
-                                  <Building2 className="h-3 w-3" />
-                                  {option.department}
+                                  <Building2 className="h-3 w-3 flex-shrink-0" />
+                                  <span className="truncate">{option.department}</span>
                                 </span>
                                 <span className="flex items-center gap-1">
-                                  <Mail className="h-3 w-3" />
-                                  {option.email}
+                                  <Mail className="h-3 w-3 flex-shrink-0" />
+                                  <span className="truncate">{option.email}</span>
                                 </span>
                               </div>
                             </div>
