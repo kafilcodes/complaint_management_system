@@ -47,6 +47,9 @@ import {
   Mail,
   Building2,
   Wrench,
+  AlertTriangle,
+  X,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDateTime, getRelativeTime } from "@/firebase/firestore-helpers";
@@ -682,21 +685,32 @@ ${ticket.assignedTo ? `👨‍🔧 Assigned to technician` : '⚠️ Unassigned'
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent className="bg-background">
+        <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Ticket</AlertDialogTitle>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Delete Ticket
+            </AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete this ticket? This action cannot be undone.
               All associated data including attachments and timeline will be permanently removed.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="flex items-center gap-2">
+              <X className="h-4 w-4" />
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteTicket}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 flex items-center gap-2"
               disabled={deleteTicketMutation.isPending}
             >
+              {deleteTicketMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
               {deleteTicketMutation.isPending ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
