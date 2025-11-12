@@ -18,13 +18,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import { Download, Loader2, ChevronDown, Calendar } from "lucide-react";
+import { Download, Loader2, ChevronDown, Calendar, Check } from "lucide-react";
 import { TicketReport, type TicketReportData } from "@/components/pdf/TicketReport";
 import type { Ticket } from "@/lib/types";
 import type { DashboardStats } from "@/app/api/dashboard/stats/route";
 import { useUsers } from "@/hooks/useUsers";
 import { Timestamp } from "firebase/firestore";
+import { cn } from "@/lib/utils";
 
 interface DownloadReportButtonProps {
   stats: DashboardStats;
@@ -246,62 +248,72 @@ export function DownloadReportButton({ stats, tickets }: DownloadReportButtonPro
         <Button
           variant="outline"
           size="sm"
-          className="gap-2 hover:bg-primary hover:text-primary-foreground hover:border-primary group transition-colors"
+          className="gap-2 hover:bg-primary hover:text-primary-foreground hover:border-primary group transition-all shadow-sm"
         >
-          <Download className="h-4 w-4 group-hover:text-inherit transition-colors" />
-          Download Report
-          <ChevronDown className="h-3 w-3 ml-1" />
+          <Calendar className="h-4 w-4 group-hover:text-inherit transition-colors" />
+          <span className="hidden sm:inline">Download Report</span>
+          <span className="sm:hidden">Report</span>
+          <ChevronDown className="h-3.5 w-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-          Select Time Period
-        </div>
+      <DropdownMenuContent align="end" className="w-64">
+        <DropdownMenuLabel className="flex items-center gap-2 text-sm font-semibold">
+          <Calendar className="h-4 w-4 text-primary" />
+          Select Report Period
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {periodOptions.map((option) => (
-          <DropdownMenuItem
-            key={option.value}
-            onClick={() => setSelectedPeriod(option.value)}
-            className="gap-2 cursor-pointer"
-          >
-            <span className="text-base">{option.icon}</span>
-            <div className="flex-1">
-              <div className="font-medium">{option.label}</div>
-              <div className="text-xs text-muted-foreground">
-                {option.value === "week" && "Last 7 days"}
-                {option.value === "month" && "Current month"}
-                {option.value === "year" && "Current year"}
-                {option.value === "all" && "All tickets"}
+        
+        <div className="p-1">
+          {periodOptions.map((option) => (
+            <DropdownMenuItem
+              key={option.value}
+              onClick={() => setSelectedPeriod(option.value)}
+              className={cn(
+                "gap-3 cursor-pointer rounded-md px-3 py-2.5 transition-all",
+                selectedPeriod === option.value && "bg-primary/10 text-primary"
+              )}
+            >
+              <span className="text-lg">{option.icon}</span>
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-sm leading-tight">{option.label}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  {option.value === "week" && "Last 7 days of tickets"}
+                  {option.value === "month" && "Current month tickets"}
+                  {option.value === "year" && "Current year tickets"}
+                  {option.value === "all" && "Complete history"}
+                </div>
               </div>
-            </div>
-            {selectedPeriod === option.value && (
-              <div className="h-2 w-2 rounded-full bg-primary" />
-            )}
-          </DropdownMenuItem>
-        ))}
+              {selectedPeriod === option.value && (
+                <Check className="h-4 w-4 text-primary flex-shrink-0" />
+              )}
+            </DropdownMenuItem>
+          ))}
+        </div>
+        
         <DropdownMenuSeparator />
-        <div className="px-2 py-2">
+        
+        <div className="p-2">
           <PDFDownloadLink
             document={<TicketReport data={reportData} />}
             fileName={fileName}
-            className="w-full"
+            className="w-full block"
           >
             {({ blob, url, loading, error }) => (
               <Button
                 disabled={loading || isGenerating}
                 size="sm"
-                className="w-full gap-2"
+                className="w-full gap-2 shadow-sm"
                 onClick={() => setIsGenerating(true)}
               >
                 {loading || isGenerating ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Creating Report...
+                    <span className="text-xs sm:text-sm">Generating PDF...</span>
                   </>
                 ) : (
                   <>
                     <Download className="h-4 w-4" />
-                    Download ({selectedPeriodLabel})
+                    <span className="text-xs sm:text-sm">Generate {selectedPeriodLabel}</span>
                   </>
                 )}
               </Button>
