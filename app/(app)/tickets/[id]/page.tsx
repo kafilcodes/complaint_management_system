@@ -81,18 +81,21 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
   // Check if user is admin
   const isAdmin = user && (user.role === "full_developer_admin" || user.role === "it_admin");
 
-  // Prepare employee options for reassignment
+  // Prepare employee options for reassignment - ONLY employees, not admins
   const employeeOptions = allUsers
-    .filter((u) => 
-      u.role === "it_technician" || 
-      u.role === "it_admin" ||
-      u.role === "full_developer_admin"
-    )
+    .filter((u) => {
+      // Exclude admins and developer admin
+      const isAdminUser = u.role === "full_developer_admin" || u.role === "it_admin";
+      const isFromAdminDept = (u as any).department === "Administration";
+      
+      // Only include non-admin users who are NOT from Administration department
+      return !isAdminUser && !isFromAdminDept;
+    })
     .map((u) => ({
       value: u.id,
       label: u.name,
       email: u.email,
-      department: (u as any).department || "IT Department",
+      department: (u as any).department || "N/A",
       photoURL: (u as any).photoURL,
     }));
 
