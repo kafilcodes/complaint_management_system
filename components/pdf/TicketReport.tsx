@@ -527,8 +527,10 @@ export const TicketReport: React.FC<{ data: TicketReportData }> = ({ data }) => 
         {/* Footer */}
         <View style={styles.footer}>
           <Text>
-            {data.appName} © {new Date().getFullYear()} - Confidential Document
-            - Page 1 of 2
+            {data.appName} © {new Date().getFullYear()} - Confidential Document - Page 1
+          </Text>
+          <Text style={{ marginTop: 4, fontSize: 8 }}>
+            Jagdalpur, Bastar District, Chhattisgarh - 494001 | Email: mparekhenterprises@gmail.com
           </Text>
         </View>
       </Page>
@@ -680,8 +682,10 @@ export const TicketReport: React.FC<{ data: TicketReportData }> = ({ data }) => 
           {/* Footer */}
           <View style={styles.footer}>
             <Text>
-              {data.appName} © {new Date().getFullYear()} - Confidential Document
-              - Page 2 of 2
+              {data.appName} © {new Date().getFullYear()} - Confidential Document - Final Page
+            </Text>
+            <Text style={{ marginTop: 4, fontSize: 8 }}>
+              Jagdalpur, Bastar District, Chhattisgarh - 494001 | Email: mparekhenterprises@gmail.com
             </Text>
           </View>
         </Page>

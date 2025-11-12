@@ -216,10 +216,10 @@ export default function AboutPage() {
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-muted-foreground mb-1">Email</p>
                 <a
-                  href="mailto:support@mparekh.com"
+                  href="mailto:mparekhenterprises@gmail.com"
                   className="text-sm font-semibold hover:text-primary transition-colors truncate block"
                 >
-                  support@mparekh.com
+                  mparekhenterprises@gmail.com
                 </a>
               </div>
             </div>
@@ -236,6 +236,19 @@ export default function AboutPage() {
                 >
                   +91 123 456 7890
                 </a>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3 p-3 sm:p-4 rounded-lg border bg-muted/30 sm:col-span-2">
+              <div className="rounded-full bg-primary/10 p-2">
+                <MapPin className="h-4 w-4 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-muted-foreground mb-1">Address</p>
+                <p className="text-sm font-semibold">
+                  Jagdalpur, Bastar District<br />
+                  Chhattisgarh - 494001
+                </p>
               </div>
             </div>
           </div>
