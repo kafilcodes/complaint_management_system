@@ -187,39 +187,41 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
           User info and logout button
       ======================================== */}
       <SidebarFooter className="border-t-0 mt-auto px-4 pb-4">
-        {/* User Info */}
-        <div className="flex items-center gap-3 px-2 py-3 rounded-lg group-data-[collapsible=icon]:justify-center">
-          <Avatar className="h-10 w-10 rounded-lg flex-shrink-0">
-            <AvatarImage src={currentUser.photoURL || undefined} alt={currentUser.name} />
-            <AvatarFallback className="rounded-lg bg-primary text-primary-foreground">
-              {userInitials}
-            </AvatarFallback>
-          </Avatar>
+        {/* User Info - Clickable to Profile */}
+        <Link href="/profile" className="block">
+          <div className="flex items-center gap-3 px-2 py-3 rounded-lg group-data-[collapsible=icon]:justify-center hover:bg-accent/50 transition-colors cursor-pointer">
+            <Avatar className="h-10 w-10 rounded-lg flex-shrink-0">
+              <AvatarImage src={currentUser.photoURL || undefined} alt={currentUser.name} />
+              <AvatarFallback className="rounded-lg bg-primary text-primary-foreground">
+                {userInitials}
+              </AvatarFallback>
+            </Avatar>
 
-          {/* User details (hidden when collapsed) */}
-          <div className="flex flex-1 flex-col gap-0.5 text-left group-data-[collapsible=icon]:hidden min-w-0">
-            <span className="truncate font-medium text-sm">{currentUser.name}</span>
-            {currentUser.department && (
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Building2 className="h-3 w-3 flex-shrink-0" />
-                <span className="truncate">{currentUser.department}</span>
-              </div>
-            )}
-            <div className="flex items-center gap-1.5 text-xs">
-              {isAdmin ? (
-                <>
-                  <Shield className="h-3 w-3 flex-shrink-0 text-primary" />
-                  <span className="truncate text-primary font-medium">{roleDisplay}</span>
-                </>
-              ) : (
-                <>
-                  <UserIcon className="h-3 w-3 flex-shrink-0" />
-                  <span className="truncate text-muted-foreground">{roleDisplay}</span>
-                </>
+            {/* User details (hidden when collapsed) */}
+            <div className="flex flex-1 flex-col gap-0.5 text-left group-data-[collapsible=icon]:hidden min-w-0">
+              <span className="truncate font-medium text-sm">{currentUser.name}</span>
+              {currentUser.department && (
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Building2 className="h-3 w-3 flex-shrink-0" />
+                  <span className="truncate">{currentUser.department}</span>
+                </div>
               )}
+              <div className="flex items-center gap-1.5 text-xs">
+                {isAdmin ? (
+                  <>
+                    <Shield className="h-3 w-3 flex-shrink-0 text-primary" />
+                    <span className="truncate text-primary font-medium">{roleDisplay}</span>
+                  </>
+                ) : (
+                  <>
+                    <UserIcon className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate text-muted-foreground">{roleDisplay}</span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        </Link>
 
         {/* About Link - Employee Only */}
         {!isAdmin && (
