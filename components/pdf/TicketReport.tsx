@@ -26,6 +26,7 @@ export interface TicketReportData {
   // Report metadata
   generatedAt: string;
   appName: string;
+  selectedPeriod?: string; // "week" | "month" | "year" | "all"
   
   // Statistics
   totalTickets: number;
@@ -313,18 +314,14 @@ const styles = StyleSheet.create({
 // ==============================================================================
 
 export const TicketReport: React.FC<{ data: TicketReportData }> = ({ data }) => {
-  // Format date for display
+  // Format date helper
   const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString("en-US", {
-        month: "short",
-        day: "2-digit",
-        year: "numeric",
-      });
-    } catch {
-      return dateString;
-    }
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   // Format ticket ID (show first 8 chars)
@@ -338,8 +335,26 @@ export const TicketReport: React.FC<{ data: TicketReportData }> = ({ data }) => 
       ? Math.round((data.closedTickets / data.totalTickets) * 100)
       : 0;
 
+  // Get period label for display
+  const getPeriodLabel = () => {
+    switch(data.selectedPeriod) {
+      case "week": return "This Week";
+      case "month": return "This Month";
+      case "year": return "This Year";
+      default: return "All Time";
+    }
+  };
+
+  // Split tickets into pages (20 per page)
+  const ticketsPerPage = 20;
+  const ticketPages: typeof data.tickets[] = [];
+  for (let i = 0; i < data.tickets.length; i += ticketsPerPage) {
+    ticketPages.push(data.tickets.slice(i, i + ticketsPerPage));
+  }
+
   return (
     <Document>
+      {/* PAGE 1: Overall Statistics */}
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
@@ -452,10 +467,13 @@ export const TicketReport: React.FC<{ data: TicketReportData }> = ({ data }) => 
           </View>
         )}
 
-        {/* Tickets List */}
+        {/* Tickets List Preview (first 10 tickets only) */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
-            Recent Tickets ({data.tickets.length})
+            Recent Tickets Preview ({Math.min(10, data.tickets.length)} of {data.tickets.length})
+          </Text>
+          <Text style={styles.statDescription}>
+            Showing top 10 tickets. Full list on next page(s).
           </Text>
           <View style={styles.table}>
             {/* Table Header */}
@@ -481,8 +499,8 @@ export const TicketReport: React.FC<{ data: TicketReportData }> = ({ data }) => 
               <Text style={[styles.tableHeaderCell, styles.colDate]}>Date</Text>
             </View>
 
-            {/* Table Rows */}
-            {data.tickets.map((ticket, index) => (
+            {/* Table Rows - First 10 only */}
+            {data.tickets.slice(0, 10).map((ticket, index) => (
               <View
                 key={ticket.id}
                 style={[
@@ -535,7 +553,97 @@ export const TicketReport: React.FC<{ data: TicketReportData }> = ({ data }) => 
         </View>
       </Page>
 
-      {/* Page 2: Monthly & Yearly Details */}
+      {/* PAGES 2+: Detailed Filtered Tickets List */}
+      {ticketPages.map((pageTickets, pageIndex) => (
+        <Page key={`tickets-page-${pageIndex}`} size="A4" style={styles.page}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.logoContainer}>
+              <Image src="/logo.png" style={styles.logo} />
+              <View>
+                <Text style={styles.headerTitle}>
+                  {data.appName} - {getPeriodLabel()} Tickets
+                </Text>
+                <Text style={styles.headerSubtitle}>
+                  Detailed Ticket Listings
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.generatedDate}>
+              Page {pageIndex + 2} - Showing {pageIndex * ticketsPerPage + 1} to {Math.min((pageIndex + 1) * ticketsPerPage, data.tickets.length)} of {data.tickets.length}
+            </Text>
+          </View>
+
+          {/* Tickets Table */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              {getPeriodLabel()} Tickets (Page {pageIndex + 1} of {ticketPages.length})
+            </Text>
+            <View style={styles.table}>
+              <View style={styles.tableHeader}>
+                <Text style={[styles.tableHeaderCell, styles.colId]}>Ticket ID</Text>
+                <Text style={[styles.tableHeaderCell, styles.colProduct]}>Product</Text>
+                <Text style={[styles.tableHeaderCell, styles.colCustomer]}>Customer</Text>
+                <Text style={[styles.tableHeaderCell, styles.colBrand]}>Brand</Text>
+                <Text style={[styles.tableHeaderCell, styles.colStatus]}>Status</Text>
+                <Text style={[styles.tableHeaderCell, styles.colAssigned]}>Assigned</Text>
+                <Text style={[styles.tableHeaderCell, styles.colDate]}>Date</Text>
+              </View>
+              {pageTickets.map((ticket, index) => (
+                <View
+                  key={ticket.id}
+                  style={[
+                    styles.tableRow,
+                    index % 2 === 1 ? styles.tableRowOdd : {},
+                  ]}
+                >
+                  <Text style={[styles.tableCell, styles.colId]}>
+                    {formatTicketId(ticket.id)}
+                  </Text>
+                  <Text style={[styles.tableCell, styles.colProduct]}>
+                    {ticket.productName}
+                  </Text>
+                  <Text style={[styles.tableCell, styles.colCustomer]}>
+                    {ticket.customerName}
+                  </Text>
+                  <Text style={[styles.tableCell, styles.colBrand]}>
+                    {ticket.brand}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.tableCell,
+                      styles.colStatus,
+                      ticket.status === "open"
+                        ? styles.statusOpen
+                        : styles.statusClosed,
+                    ]}
+                  >
+                    {ticket.status.toUpperCase()}
+                  </Text>
+                  <Text style={[styles.tableCell, styles.colAssigned]}>
+                    {ticket.assignedToName || "Unassigned"}
+                  </Text>
+                  <Text style={[styles.tableCell, styles.colDate]}>
+                    {formatDate(ticket.createdAt)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text>
+              {data.appName} © {new Date().getFullYear()} - Confidential Document - Page {pageIndex + 2}
+            </Text>
+            <Text style={{ marginTop: 4, fontSize: 8 }}>
+              Jagdalpur, Bastar District, Chhattisgarh - 494001 | Email: mparekhenterprises@gmail.com
+            </Text>
+          </View>
+        </Page>
+      ))}
+
+      {/* FINAL PAGE: Monthly & Yearly Summary (Stats Only) */}
       {(data.monthlyStats || data.yearlyStats) && (
         <Page size="A4" style={styles.page}>
           {/* Header */}
@@ -586,57 +694,6 @@ export const TicketReport: React.FC<{ data: TicketReportData }> = ({ data }) => 
                   </Text>
                 </View>
               </View>
-
-              {/* Monthly Tickets Table */}
-              {data.monthlyStats.tickets.length > 0 && (
-                <View style={styles.table}>
-                  <Text style={styles.chartTitle}>Recent Tickets This Month</Text>
-                  <View style={styles.tableHeader}>
-                    <Text style={[styles.tableHeaderCell, styles.colId]}>Ticket ID</Text>
-                    <Text style={[styles.tableHeaderCell, styles.colProduct]}>Product</Text>
-                    <Text style={[styles.tableHeaderCell, styles.colCustomer]}>Customer</Text>
-                    <Text style={[styles.tableHeaderCell, styles.colBrand]}>Brand</Text>
-                    <Text style={[styles.tableHeaderCell, styles.colStatus]}>Status</Text>
-                    <Text style={[styles.tableHeaderCell, styles.colDate]}>Date</Text>
-                  </View>
-                  {data.monthlyStats.tickets.slice(0, 15).map((ticket, index) => (
-                    <View
-                      key={ticket.id}
-                      style={[
-                        styles.tableRow,
-                        index % 2 === 1 ? styles.tableRowOdd : {},
-                      ]}
-                    >
-                      <Text style={[styles.tableCell, styles.colId]}>
-                        {formatTicketId(ticket.id)}
-                      </Text>
-                      <Text style={[styles.tableCell, styles.colProduct]}>
-                        {ticket.productName}
-                      </Text>
-                      <Text style={[styles.tableCell, styles.colCustomer]}>
-                        {ticket.customerName}
-                      </Text>
-                      <Text style={[styles.tableCell, styles.colBrand]}>
-                        {ticket.brand}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.tableCell,
-                          styles.colStatus,
-                          ticket.status === "open"
-                            ? styles.statusOpen
-                            : styles.statusClosed,
-                        ]}
-                      >
-                        {ticket.status.toUpperCase()}
-                      </Text>
-                      <Text style={[styles.tableCell, styles.colDate]}>
-                        {formatDate(ticket.createdAt)}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              )}
             </View>
           )}
 

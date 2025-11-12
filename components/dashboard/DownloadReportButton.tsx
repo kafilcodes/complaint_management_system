@@ -202,6 +202,7 @@ export function DownloadReportButton({ stats, tickets }: DownloadReportButtonPro
     return {
       generatedAt: new Date().toISOString(),
       appName,
+      selectedPeriod, // Add selected period to report data
       totalTickets: filteredStats.totalTickets,
       openTickets: filteredStats.openTickets,
       closedTickets: filteredStats.closedTickets,
@@ -225,7 +226,7 @@ export function DownloadReportButton({ stats, tickets }: DownloadReportButtonPro
         tickets: prepareTicketData(yearTickets, 30),
       },
     };
-  }, [filteredStats, filteredTickets, stats.trends, tickets, users]);
+  }, [filteredStats, filteredTickets, stats.trends, tickets, users, selectedPeriod]);
 
   // Generate filename with timestamp and period
   const fileName = `ticket-report-${selectedPeriod}-${new Date().toISOString().split("T")[0]}.pdf`;
