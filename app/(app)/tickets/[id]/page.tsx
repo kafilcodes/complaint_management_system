@@ -2,8 +2,8 @@
 
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTicket, useDeleteTicket } from "@/hooks/use-tickets";
-import { useUser } from "@/hooks/use-users";
+import { useTicket, useDeleteTicket, useUpdateTicket } from "@/hooks/use-tickets";
+import { useUser, useUsers } from "@/hooks/use-users";
 import { useResolveTicket } from "@/hooks/use-resolution";
 import { useStore } from "@/lib/store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Timeline } from "@/components/ui/timeline";
+import { Combobox } from "@/components/ui/combobox";
 import { ResolutionForm } from "@/components/tickets/ResolutionForm";
 import { ResolutionDetails } from "@/components/tickets/ResolutionDetails";
 import {
@@ -66,12 +67,34 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
   const user = useStore((state) => state.user);
   const { data: ticket, isLoading } = useTicket(id);
   const { data: assignedEmployee } = useUser(ticket?.assignedTo || null);
+  const { data: allUsers = [], isLoading: usersLoading } = useUsers();
   const resolveTicketMutation = useResolveTicket();
   const deleteTicketMutation = useDeleteTicket();
+  const updateTicketMutation = useUpdateTicket(id);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isReassigning, setIsReassigning] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<string>("");
 
   const statusColor = ticket ? getColorByValue(TICKET_STATUSES, ticket.status) : "";
   const brandLabel = ticket ? getLabelByValue(BRANDS, ticket.brand) : "";
+
+  // Check if user is admin
+  const isAdmin = user && (user.role === "full_developer_admin" || user.role === "it_admin");
+
+  // Prepare employee options for reassignment
+  const employeeOptions = allUsers
+    .filter((u) => 
+      u.role === "it_technician" || 
+      u.role === "it_admin" ||
+      u.role === "full_developer_admin"
+    )
+    .map((u) => ({
+      value: u.id,
+      label: u.name,
+      email: u.email,
+      department: (u as any).department || "IT Department",
+      photoURL: (u as any).photoURL,
+    }));
 
   // Helper to get user initials
   const getInitials = (name: string) => {
@@ -182,6 +205,38 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
       // Error toast is already shown by the mutation
     } finally {
       setShowDeleteDialog(false);
+    }
+  };
+
+  const handleReassignEmployee = async () => {
+    if (!selectedEmployee) {
+      toast.error("Please select an employee");
+      return;
+    }
+
+    if (selectedEmployee === ticket?.assignedTo) {
+      toast.error("Ticket is already assigned to this employee");
+      return;
+    }
+
+    setIsReassigning(true);
+    try {
+      await updateTicketMutation.mutateAsync({
+        assignedTo: selectedEmployee,
+      });
+      
+      toast.success("Employee reassigned successfully!");
+      
+      // Refresh the page to see updated data
+      router.refresh();
+      
+      // Reset the selection
+      setSelectedEmployee("");
+    } catch (error: any) {
+      console.error("Error reassigning employee:", error);
+      toast.error(error.message || "Failed to reassign employee");
+    } finally {
+      setIsReassigning(false);
     }
   };
 
@@ -649,6 +704,84 @@ ${ticket.assignedTo ? `👨‍🔧 Assigned to technician` : '⚠️ Unassigned'
                 <p className="text-sm text-muted-foreground">
                   This ticket needs to be assigned to a technician
                 </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Reassign Employee Section - Admin Only */}
+          {isAdmin && ticket.status === "open" && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <UserCheck className="h-4 w-4 text-primary" />
+                  {ticket.assignedTo ? "Reassign Employee" : "Assign Employee"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  {ticket.assignedTo 
+                    ? "Reassign this ticket to a different employee" 
+                    : "Assign this ticket to an employee"}
+                </p>
+                
+                <Combobox
+                  options={employeeOptions}
+                  value={selectedEmployee}
+                  onValueChange={setSelectedEmployee}
+                  placeholder="Select an employee..."
+                  searchPlaceholder="Search by name, email, or department..."
+                  emptyText="No employees found."
+                  disabled={usersLoading || isReassigning}
+                  searchFields={["label", "email", "department"]}
+                  renderOption={(option) => (
+                    <div className="flex items-center gap-2 sm:gap-3 w-full py-1 sm:py-0">
+                      <Avatar className="h-7 w-7 sm:h-9 sm:w-9 flex-shrink-0">
+                        {option.photoURL && (
+                          <AvatarImage src={option.photoURL} alt={option.label} />
+                        )}
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                          {option.label.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <span className="font-semibold text-xs sm:text-sm truncate">{option.label}</span>
+                        <div className="hidden sm:flex items-center gap-3 text-xs text-muted-foreground flex-wrap mt-0.5">
+                          <span className="flex items-center gap-1">
+                            <Building2 className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">{option.department}</span>
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Mail className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">{option.email}</span>
+                          </span>
+                        </div>
+                        {/* Mobile: Show only department */}
+                        <div className="flex sm:hidden items-center gap-1 text-xs text-muted-foreground mt-0.5">
+                          <Building2 className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{option.department}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                />
+
+                <Button
+                  onClick={handleReassignEmployee}
+                  disabled={!selectedEmployee || isReassigning || usersLoading}
+                  className="w-full"
+                >
+                  {isReassigning ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {ticket.assignedTo ? "Reassigning..." : "Assigning..."}
+                    </>
+                  ) : (
+                    <>
+                      <UserCheck className="mr-2 h-4 w-4" />
+                      {ticket.assignedTo ? "Reassign Employee" : "Assign Employee"}
+                    </>
+                  )}
+                </Button>
               </CardContent>
             </Card>
           )}
