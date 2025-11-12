@@ -18,7 +18,7 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut, Loader2 } from "lucide-react";
+import { LogOut, Loader2, Shield, User as UserIcon, Building2 } from "lucide-react";
 
 import { NAV_ITEMS, getVisibleNavItems } from "@/app/config/navConfig";
 import { cn } from "@/lib/utils";
@@ -106,11 +106,19 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
   const roleDisplay = React.useMemo(() => {
     const roleMap: Record<string, string> = {
       full_developer_admin: "Developer Admin",
-      admin: "Admin",
-      employee: "Employee",
-      user: "User",
+      it_admin: "IT Admin",
+      it_technician: "Technician",
+      store_manager: "Store Manager",
+      store_employee: "Employee",
     };
     return roleMap[currentUser.role] || currentUser.role;
+  }, [currentUser.role]);
+  
+  /**
+   * Determine if user is admin
+   */
+  const isAdmin = React.useMemo(() => {
+    return currentUser.role === "full_developer_admin" || currentUser.role === "it_admin";
   }, [currentUser.role]);
 
   return (
@@ -120,14 +128,14 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
           Shows app logo and name
       ======================================== */}
       <SidebarHeader className="border-b-0">
-        <div className="flex items-center justify-center gap-3 px-4 py-4 group-data-[collapsible=icon]:justify-center">
+        <div className="flex items-center justify-center gap-2 px-4 py-4 group-data-[collapsible=icon]:justify-center">
           {/* Logo with proper aspect ratio - increased size */}
-          <div className="relative h-16 w-16 flex-shrink-0 group-data-[collapsible=icon]:h-16 group-data-[collapsible=icon]:w-16">
+          <div className="relative h-12 w-12 flex-shrink-0 group-data-[collapsible=icon]:h-12 group-data-[collapsible=icon]:w-12">
             <Image
               src="/logo.png"
               alt="MParekh Logo"
               fill
-              sizes="100px"
+              sizes="50px"
               className="object-contain"
               priority
             />
@@ -180,8 +188,8 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
       ======================================== */}
       <SidebarFooter className="border-t-0 mt-auto px-4 pb-4">
         {/* User Info */}
-        <div className="flex items-center gap-3 px-2 py-3 rounded-lg  group-data-[collapsible=icon]:justify-center">
-          <Avatar className="h-10 w-10 rounded-lg m-1">
+        <div className="flex items-center gap-3 px-2 py-3 rounded-lg group-data-[collapsible=icon]:justify-center">
+          <Avatar className="h-10 w-10 rounded-lg flex-shrink-0">
             <AvatarImage src={currentUser.photoURL || undefined} alt={currentUser.name} />
             <AvatarFallback className="rounded-lg bg-primary text-primary-foreground">
               {userInitials}
@@ -189,11 +197,27 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
           </Avatar>
 
           {/* User details (hidden when collapsed) */}
-          <div className="flex flex-1 flex-col text-left leading-tight group-data-[collapsible=icon]:hidden">
+          <div className="flex flex-1 flex-col gap-0.5 text-left group-data-[collapsible=icon]:hidden min-w-0">
             <span className="truncate font-medium text-sm">{currentUser.name}</span>
-            <span className="truncate text-xs text-muted-foreground">
-              {roleDisplay}
-            </span>
+            {currentUser.department && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Building2 className="h-3 w-3 flex-shrink-0" />
+                <span className="truncate">{currentUser.department}</span>
+              </div>
+            )}
+            <div className="flex items-center gap-1.5 text-xs">
+              {isAdmin ? (
+                <>
+                  <Shield className="h-3 w-3 flex-shrink-0 text-primary" />
+                  <span className="truncate text-primary font-medium">{roleDisplay}</span>
+                </>
+              ) : (
+                <>
+                  <UserIcon className="h-3 w-3 flex-shrink-0" />
+                  <span className="truncate text-muted-foreground">{roleDisplay}</span>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
