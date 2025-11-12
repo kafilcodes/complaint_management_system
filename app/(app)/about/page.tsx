@@ -1,361 +1,219 @@
-"use client";
-
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import type { Metadata } from "next";
+import Image from "next/image";
+import { Card } from "@/components/ui/card";
 import {
   Mail,
   Phone,
   MapPin,
-  Send,
-  Loader2,
-  CheckCircle,
-  Info,
-  Wrench,
+  Shield,
   Users,
   TrendingUp,
-  Shield,
-  MessageSquare,
+  Clock,
 } from "lucide-react";
-import { toast } from "sonner";
 
-// Contact form schema
-const contactFormSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email address"),
-  subject: z.string().min(5, "Subject must be at least 5 characters"),
-  message: z.string().min(10, "Message must be at least 10 characters"),
-});
+/**
+ * About Page Metadata for SEO
+ */
+export const metadata: Metadata = {
+  title: "About Us - Complaint Management System",
+  description:
+    "Learn about MParekh Complaint Management System - a comprehensive solution for efficient ticket tracking, assignment management, and customer service excellence in Jagdalpur, Bastar District.",
+  keywords: [
+    "about mparekh",
+    "complaint management",
+    "customer service",
+    "ticket tracking",
+    "jagdalpur",
+    "bastar district",
+    "chhattisgarh",
+    "service management",
+  ],
+  openGraph: {
+    title: "About MParekh Complaint Management System",
+    description:
+      "Streamline complaint resolution and improve customer satisfaction with our comprehensive management system",
+    type: "website",
+  },
+};
 
-type ContactFormValues = z.infer<typeof contactFormSchema>;
-
+/**
+ * About Page Component
+ * 
+ * Features:
+ * - Mobile-first responsive design
+ * - Adaptive typography and spacing
+ * - SEO-optimized content
+ * - Modern minimal layout
+ * - Accessible contact information
+ */
 export default function AboutPage() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-
-  const form = useForm<ContactFormValues>({
-    resolver: zodResolver(contactFormSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      subject: "",
-      message: "",
-    },
-  });
-
-  async function onSubmit(values: ContactFormValues) {
-    setIsSubmitting(true);
-    
-    try {
-      // Simulate sending message (you can integrate with email service later)
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      
-      console.log("Contact form submitted:", values);
-      
-      setIsSuccess(true);
-      toast.success("Message sent successfully!", {
-        description: "We'll get back to you as soon as possible.",
-      });
-      
-      form.reset();
-      
-      // Reset success state after 3 seconds
-      setTimeout(() => setIsSuccess(false), 3000);
-    } catch (error) {
-      toast.error("Failed to send message", {
-        description: "Please try again or contact us directly via email.",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-8">
-      {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">About Us</h1>
-        <p className="text-base sm:text-lg text-muted-foreground">
-          Learn more about our complaint management system and get in touch
-        </p>
-      </div>
+    <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+      {/* Hero Section */}
+      <section className="mb-8 sm:mb-12 lg:mb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+          {/* Text Content */}
+          <div className="space-y-4 sm:space-y-6 order-2 lg:order-1">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+              About Us
+            </h1>
+            <p className="text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed">
+              Streamlining complaint resolution and improving customer satisfaction through innovative technology
+            </p>
+            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+              MParekh Complaint Management System is a comprehensive solution designed to help
+              businesses efficiently manage and resolve customer complaints with powerful features
+              and real-time tracking.
+            </p>
+          </div>
 
-      {/* About Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Info className="h-5 w-5 text-primary" />
-            About MParekh Complaint Management
-          </CardTitle>
-          <CardDescription>
-            Our mission is to streamline complaint resolution and improve customer satisfaction
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm sm:text-base leading-relaxed">
-            MParekh Complaint Management System is a comprehensive solution designed to help
-            businesses efficiently manage and resolve customer complaints. Our platform provides
-            a seamless experience for both employees and administrators to track, manage, and
-            resolve issues in a timely manner.
-          </p>
-          <p className="text-sm sm:text-base leading-relaxed">
-            With powerful features like ticket tracking, assignment management, real-time
-            notifications, and detailed reporting, we empower teams to deliver exceptional
-            customer service and maintain high satisfaction levels.
-          </p>
-        </CardContent>
-      </Card>
+          {/* Illustration */}
+          <div className="order-1 lg:order-2 flex justify-center lg:justify-end">
+            <div className="w-full max-w-md lg:max-w-lg">
+              <Image
+                src="/about.svg"
+                alt="About MParekh Complaint Management System"
+                width={600}
+                height={465}
+                priority
+                className="w-full h-auto"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
 
-      {/* Features Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Wrench className="h-5 w-5 text-primary" />
-            Key Features
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="item-1">
-              <AccordionTrigger className="text-sm sm:text-base">
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-primary" />
-                  Ticket Management
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="text-sm text-muted-foreground">
-                Create, track, and manage customer complaints with ease. Assign tickets to
-                technicians, track progress, and ensure timely resolution with our intuitive
-                ticket management system.
-              </AccordionContent>
-            </AccordionItem>
+      {/* Features Grid */}
+      <section className="mb-8 sm:mb-12 lg:mb-16">
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 sm:mb-8 lg:mb-10 text-center">
+          Why Choose Us
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          {/* Feature 1 */}
+          <Card className="p-4 sm:p-6 hover:shadow-lg transition-shadow duration-300">
+            <div className="rounded-full bg-primary/10 w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center mb-3 sm:mb-4">
+              <Users className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold mb-2">
+              Team Management
+            </h3>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              Assign tickets to technicians and track team performance efficiently
+            </p>
+          </Card>
 
-            <AccordionItem value="item-2">
-              <AccordionTrigger className="text-sm sm:text-base">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-primary" />
-                  Analytics & Reporting
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="text-sm text-muted-foreground">
-                Get comprehensive insights with detailed reports and analytics. Track performance
-                metrics, identify trends, and make data-driven decisions to improve your support
-                operations.
-              </AccordionContent>
-            </AccordionItem>
+          {/* Feature 2 */}
+          <Card className="p-4 sm:p-6 hover:shadow-lg transition-shadow duration-300">
+            <div className="rounded-full bg-primary/10 w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center mb-3 sm:mb-4">
+              <TrendingUp className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold mb-2">
+              Analytics & Reports
+            </h3>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              Get comprehensive insights with detailed reports and data visualization
+            </p>
+          </Card>
 
-            <AccordionItem value="item-3">
-              <AccordionTrigger className="text-sm sm:text-base">
-                <div className="flex items-center gap-2">
-                  <Shield className="h-4 w-4 text-primary" />
-                  Role-Based Access
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="text-sm text-muted-foreground">
-                Secure role-based access control ensures that each user has appropriate
-                permissions. Admins can manage the entire system while employees can focus on
-                their assigned tasks.
-              </AccordionContent>
-            </AccordionItem>
+          {/* Feature 3 */}
+          <Card className="p-4 sm:p-6 hover:shadow-lg transition-shadow duration-300">
+            <div className="rounded-full bg-primary/10 w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center mb-3 sm:mb-4">
+              <Shield className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold mb-2">
+              Secure Access
+            </h3>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              Role-based permissions ensure data security and appropriate access
+            </p>
+          </Card>
 
-            <AccordionItem value="item-4">
-              <AccordionTrigger className="text-sm sm:text-base">
-                <div className="flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 text-primary" />
-                  Real-Time Updates
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="text-sm text-muted-foreground">
-                Stay informed with real-time notifications and timeline tracking. Monitor ticket
-                status changes, assignments, and resolutions as they happen with our live update
-                system.
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </CardContent>
-      </Card>
+          {/* Feature 4 */}
+          <Card className="p-4 sm:p-6 hover:shadow-lg transition-shadow duration-300">
+            <div className="rounded-full bg-primary/10 w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center mb-3 sm:mb-4">
+              <Clock className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold mb-2">
+              Real-Time Updates
+            </h3>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              Monitor ticket status changes and resolutions as they happen
+            </p>
+          </Card>
+        </div>
+      </section>
 
       {/* Contact Section */}
-      <Card id="contact">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5 text-primary" />
-            Contact Us
-          </CardTitle>
-          <CardDescription>
-            Have questions or feedback? We'd love to hear from you
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Contact Information */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex items-start gap-3 p-3 sm:p-4 rounded-lg border bg-muted/30">
-              <div className="rounded-full bg-primary/10 p-2">
-                <Mail className="h-4 w-4 text-primary" />
+      <section className="mb-8 sm:mb-12">
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 sm:mb-8 text-center">
+          Get In Touch
+        </h2>
+        <Card className="p-6 sm:p-8 lg:p-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {/* Email */}
+            <a
+              href="mailto:mparekhenterprises@gmail.com"
+              className="flex items-start gap-4 p-4 sm:p-5 rounded-lg border border-border hover:border-primary hover:bg-accent/50 transition-all duration-300 group"
+            >
+              <div className="rounded-full bg-primary/10 group-hover:bg-primary/20 p-3 transition-colors">
+                <Mail className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-muted-foreground mb-1">Email</p>
-                <a
-                  href="mailto:mparekhenterprises@gmail.com"
-                  className="text-sm font-semibold hover:text-primary transition-colors truncate block"
-                >
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-1">
+                  Email Us
+                </p>
+                <p className="text-sm sm:text-base font-semibold truncate group-hover:text-primary transition-colors">
                   mparekhenterprises@gmail.com
-                </a>
+                </p>
               </div>
-            </div>
+            </a>
 
-            <div className="flex items-start gap-3 p-3 sm:p-4 rounded-lg border bg-muted/30">
-              <div className="rounded-full bg-primary/10 p-2">
-                <Phone className="h-4 w-4 text-primary" />
+            {/* Phone */}
+            <a
+              href="tel:+911234567890"
+              className="flex items-start gap-4 p-4 sm:p-5 rounded-lg border border-border hover:border-primary hover:bg-accent/50 transition-all duration-300 group"
+            >
+              <div className="rounded-full bg-primary/10 group-hover:bg-primary/20 p-3 transition-colors">
+                <Phone className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-muted-foreground mb-1">Phone</p>
-                <a
-                  href="tel:+911234567890"
-                  className="text-sm font-semibold hover:text-primary transition-colors"
-                >
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-1">
+                  Call Us
+                </p>
+                <p className="text-sm sm:text-base font-semibold group-hover:text-primary transition-colors">
                   +91 123 456 7890
-                </a>
+                </p>
               </div>
-            </div>
-            
-            <div className="flex items-start gap-3 p-3 sm:p-4 rounded-lg border bg-muted/30 sm:col-span-2">
-              <div className="rounded-full bg-primary/10 p-2">
-                <MapPin className="h-4 w-4 text-primary" />
+            </a>
+
+            {/* Address */}
+            <div className="flex items-start gap-4 p-4 sm:p-5 rounded-lg border border-border sm:col-span-2 lg:col-span-1">
+              <div className="rounded-full bg-primary/10 p-3">
+                <MapPin className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-muted-foreground mb-1">Address</p>
-                <p className="text-sm font-semibold">
-                  Jagdalpur, Bastar District<br />
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-1">
+                  Visit Us
+                </p>
+                <p className="text-sm sm:text-base font-semibold leading-relaxed">
+                  Jagdalpur, Bastar District
+                  <br />
                   Chhattisgarh - 494001
                 </p>
               </div>
             </div>
           </div>
-
-          <Separator />
-
-          {/* Contact Form */}
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
-                      <FormControl>
-                        <Input placeholder="Your name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email <span className="text-destructive">*</span></FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="your.email@example.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="subject"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Subject <span className="text-destructive">*</span></FormLabel>
-                    <FormControl>
-                      <Input placeholder="What is this about?" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="message"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Message <span className="text-destructive">*</span></FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Tell us more..."
-                        className="min-h-[120px] resize-none"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <Button
-                type="submit"
-                disabled={isSubmitting || isSuccess}
-                className="w-full sm:w-auto"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Sending...
-                  </>
-                ) : isSuccess ? (
-                  <>
-                    <CheckCircle className="mr-2 h-4 w-4" />
-                    Message Sent!
-                  </>
-                ) : (
-                  <>
-                    <Send className="mr-2 h-4 w-4" />
-                    Send Message
-                  </>
-                )}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+        </Card>
+      </section>
 
       {/* Footer Note */}
-      <Card className="bg-muted/50 border-dashed">
-        <CardContent className="pt-6">
+      <section>
+        <Card className="bg-muted/30 border-dashed p-4 sm:p-6">
           <p className="text-xs sm:text-sm text-center text-muted-foreground">
-            💡 <strong>Tip:</strong> For urgent issues, please call our support line directly.
-            We're here to help!
+            <strong className="text-foreground">Need Help?</strong> Our support team is available to assist you with any questions or concerns.
           </p>
-        </CardContent>
-      </Card>
+        </Card>
+      </section>
     </div>
   );
 }

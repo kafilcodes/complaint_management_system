@@ -36,33 +36,55 @@ const inter = Inter({
  * Application metadata for SEO and PWA
  */
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+  ),
   title: {
-    default: process.env.NEXT_PUBLIC_APP_NAME || "Internal Complaint Management System",
-    template: `%s | ${process.env.NEXT_PUBLIC_APP_NAME || "CMS"}`,
+    default: process.env.NEXT_PUBLIC_APP_NAME || "MParekh - Complaint Management System",
+    template: `%s | ${process.env.NEXT_PUBLIC_APP_NAME || "MParekh CMS"}`,
   },
   description:
-    "A production-grade Progressive Web Application for managing customer complaints, service tickets, and technician workflows in real-time.",
+    "A production-grade Progressive Web Application for managing customer complaints, service tickets, and technician workflows in real-time. Streamline your support operations with MParekh.",
   keywords: [
     "complaint management",
     "service tickets",
     "technician management",
     "customer support",
     "PWA",
+    "ticket tracking",
+    "customer service software",
+    "help desk",
+    "IT support",
+    "service management",
   ],
-  authors: [{ name: "Your Company Name" }],
-  creator: "Your Company Name",
-  publisher: "Your Company Name",
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-  ),
+  authors: [{ name: "MParekh Enterprises", url: "mailto:mparekhenterprises@gmail.com" }],
+  creator: "MParekh Enterprises",
+  publisher: "MParekh Enterprises",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
     url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-    title: process.env.NEXT_PUBLIC_APP_NAME || "Internal Complaint Management System",
+    title: process.env.NEXT_PUBLIC_APP_NAME || "MParekh - Complaint Management System",
     description:
-      "A production-grade PWA for managing customer complaints and service tickets",
-    siteName: process.env.NEXT_PUBLIC_APP_NAME || "CMS",
+      "A production-grade PWA for managing customer complaints and service tickets with real-time tracking and analytics",
+    siteName: process.env.NEXT_PUBLIC_APP_NAME || "MParekh CMS",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: process.env.NEXT_PUBLIC_APP_NAME || "MParekh - Complaint Management System",
+    description:
+      "Streamline complaint resolution and improve customer satisfaction with our comprehensive management system",
   },
   icons: {
     icon: [
@@ -80,11 +102,18 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: process.env.NEXT_PUBLIC_APP_NAME || "CMS",
+    title: process.env.NEXT_PUBLIC_APP_NAME || "MParekh CMS",
+    startupImage: [
+      {
+        url: "/ios/180.png",
+        media: "(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)",
+      },
+    ],
   },
   formatDetection: {
     telephone: false,
   },
+  category: "business",
 };
 
 /**

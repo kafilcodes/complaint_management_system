@@ -1,7 +1,7 @@
 {
   "name": "MParekh - Complaint Management System",
-  "short_name": "MParekh",
-  "description": "Internal complaint management and service ticket tracking system",
+  "short_name": "MParekh CMS",
+  "description": "Internal complaint management and service ticket tracking system for efficient customer service",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -11,6 +11,10 @@
   "lang": "en-US",
   "dir": "ltr",
   "scope": "/",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "edge_side_panel": {
+    "preferred_width": 480
+  },
   "icons": [
     {
       "src": "/icons/icon-72x72.png",
