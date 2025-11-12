@@ -62,23 +62,23 @@ export function TicketCard({
   return (
     <Link href={`/tickets/${ticket.id}`} className="block group">
       <Card className="hover:shadow-lg transition-all hover:border-primary/50 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 h-full">
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between gap-4">
+        <CardHeader className="pb-2 sm:pb-3 p-4 sm:p-6">
+          <div className="flex items-start justify-between gap-2 sm:gap-4">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <Badge className={cn("text-xs flex items-center gap-1.5", statusColor)}>
+              <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2 flex-wrap">
+                <Badge className={cn("text-[10px] sm:text-xs flex items-center gap-1 sm:gap-1.5 py-0.5", statusColor)}>
                   {getStatusIcon(ticket.status)}
                   {getLabelByValue(TICKET_STATUSES, ticket.status)}
                 </Badge>
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-[10px] sm:text-xs py-0.5">
                   {brandLabel}
                 </Badge>
               </div>
-              <h3 className="text-lg font-semibold group-hover:text-primary transition-colors line-clamp-1">
+              <h3 className="text-sm sm:text-lg font-semibold group-hover:text-primary transition-colors line-clamp-1">
                 {ticket.productName}
               </h3>
               {ticket.productModel && (
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
                   Model: {ticket.productModel}
                 </p>
               )}
@@ -86,34 +86,34 @@ export function TicketCard({
           </div>
         </CardHeader>
 
-      <CardContent className="space-y-3 pb-3">
+      <CardContent className="space-y-2 sm:space-y-3 pb-2 sm:pb-3 p-4 sm:p-6 pt-0">
         {/* Customer Info */}
-        <div className="space-y-2 text-sm">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <User className="h-4 w-4 shrink-0" />
+        <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
+          <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground">
+            <User className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
             <span className="truncate">{ticket.customerName}</span>
           </div>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Phone className="h-4 w-4 shrink-0" />
+          <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground">
+            <Phone className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
             <span>{ticket.customerPhone}</span>
           </div>
           {ticket.address && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <MapPin className="h-4 w-4 shrink-0" />
+            <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground">
+              <MapPin className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
               <span className="truncate">{ticket.address}</span>
             </div>
           )}
         </div>
 
         {/* Issue Description */}
-        <div className="pt-2 border-t">
-          <p className="text-sm text-muted-foreground line-clamp-2">
+        <div className="pt-1.5 sm:pt-2 border-t">
+          <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
             {ticket.issueDescription}
           </p>
         </div>
 
         {/* Metadata */}
-        <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
+        <div className="flex items-center gap-2 sm:gap-4 text-[10px] sm:text-xs text-muted-foreground pt-1.5 sm:pt-2">
           <div className="flex items-center gap-1">
             <Calendar className="h-3 w-3" />
             <span>{getRelativeTime(ticket.createdAt)}</span>
@@ -128,7 +128,7 @@ export function TicketCard({
       </CardContent>
 
       {showActions && (
-        <CardFooter className="gap-2 pt-3 border-t">
+        <CardFooter className="gap-2 pt-2 sm:pt-3 border-t p-4 sm:p-6">
           {!ticket.assignedTo && onAssign && (
             <Button
               variant="outline"
@@ -137,7 +137,7 @@ export function TicketCard({
                 e.preventDefault();
                 onAssign(ticket.id);
               }}
-              className="flex-1"
+              className="flex-1 text-xs sm:text-sm h-8 sm:h-9"
             >
               Assign
             </Button>
@@ -150,12 +150,12 @@ export function TicketCard({
                 e.preventDefault();
                 onResolve(ticket.id);
               }}
-              className="flex-1"
+              className="flex-1 text-xs sm:text-sm h-8 sm:h-9"
             >
               Resolve
             </Button>
           )}
-          <Button variant="outline" size="sm" className="flex-1">
+          <Button variant="outline" size="sm" className="flex-1 text-xs sm:text-sm h-8 sm:h-9">
             View Details
           </Button>
         </CardFooter>
