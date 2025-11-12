@@ -20,11 +20,40 @@
 "use client";
 
 import { type ReactNode } from "react";
-import { ThemeProvider } from "next-themes";
+import { ThemeProvider, useTheme } from "next-themes";
 import { Toaster } from "sonner";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { CommandMenu } from "@/components/common/CommandMenu";
+
+/**
+ * Theme-aware Toaster Component
+ * Wraps Sonner Toaster to make it theme-adaptive
+ */
+function ThemedToaster() {
+  const { theme } = useTheme();
+  
+  return (
+    <Toaster
+      position="top-right"
+      expand={true}
+      richColors
+      closeButton
+      duration={4000}
+      theme={theme as "light" | "dark" | "system"}
+      toastOptions={{
+        classNames: {
+          toast: "font-sans",
+          title: "font-medium",
+          description: "text-sm",
+          actionButton: "bg-primary text-primary-foreground",
+          cancelButton: "bg-muted text-muted-foreground",
+          closeButton: "bg-muted text-muted-foreground hover:bg-muted/80",
+        },
+      }}
+    />
+  );
+}
 
 interface ProvidersProps {
   children: ReactNode;
@@ -51,24 +80,8 @@ export function Providers({ children }: ProvidersProps) {
           {/* Global Command Menu (Cmd+K / Ctrl+K) */}
           <CommandMenu />
           
-          {/* Sonner Toast Notifications - Task 04 Enhanced */}
-          <Toaster
-            position="top-right"
-            expand={true}
-            richColors
-            closeButton
-            duration={4000}
-            toastOptions={{
-              classNames: {
-                toast: "font-sans",
-                title: "font-medium",
-                description: "text-sm",
-                actionButton: "bg-primary text-primary-foreground",
-                cancelButton: "bg-muted text-muted-foreground",
-                closeButton: "bg-muted text-muted-foreground hover:bg-muted/80",
-              },
-            }}
-          />
+          {/* Sonner Toast Notifications - Theme Adaptive */}
+          <ThemedToaster />
         </ThemeProvider>
       </AuthProvider>
     </QueryProvider>
