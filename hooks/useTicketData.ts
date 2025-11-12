@@ -326,11 +326,12 @@ export function useCreateTicket() {
 
   return useMutation({
     mutationFn: async (ticketData: TicketCreateInput) => {
-      const response: ApiSuccessResponse<{ ticketId: string }> = await apiPost(
+      const response: ApiSuccessResponse<Ticket> = await apiPost(
         "/api/tickets",
         ticketData
       );
-      return response.data;
+      // Return ticket ID from the created ticket
+      return { ticketId: response.data?.id };
     },
     onSuccess: () => {
       // Invalidate all ticket lists to refetch with real-time data
