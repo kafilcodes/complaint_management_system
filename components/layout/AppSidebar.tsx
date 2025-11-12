@@ -18,7 +18,7 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut, Loader2, Shield, User as UserIcon, Building2 } from "lucide-react";
+import { LogOut, Loader2, Shield, User as UserIcon, Building2, Info } from "lucide-react";
 
 import { NAV_ITEMS, getVisibleNavItems } from "@/app/config/navConfig";
 import { cn } from "@/lib/utils";
@@ -220,6 +220,29 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
             </div>
           </div>
         </div>
+
+        {/* About Link - Employee Only */}
+        {!isAdmin && (
+          <>
+            <Separator className="my-2" />
+            <Link href="/about">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "w-full justify-start gap-3 h-10",
+                  "group-data-[collapsible=icon]:justify-center",
+                  pathname === "/about" && "bg-accent text-accent-foreground"
+                )}
+              >
+                <Info className="h-4 w-4" />
+                <span className="text-sm group-data-[collapsible=icon]:hidden">
+                  About & Contact
+                </span>
+              </Button>
+            </Link>
+          </>
+        )}
 
         {/* Theme Toggle and Logout */}
         <div className="flex items-center gap-2 mt-2">
