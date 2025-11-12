@@ -119,6 +119,56 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Fetch creator user data for denormalization
+    let createdByUserName = creatorName;
+    let createdByUserEmail = "";
+    if (createdBy) {
+      try {
+        const creatorDoc = await adminDb.collection("users").doc(createdBy).get();
+        if (creatorDoc.exists) {
+          const creatorData = creatorDoc.data();
+          createdByUserName = creatorData?.name || creatorName;
+          createdByUserEmail = creatorData?.email || "";
+        }
+      } catch (err) {
+        console.warn(`[tickets:${requestId}] Could not fetch creator data, using defaults`);
+      }
+    }
+
+    // Fetch assignee user data for denormalization
+    let assignedToUserName: string | null = null;
+    let assignedToUserEmail: string | null = null;
+    if (data.assignedTo) {
+      try {
+        const assigneeDoc = await adminDb.collection("users").doc(data.assignedTo).get();
+        if (assigneeDoc.exists) {
+          const assigneeData = assigneeDoc.data();
+          assignedToUserName = assigneeData?.name || null;
+          assignedToUserEmail = assigneeData?.email || null;
+          
+          // Update assignee's ticket count
+          await adminDb.collection("users").doc(data.assignedTo).update({
+            ticketCount: FieldValue.increment(1),
+            lastActivity: Timestamp.now(),
+          });
+        }
+      } catch (err) {
+        console.warn(`[tickets:${requestId}] Could not fetch assignee data, using null`);
+      }
+    }
+
+    // Update creator's ticket count if exists
+    if (createdBy) {
+      try {
+        await adminDb.collection("users").doc(createdBy).update({
+          ticketCount: FieldValue.increment(1),
+          lastActivity: Timestamp.now(),
+        });
+      } catch (err) {
+        console.warn(`[tickets:${requestId}] Could not update creator ticket count`);
+      }
+    }
+
     // Prepare ticket document
     const now = Timestamp.now();
     
@@ -155,6 +205,12 @@ export async function POST(request: NextRequest) {
       assignedAt: data.assignedTo ? (now as any) : null,
       closedAt: null,
       
+      // Denormalized User Data (for performance)
+      createdByUserName,
+      createdByUserEmail,
+      assignedToUserName,
+      assignedToUserEmail,
+      
       // Customer Information
       customerName: data.customerName,
       customerPhone: data.customerPhone,
@@ -179,7 +235,7 @@ export async function POST(request: NextRequest) {
     const ticketRef = await adminDb.collection("tickets").add(ticketData);
     console.log(`[tickets:${requestId}] Ticket created with ID: ${ticketRef.id}`);
 
-    // Create notification if ticket is assigned
+    // Create notification if ticket is assigned (with denormalized data)
     if (ticketData.assignedTo) {
       await adminDb.collection("notifications").add({
         userId: ticketData.assignedTo,
@@ -190,6 +246,10 @@ export async function POST(request: NextRequest) {
         link: `/tickets/${ticketRef.id}`,
         ticketId: ticketRef.id,
         type: "ticket_assigned",
+        // Denormalized data
+        ticketTitle: `${data.productName} - ${data.brand}`,
+        ticketBrand: data.brand,
+        assignedUserName: assignedToUserName || undefined,
       });
       console.log(`[tickets:${requestId}] Notification created for assignee: ${ticketData.assignedTo}`);
     }

@@ -87,7 +87,7 @@ export function NotificationBell() {
                 {notifications.slice(0, 5).map((notification) => (
                   <div key={notification.id} onClick={() => setOpen(false)}>
                     <NotificationItem
-                      notification={notification}
+                      notification={notification as any}
                       showActions={false}
                     />
                   </div>

@@ -46,16 +46,23 @@ import { toast } from "sonner";
  * This hook creates an onSnapshot listener for the entire tickets collection.
  * Data updates automatically when any ticket changes in Firestore.
  * 
- * @param filters - Optional filters for status, brand, etc.
+ * @param options - Optional filters and configuration
  * @returns TanStack Query result with live ticket array
  */
-export function useTicketList(filters?: {
+export function useTicketList(options?: {
   status?: TicketStatus;
   brand?: string;
   limit?: number;
+  enabled?: boolean;
 }) {
+  // Separate enabled from filters for query key
+  const { enabled = true, ...filters } = options || {};
+  
+  console.log("[useTicketList] 🔧 Hook called with enabled:", enabled);
+  
   return useQuery<Ticket[]>({
-    queryKey: queryKeys.tickets.list(filters),
+    queryKey: queryKeys.tickets.list(filters), // Don't include enabled in query key
+    enabled: enabled, // Use enabled separately
     queryFn: () =>
       new Promise<Ticket[]>((resolve, reject) => {
         try {
@@ -137,6 +144,8 @@ export function useTicketList(filters?: {
       }),
     staleTime: Infinity, // Data is always fresh (real-time listener)
     gcTime: 1000 * 60 * 5, // Cache for 5 minutes after unmount
+    refetchOnMount: true, // Always refetch when component mounts
+    refetchOnWindowFocus: true, // Refetch when window regains focus
   });
 }
 
@@ -156,9 +165,12 @@ export function useMyTicketList() {
     queryFn: () =>
       new Promise<Ticket[]>((resolve, reject) => {
         if (!user?.id) {
+          console.log("[useMyTicketList] ⚠️ No user.id found, returning empty array");
           resolve([]);
           return;
         }
+
+        console.log("[useMyTicketList] 🔍 Querying tickets with assignedTo ==", user.id);
 
         try {
           const myTicketsQuery = query(
@@ -170,6 +182,7 @@ export function useMyTicketList() {
           const unsubscribe = onSnapshot(
             myTicketsQuery,
             (snapshot) => {
+              console.log("[useMyTicketList] 📦 Received", snapshot.docs.length, "tickets from query");
               const tickets: Ticket[] = snapshot.docs.map((doc) => {
                 const data = doc.data();
                 return {
@@ -225,6 +238,8 @@ export function useMyTicketList() {
     enabled: !!user?.id,
     staleTime: Infinity,
     gcTime: 1000 * 60 * 5,
+    refetchOnMount: true, // Always refetch when component mounts
+    refetchOnWindowFocus: true, // Refetch when window regains focus
   });
 }
 

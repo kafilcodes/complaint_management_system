@@ -66,7 +66,7 @@ export async function POST(
       );
     }
 
-    // Prepare resolution document
+    // Prepare resolution document with denormalized data
     const resolutionData = {
       ticketId: id,
       resolvedBy: user.id,
@@ -77,10 +77,25 @@ export async function POST(
       productImageURL: data.productImageURL || null,
       warrantyCardURL: data.warrantyCardURL || null,
       partConsumedImageURL: data.partConsumedImageURL || null,
+      // Denormalized data for performance
+      resolvedByUserName: user.name || "",
+      resolvedByUserEmail: user.email || "",
+      ticketTitle: `${ticket?.productName} - ${ticket?.brand}`,
+      ticketBrand: ticket?.brand || "",
     };
 
     // Create resolution document
     await adminDb.collection("resolutions").doc(id).set(resolutionData);
+    
+    // Update user's resolved count
+    try {
+      await adminDb.collection("users").doc(user.id).update({
+        resolvedCount: FieldValue.increment(1),
+        lastActivity: Timestamp.now(),
+      });
+    } catch (err) {
+      console.warn("Could not update user resolved count");
+    }
 
     // Create timeline event for resolution
     const now = Timestamp.now();
@@ -104,17 +119,21 @@ export async function POST(
       timeline: FieldValue.arrayUnion(resolvedEvent),
     });
 
-    // Create notification for ticket creator
+    // Create notification for ticket creator with denormalized data
     if (ticket?.createdBy) {
       await adminDb.collection("notifications").add({
         userId: ticket.createdBy,
         createdAt: Timestamp.now(),
         read: false,
         title: "Ticket Resolved",
-        message: `Your ticket has been resolved by the technician`,
+        message: `Your ticket has been resolved by ${user.name}`,
         link: `/tickets/${id}`,
         ticketId: id,
         type: "ticket_resolved",
+        // Denormalized data
+        ticketTitle: `${ticket.productName} - ${ticket.brand}`,
+        ticketBrand: ticket.brand,
+        assignedUserName: user.name,
       });
     }
 

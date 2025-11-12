@@ -2,15 +2,19 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-export interface User {
+interface User {
   id: string;
-  email: string;
   name: string;
-  role: "user" | "it_technician" | "it_admin" | "full_developer_admin";
+  email: string;
+  photoURL?: string;
   phone?: string;
-  createdAt: string;
-  disabled?: boolean;
-  lastLogin?: string;
+  role: "employee" | "admin" | "full_developer_admin";
+  department?: string;
+  storeId?: string;
+  storeName?: string;
+  brand?: string;
+  category?: string;
+  isActive?: boolean;
 }
 
 interface UsersResponse {
@@ -237,9 +241,9 @@ export function useToggleUserStatus(userId: string) {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["users", userId] });
       toast.success(
-        data.disabled ? "User disabled" : "User enabled",
+        (data as any).disabled ? "User disabled" : "User enabled",
         {
-          description: `${data.name} has been ${data.disabled ? "disabled" : "enabled"}`,
+          description: `${data.name} has been ${(data as any).disabled ? "disabled" : "enabled"}`,
         }
       );
     },

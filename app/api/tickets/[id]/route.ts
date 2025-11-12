@@ -126,6 +126,52 @@ export async function PUT(
       updateData.assignedTo = updates.assignedTo;
       updateData.assignedAt = updates.assignedTo ? now : null;
       
+      // Fetch assignee user data for denormalization
+      if (updates.assignedTo) {
+        try {
+          const assigneeDoc = await db.collection("users").doc(updates.assignedTo).get();
+          if (assigneeDoc.exists) {
+            const assigneeData = assigneeDoc.data();
+            updateData.assignedToUserName = assigneeData?.name || null;
+            updateData.assignedToUserEmail = assigneeData?.email || null;
+            
+            // Update assignee's ticket count and activity
+            await db.collection("users").doc(updates.assignedTo).update({
+              ticketCount: FieldValue.increment(1),
+              lastActivity: Timestamp.now(),
+            });
+          }
+        } catch (err) {
+          console.warn("Could not fetch assignee data for denormalization");
+        }
+        
+        // Decrement previous assignee's ticket count if exists
+        if (wasAssigned && wasAssigned !== updates.assignedTo) {
+          try {
+            await db.collection("users").doc(wasAssigned).update({
+              ticketCount: FieldValue.increment(-1),
+            });
+          } catch (err) {
+            console.warn("Could not decrement previous assignee ticket count");
+          }
+        }
+      } else {
+        // Unassigning - clear denormalized data
+        updateData.assignedToUserName = null;
+        updateData.assignedToUserEmail = null;
+        
+        // Decrement previous assignee's ticket count
+        if (wasAssigned) {
+          try {
+            await db.collection("users").doc(wasAssigned).update({
+              ticketCount: FieldValue.increment(-1),
+            });
+          } catch (err) {
+            console.warn("Could not decrement assignee ticket count");
+          }
+        }
+      }
+      
       if (wasAssigned !== updates.assignedTo) {
         timelineEvents.push({
           event: "assigned",
@@ -170,7 +216,7 @@ export async function PUT(
     // Update ticket in Firestore
     await db.collection("tickets").doc(id).update(updateData);
 
-    // If assignment changed, create notification
+    // If assignment changed, create notification with denormalized data
     if (updates.assignedTo && updates.assignedTo !== existingTicket.assignedTo) {
       await db.collection("notifications").add({
         userId: updates.assignedTo,
@@ -181,6 +227,10 @@ export async function PUT(
         link: `/tickets/${id}`,
         ticketId: id,
         type: "ticket_assigned",
+        // Denormalized data
+        ticketTitle: `${existingTicket.productName} - ${existingTicket.brand}`,
+        ticketBrand: existingTicket.brand,
+        assignedUserName: updateData.assignedToUserName || undefined,
       });
     }
 

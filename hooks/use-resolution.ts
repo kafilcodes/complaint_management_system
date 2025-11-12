@@ -15,6 +15,11 @@ interface Resolution {
   resolvedBy: string;
   resolvedAt: Date;
   createdAt: Date;
+  // Denormalized fields (optional for backward compatibility)
+  resolvedByUserName?: string;
+  resolvedByUserEmail?: string;
+  ticketTitle?: string;
+  ticketBrand?: string;
 }
 
 interface ResolveTicketData {

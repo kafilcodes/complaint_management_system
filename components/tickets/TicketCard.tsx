@@ -121,7 +121,10 @@ export function TicketCard({
           {ticket.assignedTo && (
             <div className="flex items-center gap-1">
               <User className="h-3 w-3" />
-              <span>Assigned</span>
+              <span>
+                {/* Use denormalized user name if available, fallback to "Assigned" */}
+                {ticket.assignedToUserName ? `Assigned to ${ticket.assignedToUserName}` : "Assigned"}
+              </span>
             </div>
           )}
         </div>

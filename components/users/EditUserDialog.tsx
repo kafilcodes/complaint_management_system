@@ -36,7 +36,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const editUserSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  role: z.enum(["user", "it_technician", "it_admin", "full_developer_admin"]),
+  role: z.enum(["employee", "admin", "full_developer_admin"]),
   phone: z.string().optional(),
 });
 
@@ -60,7 +60,7 @@ export function EditUserDialog({
     resolver: zodResolver(editUserSchema),
     defaultValues: {
       name: "",
-      role: "user",
+      role: "employee",
       phone: "",
     },
   });
@@ -163,8 +163,8 @@ export function EditUserDialog({
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="user">User</SelectItem>
-                        <SelectItem value="it_technician">Technician</SelectItem>
-                        <SelectItem value="it_admin">IT Admin</SelectItem>
+                        <SelectItem value="employee">Employee</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
                         <SelectItem value="full_developer_admin">
                           Full Admin
                         </SelectItem>

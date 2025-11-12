@@ -41,7 +41,24 @@ export function Header() {
 
   const handleLogout = async () => {
     try {
+      // Clear Firebase auth session
       await signOut(auth);
+      
+      // Clear Zustand store (auth state) - import store directly
+      const { useStore } = await import("@/lib/store");
+      useStore.getState().clearAuth();
+      
+      // Clear React Query cache
+      const { QueryClient } = await import("@tanstack/react-query");
+      const queryClient = new QueryClient();
+      queryClient.clear();
+      
+      // Clear local storage
+      localStorage.clear();
+      
+      // Clear session storage
+      sessionStorage.clear();
+      
       toast.success("Logged out successfully");
       router.push("/login");
     } catch (error) {

@@ -62,7 +62,24 @@ export function CommandMenu() {
 
   const handleLogout = async () => {
     try {
+      // Clear Firebase auth session
       await firebaseSignOut(auth);
+      
+      // Clear Zustand store (auth state) - import store directly
+      const { useStore } = await import("@/lib/store");
+      useStore.getState().clearAuth();
+      
+      // Clear React Query cache
+      const { QueryClient } = await import("@tanstack/react-query");
+      const queryClient = new QueryClient();
+      queryClient.clear();
+      
+      // Clear local storage
+      localStorage.clear();
+      
+      // Clear session storage
+      sessionStorage.clear();
+      
       toast.success("Logged out successfully");
       router.push("/login");
     } catch (error) {
@@ -85,7 +102,7 @@ export function CommandMenu() {
             <FileText className="mr-2 h-4 w-4" />
             <span>Tickets</span>
           </CommandItem>
-          {(user?.role === "it_admin" || user?.role === "full_developer_admin") && (
+          {(user?.role === "admin" || user?.role === "full_developer_admin") && (
             <CommandItem onSelect={() => runCommand(() => router.push("/users"))}>
               <Users className="mr-2 h-4 w-4" />
               <span>Users</span>
@@ -104,7 +121,7 @@ export function CommandMenu() {
         <CommandSeparator />
 
         <CommandGroup heading="Actions">
-          {(user?.role === "it_admin" || user?.role === "full_developer_admin") && (
+          {(user?.role === "admin" || user?.role === "full_developer_admin") && (
             <CommandItem onSelect={() => runCommand(() => router.push("/create-ticket"))}>
               <Plus className="mr-2 h-4 w-4" />
               <span>Create New Ticket</span>
@@ -131,14 +148,14 @@ export function CommandMenu() {
  */
 export function CommandMenuTrigger() {
   const [mounted, setMounted] = useState(false);
+  const [isMac, setIsMac] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    setIsMac(navigator.platform.toUpperCase().indexOf("MAC") >= 0);
   }, []);
 
   if (!mounted) return null;
-
-  const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
 
   return (
     <div className="flex items-center gap-1 text-sm text-muted-foreground">

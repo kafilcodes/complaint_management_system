@@ -343,26 +343,116 @@ export function timestampToDate(timestamp: any): Date {
  * Format date for display
  */
 export function formatDate(date: Date | Timestamp | undefined): string {
-  const d = timestampToDate(date);
-  return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  }).format(d);
+  if (!date) return "N/A";
+  
+  try {
+    const d = timestampToDate(date);
+    
+    // Validate the date is not invalid
+    if (!d || isNaN(d.getTime()) || d.getTime() < 0) {
+      console.warn('Invalid date passed to formatDate:', date);
+      return "N/A";
+    }
+    
+    // Additional validation - check if year is reasonable (between 1900 and 2100)
+    const year = d.getFullYear();
+    if (year < 1900 || year > 2100) {
+      console.warn('Date year out of range:', year, date);
+      return "N/A";
+    }
+    
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }).format(d);
+  } catch (error) {
+    console.error('Error formatting date:', error, date);
+    return "N/A";
+  }
 }
 
 /**
  * Format datetime for display
+ * PRODUCTION-GRADE: Multiple layers of validation and error handling
  */
 export function formatDateTime(date: Date | Timestamp | undefined): string {
-  const d = timestampToDate(date);
-  return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(d);
+  // Layer 1: Check if date exists
+  if (!date) {
+    console.log('[formatDateTime] No date provided');
+    return "N/A";
+  }
+  
+  try {
+    // Layer 2: Convert to Date object
+    const d = timestampToDate(date);
+    
+    // Layer 3: Validate Date object exists
+    if (!d) {
+      console.warn('[formatDateTime] timestampToDate returned null/undefined');
+      return "N/A";
+    }
+    
+    // Layer 4: Check if date time is valid
+    const timestamp = d.getTime();
+    if (isNaN(timestamp)) {
+      console.warn('[formatDateTime] Invalid timestamp (NaN):', date);
+      return "N/A";
+    }
+    
+    // Layer 5: Check if timestamp is reasonable (not negative, not too far in future)
+    if (timestamp < 0) {
+      console.warn('[formatDateTime] Negative timestamp:', timestamp);
+      return "N/A";
+    }
+    
+    const now = Date.now();
+    const tenYearsFromNow = now + (10 * 365 * 24 * 60 * 60 * 1000);
+    if (timestamp > tenYearsFromNow) {
+      console.warn('[formatDateTime] Timestamp too far in future:', new Date(timestamp));
+      return "N/A";
+    }
+    
+    // Layer 6: Validate year is reasonable
+    try {
+      const year = d.getFullYear();
+      if (isNaN(year) || year < 1900 || year > 2100) {
+        console.warn('[formatDateTime] Year out of range:', year);
+        return "N/A";
+      }
+    } catch (yearError) {
+      console.error('[formatDateTime] Error getting year:', yearError);
+      return "N/A";
+    }
+    
+    // Layer 7: Final formatting with additional try-catch
+    try {
+      // Test if date can be converted to ISO string first
+      d.toISOString();
+      
+      const formatted = new Intl.DateTimeFormat("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(d);
+      
+      return formatted;
+    } catch (formatError) {
+      console.error('[formatDateTime] Intl.DateTimeFormat error:', formatError, 'Date:', d);
+      // Fallback to simple string conversion
+      try {
+        return d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
+      } catch (fallbackError) {
+        console.error('[formatDateTime] Fallback formatting failed:', fallbackError);
+        return "N/A";
+      }
+    }
+  } catch (error) {
+    console.error('[formatDateTime] Outer catch - Unexpected error:', error, 'Input:', date);
+    return "N/A";
+  }
 }
 
 /**

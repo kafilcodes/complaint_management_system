@@ -72,7 +72,7 @@ export async function PUT(
 
     // Validate role if provided
     if (role) {
-      const validRoles = ["user", "it_technician", "it_admin", "full_developer_admin"];
+      const validRoles = ["employee", "admin", "full_developer_admin"];
       if (!validRoles.includes(role)) {
         return NextResponse.json(
           { error: "Invalid role" },
@@ -187,7 +187,7 @@ export async function DELETE(
     const userData = userDoc.data();
 
     // Handle ticket reassignment if user is a technician
-    if (userData?.role === "it_technician" || userData?.role === "it_admin") {
+    if (userData?.role === "employee" || userData?.role === "admin") {
       const assignedTickets = await adminDb
         .collection("tickets")
         .where("assignedTo", "==", id)
@@ -207,8 +207,8 @@ export async function DELETE(
 
           const reassignUserData = reassignUserDoc.data();
           if (
-            reassignUserData?.role !== "it_technician" &&
-            reassignUserData?.role !== "it_admin" &&
+            reassignUserData?.role !== "employee" &&
+            reassignUserData?.role !== "admin" &&
             reassignUserData?.role !== "full_developer_admin"
           ) {
             return NextResponse.json(

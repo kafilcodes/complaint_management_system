@@ -1,17 +1,17 @@
 /**
  * API CLIENT UTILITIES
  * 
- * Helper functions for making authenticated API requests.
- * Automatically includes Firebase Auth token in requests.
+ * Helper functions for making public API requests.
+ * NO AUTHENTICATION - This is an internal-only app with public Firebase rules.
  * 
  * @module lib/api-client
+ * @updated 2025-11-12 - Removed all auth token logic (internal app only)
  */
 
-import { useStore } from "@/lib/store";
-
 /**
- * Simple fetch wrapper without authentication
- * Auth is handled by Firebase Firestore Rules for this internal-only app
+ * Fetch wrapper for public API routes
+ * Note: This is for Next.js API routes only, not for direct Firestore/Storage access
+ * All routes are public - this is an internal-only application
  */
 export function simpleFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const headers = new Headers(options.headers);

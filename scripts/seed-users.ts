@@ -187,7 +187,7 @@ async function createFirestoreUser(uid: string, userData: typeof SEED_USERS[0]) 
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       createdBy: "system",
       lastLoginAt: null,
-      profilePicture: null,
+      photoURL: null, // Standardized field name for profile photos
       preferences: {
         notifications: true,
         emailNotifications: true,

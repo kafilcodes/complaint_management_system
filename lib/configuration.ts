@@ -45,14 +45,11 @@ export const PRIORITIES = [
 ] as const;
 
 /**
- * Ticket status types
+ * Ticket status types - Simplified to Open and Closed only
  */
 export const TICKET_STATUSES = [
-  { value: "open", label: "Open", color: "text-blue-600 bg-blue-50" },
-  { value: "in_progress", label: "In Progress", color: "text-yellow-600 bg-yellow-50" },
-  { value: "pending_parts", label: "Pending Parts", color: "text-purple-600 bg-purple-50" },
-  { value: "resolved", label: "Resolved", color: "text-green-600 bg-green-50" },
-  { value: "closed", label: "Closed", color: "text-gray-600 bg-gray-50" },
+  { value: "open", label: "Open", color: "text-white bg-green-600 hover:bg-green-700 border-green-600" },
+  { value: "closed", label: "Closed", color: "text-white bg-red-600 hover:bg-red-700 border-red-600" },
 ] as const;
 
 /**
@@ -60,38 +57,20 @@ export const TICKET_STATUSES = [
  */
 export const USER_ROLES = [
   {
-    value: "store_employee",
-    label: "Store Employee",
-    description: "Can create and view own tickets",
-    permissions: ["create_ticket", "view_own_tickets", "comment_own_tickets"] as string[],
-  },
-  {
-    value: "store_manager",
-    label: "Store Manager",
-    description: "Can view all store tickets and approve requests",
+    value: "employee",
+    label: "Employee",
+    description: "Can view and resolve assigned tickets (differentiated by department)",
     permissions: [
-      "create_ticket",
-      "view_store_tickets",
-      "view_own_tickets",
-      "comment_all_tickets",
-      "approve_tickets",
-    ] as string[],
-  },
-  {
-    value: "it_technician",
-    label: "IT Technician",
-    description: "Can view, resolve, and manage assigned tickets",
-    permissions: [
-      "view_all_tickets",
+      "view_assigned_tickets",
       "update_assigned_tickets",
       "resolve_tickets",
-      "comment_all_tickets",
+      "comment_assigned_tickets",
     ] as string[],
   },
   {
-    value: "it_admin",
-    label: "IT Admin",
-    description: "Can manage all tickets and assign to technicians",
+    value: "admin",
+    label: "Admin",
+    description: "Can manage all tickets and assign to employees",
     permissions: [
       "view_all_tickets",
       "update_all_tickets",

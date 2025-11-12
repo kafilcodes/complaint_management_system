@@ -34,7 +34,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { IconInput } from "@/components/common/IconInput";
-import { useAuth } from "@/lib/store";
+import { useAuth, useStore } from "@/lib/store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Form,
@@ -58,34 +58,29 @@ import type { UserRole } from "@/lib/types";
 // ==============================================================================
 
 const profileFormSchema = z.object({
-  // Mutable fields (user can edit) - NOW REQUIRED
+  // Required fields - mobile, address, aadhar
   mobile: z
     .string()
     .min(10, "Mobile number is required")
-    .max(13, "Mobile number must not exceed 13 characters")
-    .refine(
-      (val) => /^(\+91)?[6-9]\d{9}$/.test(val),
-      "Must be a valid 10-digit Indian mobile number (e.g., 9876543210 or +919876543210)"
-    ),
+    .max(10, "Mobile number must be 10 digits")
+    .regex(/^[6-9]\d{9}$/, "Must be a valid 10-digit Indian mobile number"),
   address: z
     .string()
-    .min(5, "Address is required")
-    .max(100, "Address must be 100 characters or less"),
+    .min(5, "Address is required (minimum 5 characters)")
+    .max(200, "Address must be 200 characters or less"),
   aadhar: z
     .string()
     .length(12, "Aadhar number must be exactly 12 digits")
-    .refine(
-      (val) => /^\d{12}$/.test(val),
-      "Aadhar must contain only digits"
-    ),
+    .regex(/^\d{12}$/, "Aadhar must contain only digits"),
+  // Optional field - alternate number
   alternateNo: z
     .string()
-    .min(10, "Alternate number is required")
-    .max(13, "Mobile number must not exceed 13 characters")
     .refine(
-      (val) => /^(\+91)?[6-9]\d{9}$/.test(val),
-      "Must be a valid 10-digit Indian mobile number"
-    ),
+      (val) => !val || (val.length === 10 && /^[6-9]\d{9}$/.test(val)),
+      "Must be a valid 10-digit mobile number if provided"
+    )
+    .optional()
+    .or(z.literal("")),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -100,9 +95,9 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 function getRoleIcon(role: UserRole): React.ReactElement {
   switch (role) {
     case "full_developer_admin":
-    case "it_admin":
+    case "admin":
       return <Shield className="h-10 w-10" />;
-    case "it_technician":
+    case "employee":
       return <Wrench className="h-10 w-10" />;
     default:
       return <UserIcon className="h-10 w-10" />;
@@ -115,10 +110,8 @@ function getRoleIcon(role: UserRole): React.ReactElement {
 function getRoleLabel(role: UserRole): string {
   const roleLabels: Record<UserRole, string> = {
     full_developer_admin: "Full Developer Admin",
-    it_admin: "IT Administrator",
-    it_technician: "IT Technician",
-    store_manager: "Store Manager",
-    store_employee: "Store Employee",
+    admin: "Administrator",
+    employee: "Employee",
   };
   return roleLabels[role] || role;
 }
@@ -128,71 +121,126 @@ function getRoleLabel(role: UserRole): string {
 // ==============================================================================
 
 export default function ProfilePage() {
-  const { user, setUser } = useAuth();
+  const { user } = useAuth();
+  const setUser = useStore((state) => state.setUser);
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Initialize form with user data
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
       mobile: user?.phone || "",
-      address: "",
-      aadhar: "",
-      alternateNo: "",
+      address: (user as any)?.address || "",
+      aadhar: (user as any)?.aadhar || "",
+      alternateNo: (user as any)?.alternateNo || "",
     },
   });
 
-  // Photo upload mutation
+  // Photo upload mutation - Direct Firebase Storage upload
   const uploadPhotoMutation = useMutation({
     mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.append("photo", file);
-
-      const response = await fetch("/api/users/profile-photo", {
-        method: "POST",
-        body: formData,
+      console.log("[ProfilePage] 📸 Photo upload started", {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to upload photo");
+      if (!user?.id) {
+        console.error("[ProfilePage] ❌ No user ID for photo upload");
+        throw new Error("User not authenticated");
       }
 
-      return response.json();
+      console.log("[ProfilePage] 🔥 Importing Firebase modules...");
+      // Import Firebase Storage dynamically
+      const { storage } = await import("@/firebase/client");
+      const { ref, uploadBytes, getDownloadURL } = await import("firebase/storage");
+      const { doc, updateDoc } = await import("firebase/firestore");
+      const { db } = await import("@/firebase/client");
+
+      console.log("[ProfilePage] ☁️ Uploading to Firebase Storage...");
+      // Upload to Firebase Storage with user's required path structure
+      const storagePath = `profile-photos/${user.id}/images/${file.name}`;
+      console.log("[ProfilePage] Storage path:", storagePath);
+      
+      const storageRef = ref(storage, storagePath);
+      const snapshot = await uploadBytes(storageRef, file);
+      console.log("[ProfilePage] ✅ Upload complete, getting download URL...");
+      
+      const photoURL = await getDownloadURL(snapshot.ref);
+      console.log("[ProfilePage] 🔗 Photo URL:", photoURL);
+
+      console.log("[ProfilePage] 📄 Updating Firestore document...");
+      // Update Firestore user document with photoURL field
+      const { Timestamp } = await import("firebase/firestore");
+      const userRef = doc(db, "users", user.id);
+      await updateDoc(userRef, { 
+        photoURL: photoURL, // Standardized field name across all users
+        updatedAt: Timestamp.now()
+      });
+      
+      console.log("[ProfilePage] ✅ Firestore updated with new photo URL");
+      return { photoURL };
     },
     onSuccess: (data) => {
+      console.log("[ProfilePage] 🎉 Photo upload successful!", { photoURL: data.photoURL });
+      
       // Update user in store with new photoURL
       if (user) {
-        setUser({ ...user, photoURL: data.data.photoURL });
+        setUser({ ...user, photoURL: data.photoURL });
+        console.log("[ProfilePage] 🔄 User store updated with new photo");
       }
+      
       toast.success("Profile photo updated successfully");
       queryClient.invalidateQueries({ queryKey: ["profile"] });
     },
     onError: (error: Error) => {
+      console.error("[ProfilePage] ❌ Photo upload failed:", error);
+      console.error("[ProfilePage] Error details:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      
       toast.error("Failed to upload photo", {
-        description: error.message,
+        description: error.message || "Please try again"
       });
     },
   });
 
   // Handle file selection
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("[ProfilePage] 📁 File selection triggered");
+    
     const file = event.target.files?.[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith("image/")) {
-        toast.error("Please select an image file");
-        return;
-      }
-
-      // Validate file size (5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("Image must be less than 5MB");
-        return;
-      }
-
-      uploadPhotoMutation.mutate(file);
+    if (!file) {
+      console.log("[ProfilePage] ⚠️ No file selected");
+      return;
     }
+    
+    console.log("[ProfilePage] 📋 File selected:", {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      sizeInMB: (file.size / 1024 / 1024).toFixed(2)
+    });
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      console.error("[ProfilePage] ❌ Invalid file type:", file.type);
+      toast.error("Please select an image file");
+      return;
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      console.error("[ProfilePage] ❌ File too large:", (file.size / 1024 / 1024).toFixed(2), "MB");
+      toast.error("Image must be less than 5MB");
+      return;
+    }
+
+    console.log("[ProfilePage] ✅ Validation passed, starting upload...");
+    uploadPhotoMutation.mutate(file);
   };
 
   // Early return if no user
@@ -212,22 +260,59 @@ export default function ProfilePage() {
     .slice(0, 2);
 
   const onSubmit = async (data: ProfileFormValues) => {
+    console.log("[ProfilePage] 📝 Form submission started", { data });
+    
     try {
-      // TODO: Call /api/users/profile endpoint
-      const response = await fetch("/api/users/profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update profile");
+      if (!user?.id) {
+        console.error("[ProfilePage] ❌ No user ID");
+        throw new Error("User not authenticated");
       }
 
+      console.log("[ProfilePage] 🔥 Importing Firestore modules...");
+      // Import Firestore directly
+      const { doc, updateDoc } = await import("firebase/firestore");
+      const { db } = await import("@/firebase/client");
+
+      console.log("[ProfilePage] 📄 Updating Firestore document:", user.id);
+      
+      // Update Firestore user document directly
+      const { Timestamp } = await import("firebase/firestore");
+      const userRef = doc(db, "users", user.id);
+      await updateDoc(userRef, {
+        phone: data.mobile,
+        address: data.address,
+        aadhar: data.aadhar,
+        alternateNo: data.alternateNo || null,
+        updatedAt: Timestamp.now(),
+      });
+
+      console.log("[ProfilePage] ✅ Firestore update successful");
       toast.success("Profile updated successfully");
+      
+      // Update user in store with new data
+      setUser({ 
+        ...user, 
+        phone: data.mobile,
+        address: data.address,
+        aadhar: data.aadhar,
+        alternateNo: data.alternateNo || null,
+      } as any);
+      
+      console.log("[ProfilePage] 🔄 Invalidating queries");
+      // Invalidate profile query
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      
+      console.log("[ProfilePage] 🎉 Profile update complete");
     } catch (error) {
-      console.error("Profile update error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to update profile");
+      console.error("[ProfilePage] ❌ Profile update error:", error);
+      console.error("[ProfilePage] Error details:", {
+        message: error instanceof Error ? error.message : "Unknown error",
+        stack: error instanceof Error ? error.stack : undefined,
+        error
+      });
+      toast.error("Failed to update profile", {
+        description: error instanceof Error ? error.message : "An unexpected error occurred"
+      });
     }
   };
 
@@ -274,7 +359,11 @@ export default function ProfilePage() {
           <div className="flex items-center gap-6">
             <div className="relative group">
               <Avatar className="h-24 w-24">
-                <AvatarImage src={user.photoURL} alt={user.name} />
+                <AvatarImage 
+                  src={user.photoURL || undefined} 
+                  alt={user.name}
+                  key={user.photoURL} // Force re-render when photoURL changes
+                />
                 <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
                   {userInitials}
                 </AvatarFallback>
@@ -363,7 +452,20 @@ export default function ProfilePage() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                console.log("[ProfilePage] 🎯 Form submit event fired");
+                console.log("[ProfilePage] Form state:", {
+                  isDirty: form.formState.isDirty,
+                  isValid: form.formState.isValid,
+                  isSubmitting: form.formState.isSubmitting,
+                  errors: form.formState.errors
+                });
+                form.handleSubmit(onSubmit)(e);
+              }} 
+              className="space-y-6"
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -376,13 +478,13 @@ export default function ProfilePage() {
                       <FormControl>
                         <IconInput 
                           icon={Phone}
-                          placeholder="+91 98765 43210"
-                          maxLength={13}
+                          placeholder="9876543210"
+                          maxLength={10}
                           {...field} 
                         />
                       </FormControl>
                       <FormDescription>
-                        Your primary contact number (10 digits)
+                        10-digit mobile number
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -395,18 +497,18 @@ export default function ProfilePage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Alternate Number <span className="text-destructive">*</span>
+                        Alternate Number (Optional)
                       </FormLabel>
                       <FormControl>
                         <IconInput 
                           icon={PhoneCall}
-                          placeholder="+91 87654 32109"
-                          maxLength={13}
+                          placeholder="8765432109"
+                          maxLength={10}
                           {...field} 
                         />
                       </FormControl>
                       <FormDescription>
-                        Secondary contact number
+                        Secondary contact number (optional)
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

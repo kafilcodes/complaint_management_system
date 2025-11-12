@@ -35,7 +35,10 @@ export interface NavItem {
   icon: LucideIcon;
   
   /** Role required to see this item (optional, defaults to any authenticated user) */
-  requiredRole?: "full_developer_admin";
+  requiredRole?: "full_developer_admin" | "admin";
+  
+  /** Roles that should NOT see this item */
+  excludedRoles?: string[];
 }
 
 /**
@@ -59,6 +62,8 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Create Ticket",
     href: "/create-ticket",
     icon: Plus,
+    // Only admins can create tickets, not employees
+    excludedRoles: ["employee"],
   },
   {
     label: "Users",
@@ -87,11 +92,43 @@ export const NAV_ITEMS: NavItem[] = [
 export function getVisibleNavItems(
   userRole: string
 ): NavItem[] {
-  return NAV_ITEMS.filter((item) => {
+  console.log("========================================");
+  console.log("[navConfig] 🧭 FILTERING NAVIGATION ITEMS");
+  console.log("========================================");
+  console.log("[navConfig] Input userRole:", userRole);
+  console.log("[navConfig] userRole type:", typeof userRole);
+  
+  const filtered = NAV_ITEMS.filter((item) => {
+    console.log(`[navConfig] Checking item: "${item.label}"`);
+    console.log(`  - href: ${item.href}`);
+    console.log(`  - requiredRole: ${item.requiredRole || "none"}`);
+    console.log(`  - excludedRoles: ${item.excludedRoles?.join(", ") || "none"}`);
+    
+    // If item has excluded roles, check if user is excluded
+    if (item.excludedRoles && item.excludedRoles.includes(userRole)) {
+      console.log(`  ❌ EXCLUDED (user role "${userRole}" is in excludedRoles)`);
+      return false;
+    }
+    
     // If no required role, item is visible to everyone
-    if (!item.requiredRole) return true;
+    if (!item.requiredRole) {
+      console.log(`  ✅ VISIBLE (no required role)`);
+      return true;
+    }
+    
+    // full_developer_admin can see everything
+    if (userRole === "full_developer_admin") {
+      console.log(`  ✅ VISIBLE (user is full_developer_admin)`);
+      return true;
+    }
     
     // If required role matches user role, item is visible
-    return item.requiredRole === userRole;
+    const matches = item.requiredRole === userRole;
+    console.log(`  ${matches ? "✅" : "❌"} ${matches ? "VISIBLE" : "HIDDEN"} (requiredRole "${item.requiredRole}" ${matches ? "matches" : "doesn't match"} userRole "${userRole}")`);
+    return matches;
   });
+  
+  console.log("[navConfig] ✅ Final visible items:", filtered.map(i => i.label));
+  console.log("========================================");
+  return filtered;
 }

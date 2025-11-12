@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/firebase/admin";
+import type { User } from "@/lib/types";
 
-export interface User {
-  id: string;
+interface CreateUserRequest {
   email: string;
+  password: string;
   name: string;
-  role: "user" | "it_technician" | "it_admin" | "full_developer_admin";
   phone?: string;
-  createdAt: string;
-  disabled?: boolean;
-  lastLogin?: string;
+  role: "employee" | "admin" | "full_developer_admin";
+  department?: string;
+  storeId?: string;
+  storeName?: string;
+  brand?: string;
+  category?: string;
 }
 
 /**
@@ -104,7 +107,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate role
-    const validRoles = ["user", "it_technician", "it_admin", "full_developer_admin"];
+    const validRoles = ["employee", "admin", "full_developer_admin"];
     if (!validRoles.includes(role)) {
       return NextResponse.json(
         { error: "Invalid role" },
@@ -141,6 +144,20 @@ export async function POST(request: NextRequest) {
     };
 
     await adminDb.collection("users").doc(authUser.uid).set(userData);
+
+    // Create welcome notification for employees (not for admins)
+    if (role === "employee") {
+      await adminDb.collection("notifications").add({
+        userId: authUser.uid,
+        type: "system",
+        title: "Welcome to MParekh CMS!",
+        message: "Your account has been created by admin. Please complete your profile details and upload a profile picture to get started.",
+        link: "/profile",
+        ticketId: null,
+        read: false,
+        createdAt: new Date().toISOString(),
+      });
+    }
 
     return NextResponse.json(
       {

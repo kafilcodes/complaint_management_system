@@ -13,7 +13,7 @@ import { useStore } from "@/lib/store";
  * 
  * @example
  * ```tsx
- * const { data: users = [], isLoading } = useUsers({ role: 'it_technician' });
+ * const { data: users = [], isLoading } = useUsers({ role: 'employee' });
  * ```
  */
 
@@ -21,7 +21,7 @@ interface UseUsersOptions {
   /**
    * Filter by role (optional)
    */
-  role?: "admin" | "full_developer_admin" | "it_technician" | "customer";
+  role?: "admin" | "full_developer_admin" | "employee";
   
   /**
    * Enable/disable the query

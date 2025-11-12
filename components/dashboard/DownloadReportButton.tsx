@@ -299,26 +299,35 @@ export function DownloadReportButton({ stats, tickets }: DownloadReportButtonPro
             fileName={fileName}
             className="w-full block"
           >
-            {({ blob, url, loading, error }) => (
-              <Button
-                disabled={loading || isGenerating}
-                size="sm"
-                className="w-full gap-2 shadow-sm"
-                onClick={() => setIsGenerating(true)}
-              >
-                {loading || isGenerating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-xs sm:text-sm">Generating PDF...</span>
-                  </>
-                ) : (
-                  <>
-                    <Download className="h-4 w-4" />
-                    <span className="text-xs sm:text-sm">Generate {selectedPeriodLabel}</span>
-                  </>
-                )}
-              </Button>
-            )}
+            {({ blob, url, loading, error }) => {
+              // Reset isGenerating when loading is complete
+              React.useEffect(() => {
+                if (!loading && isGenerating) {
+                  setIsGenerating(false);
+                }
+              }, [loading]);
+
+              return (
+                <Button
+                  disabled={loading || isGenerating}
+                  size="sm"
+                  className="w-full gap-2 shadow-sm"
+                  onClick={() => setIsGenerating(true)}
+                >
+                  {loading || isGenerating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="text-xs sm:text-sm">Generating PDF...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4" />
+                      <span className="text-xs sm:text-sm">Generate {selectedPeriodLabel}</span>
+                    </>
+                  )}
+                </Button>
+              );
+            }}
           </PDFDownloadLink>
         </div>
       </DropdownMenuContent>

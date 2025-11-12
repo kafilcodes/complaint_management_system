@@ -92,10 +92,17 @@ try {
     adminDb = getFirestore(adminApp);
     adminStorage = getStorage(adminApp);
 
-    // Set Firestore settings for better performance
-    adminDb.settings({
-      ignoreUndefinedProperties: true, // Ignore undefined values in writes
-    });
+    // Set Firestore settings for better performance (only on first initialization)
+    if (!getApps().length || getApps().length === 1) {
+      try {
+        adminDb.settings({
+          ignoreUndefinedProperties: true, // Ignore undefined values in writes
+        });
+      } catch (settingsError) {
+        // Settings already configured, ignore error
+        console.log("⚠️ Firestore settings already configured");
+      }
+    }
   }
 } catch (error) {
   console.error("❌ Firebase Admin SDK initialization error:", error);

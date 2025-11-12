@@ -2,6 +2,7 @@
 
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useTicket, useDeleteTicket, useUpdateTicket } from "@/hooks/use-tickets";
 import { useUser, useUsers } from "@/hooks/use-users";
 import { useResolveTicket } from "@/hooks/use-resolution";
@@ -72,6 +73,7 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
   const deleteTicketMutation = useDeleteTicket();
   const updateTicketMutation = useUpdateTicket(id);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showReopenDialog, setShowReopenDialog] = useState(false);
   const [isReassigning, setIsReassigning] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
 
@@ -79,13 +81,13 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
   const brandLabel = ticket ? getLabelByValue(BRANDS, ticket.brand) : "";
 
   // Check if user is admin
-  const isAdmin = user && (user.role === "full_developer_admin" || user.role === "it_admin");
+  const isAdmin = user && (user.role === "full_developer_admin" || user.role === "admin");
 
   // Prepare employee options for reassignment - ONLY employees, not admins
   const employeeOptions = allUsers
     .filter((u) => {
       // Exclude admins and developer admin
-      const isAdminUser = u.role === "full_developer_admin" || u.role === "it_admin";
+      const isAdminUser = u.role === "full_developer_admin" || u.role === "admin";
       const isFromAdminDept = (u as any).department === "Administration";
       
       // Only include non-admin users who are NOT from Administration department
@@ -166,16 +168,30 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
   }) || [];
 
   // Check if current user can resolve this ticket
+  // Employees can resolve open tickets assigned to them, admins can resolve any open ticket
+  const isEmployee = user?.role === "employee";
+  
   const canResolve =
     ticket &&
     ticket.status === "open" &&
     user &&
-    ((user.role === "it_technician" && ticket.assignedTo === user.id) ||
-      user.role === "it_admin" ||
+    ((isEmployee && ticket.assignedTo === user.id) ||
+      user.role === "admin" ||
       user.role === "full_developer_admin");
 
+  // Debug logging for resolve permissions
+  console.log("[TicketDetail] 🔍 Resolve Permission Debug:");
+  console.log("  - Current user:", user);
+  console.log("  - User role:", user?.role);
+  console.log("  - isEmployee:", isEmployee);
+  console.log("  - Ticket status:", ticket?.status);
+  console.log("  - Ticket assignedTo:", ticket?.assignedTo);
+  console.log("  - User ID:", user?.id);
+  console.log("  - Is assigned to user?:", ticket?.assignedTo === user?.id);
+  console.log("  - canResolve final:", canResolve);
+
   // Check if current user can delete this ticket (admin only)
-  const canDelete = user && (user.role === "full_developer_admin" || user.role === "it_admin");
+  const canDelete = user && (user.role === "full_developer_admin" || user.role === "admin");
 
   const handleResolve = async (data: any) => {
     try {
@@ -190,24 +206,68 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
           partConsumedImage: data.partConsumedImage,
         },
       });
-      toast.success("Ticket resolved successfully!");
+      // Toast is shown by the mutation's onSuccess callback
       router.push("/tickets");
     } catch (error) {
       console.error("Error resolving ticket:", error);
-      toast.error("Failed to resolve ticket");
+      // Toast is shown by the mutation's onError callback
     }
   };
 
   const handleDeleteTicket = async () => {
     try {
       await deleteTicketMutation.mutateAsync(id);
-      toast.success("Ticket deleted successfully!");
+      // Toast is shown by the mutation
       router.push("/tickets");
     } catch (error) {
       console.error("Error deleting ticket:", error);
       // Error toast is already shown by the mutation
     } finally {
       setShowDeleteDialog(false);
+    }
+  };
+
+  const handleReopenTicket = async () => {
+    try {
+      // Import Firebase modules
+      const { doc, updateDoc, deleteDoc, Timestamp } = await import("firebase/firestore");
+      const { db } = await import("@/firebase/client");
+
+      // 1. Delete the resolution document
+      try {
+        const resolutionRef = doc(db, "resolutions", id);
+        await deleteDoc(resolutionRef);
+        console.log("[ReopenTicket] Resolution document deleted");
+      } catch (err) {
+        console.warn("[ReopenTicket] No resolution document to delete or error:", err);
+      }
+
+      // 2. Update ticket status to 'open' and add timeline event
+      const ticketRef = doc(db, "tickets", id);
+      const reopenEvent = {
+        event: "reopened",
+        timestamp: Timestamp.now(),
+        message: "Ticket reopened by admin",
+        userName: user?.name || "Admin",
+        userId: user?.id || "unknown",
+      };
+
+      await updateDoc(ticketRef, {
+        status: "open",
+        updatedAt: Timestamp.now(),
+        timeline: [...(ticket?.timeline || []), reopenEvent],
+      });
+
+      toast.success("Ticket reopened successfully", {
+        description: "Previous resolution data has been deleted",
+      });
+
+      setShowReopenDialog(false);
+    } catch (error) {
+      console.error("Error reopening ticket:", error);
+      toast.error("Failed to reopen ticket", {
+        description: error instanceof Error ? error.message : "Please try again",
+      });
     }
   };
 
@@ -496,55 +556,101 @@ ${ticket.assignedTo ? `👨‍🔧 Assigned to technician` : '⚠️ Unassigned'
                   Attachments ({ticket.attachmentUrls.length})
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid gap-3">
-                  {ticket.attachmentUrls.map((url, index) => {
-                    const fileName = url.split('/').pop()?.split('?')[0] || `attachment-${index + 1}`;
-                    const fileExtension = fileName.split('.').pop()?.toLowerCase();
-                    const isPDF = fileExtension === 'pdf';
-                    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic'].includes(fileExtension || '');
-                    
+              <CardContent className="space-y-4">
+                {/* Image Preview Section - Show max 3 images */}
+                {(() => {
+                  const images = ticket.attachmentUrls.filter(url => {
+                    const fileExtension = url.split('/').pop()?.split('?')[0].split('.').pop()?.toLowerCase();
+                    return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic'].includes(fileExtension || '');
+                  });
+                  
+                  if (images.length > 0) {
                     return (
-                      <div key={index} className="flex items-center justify-between p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors">
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <div className="rounded-md bg-primary/10 p-2">
-                            <Paperclip className="h-4 w-4 text-primary" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{fileName}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {isPDF ? 'PDF Document' : isImage ? 'Image' : 'File'}
-                            </p>
-                          </div>
+                      <div>
+                        <p className="text-sm font-medium mb-3">Image Previews (max 3)</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {images.slice(0, 3).map((url, index) => (
+                            <div key={index} className="relative aspect-video rounded-lg overflow-hidden border hover:opacity-80 transition-opacity cursor-pointer group">
+                              <Image
+                                src={url}
+                                alt={`Attachment ${index + 1}`}
+                                fill
+                                className="object-cover"
+                                onClick={() => window.open(url, '_blank')}
+                              />
+                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <ExternalLink className="h-6 w-6 text-white" />
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 w-8 p-0"
-                            onClick={() => window.open(url, '_blank')}
-                            title="Open in new tab"
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 w-8 p-0"
-                            onClick={() => {
-                              const link = document.createElement('a');
-                              link.href = url;
-                              link.download = fileName;
-                              link.click();
-                            }}
-                            title="Download"
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        {images.length > 3 && (
+                          <p className="text-xs text-muted-foreground mt-2">
+                            +{images.length - 3} more image(s) available in downloads below
+                          </p>
+                        )}
                       </div>
                     );
-                  })}
+                  }
+                  return null;
+                })()}
+
+                {/* All Attachments List - Download & Open Options */}
+                <div>
+                  <p className="text-sm font-medium mb-3">All Attachments</p>
+                  <div className="grid gap-3">
+                    {ticket.attachmentUrls.map((url, index) => {
+                      const fileExtension = url.split('.').pop()?.split('?')[0]?.toLowerCase();
+                      const isPDF = fileExtension === 'pdf';
+                      const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic'].includes(fileExtension || '');
+                      const isDoc = ['doc', 'docx'].includes(fileExtension || '');
+                      
+                      return (
+                        <div key={index} className="flex items-center justify-between p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors gap-3 max-w-full overflow-hidden">
+                          <div className="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
+                            <div className="rounded-md bg-primary/10 p-2 flex-shrink-0">
+                              <Paperclip className="h-4 w-4 text-primary" />
+                            </div>
+                            <div className="min-w-0 flex-1 overflow-hidden">
+                              <p className="text-sm font-medium truncate">
+                                {isPDF ? 'PDF Document' : isImage ? 'Image File' : isDoc ? 'Document' : 'File'}
+                              </p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                Attachment {index + 1}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 flex-shrink-0">
+                            {/* Open in new tab button */}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0"
+                              onClick={() => window.open(url, '_blank')}
+                              title="Open in new tab"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </Button>
+                            {/* Download button */}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0"
+                              onClick={() => {
+                                const link = document.createElement('a');
+                                link.href = url;
+                                link.download = `attachment-${index + 1}.${fileExtension}`;
+                                link.click();
+                              }}
+                              title="Download"
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -561,10 +667,38 @@ ${ticket.assignedTo ? `👨‍🔧 Assigned to technician` : '⚠️ Unassigned'
 
           {/* Resolution Details (for closed tickets) */}
           {ticket.status === "closed" && (
-            <ResolutionDetails 
-              ticketId={ticket.id}
-              resolvedBy={ticket.assignedTo || "Unknown"}
-            />
+            <>
+              <ResolutionDetails 
+                ticketId={ticket.id}
+                resolvedBy={ticket.assignedTo || "Unknown"}
+              />
+              
+              {/* Reopen Ticket Button (Admin Only) */}
+              {isAdmin && (
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-1">
+                        <h4 className="text-sm font-semibold mb-1">Reopen this ticket?</h4>
+                        <p className="text-xs text-muted-foreground">
+                          This will delete the resolution data and set the ticket status back to open.
+                          Use this option if the issue was not properly resolved.
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowReopenDialog(true)}
+                        className="flex-shrink-0"
+                      >
+                        <CircleDot className="h-4 w-4 mr-2" />
+                        Reopen Ticket
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </>
           )}
         </div>
 
@@ -879,6 +1013,36 @@ ${ticket.assignedTo ? `👨‍🔧 Assigned to technician` : '⚠️ Unassigned'
                 <Trash2 className="h-4 w-4" />
               )}
               {deleteTicketMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reopen Confirmation Dialog */}
+      <AlertDialog open={showReopenDialog} onOpenChange={setShowReopenDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <CircleDot className="h-5 w-5 text-primary" />
+              Reopen This Ticket?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will delete the previous resolution records and reopen the ticket.
+              The ticket will be set back to &quot;open&quot; status, just like a newly created ticket.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="flex items-center gap-2">
+              <X className="h-4 w-4" />
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleReopenTicket}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2"
+            >
+              <CircleDot className="h-4 w-4" />
+              Reopen Ticket
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

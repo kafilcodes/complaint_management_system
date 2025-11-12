@@ -17,17 +17,13 @@ import { Timestamp } from "firebase/firestore";
 /**
  * User roles with hierarchical permissions
  * - full_developer_admin: Super admin with all permissions including user management
- * - it_admin: Can manage all tickets but cannot manage users
- * - it_technician: Can only view and resolve assigned tickets
- * - store_manager: Can view and manage store tickets
- * - store_employee: Can create and view own tickets
+ * - admin: Can manage all tickets but cannot manage users
+ * - employee: Can view and resolve assigned tickets (differentiated by department)
  */
 export type UserRole = 
   | "full_developer_admin" 
-  | "it_admin" 
-  | "it_technician"
-  | "store_manager"
-  | "store_employee";
+  | "admin" 
+  | "employee";
 
 /**
  * User document structure from Firestore
@@ -51,6 +47,11 @@ export interface User {
   lastLogin?: string; // From Firebase Auth metadata (server-side only)
   createdAt: Timestamp | Date;
   updatedAt?: Timestamp | Date;
+  
+  // Activity Tracking (for analytics and performance metrics)
+  lastActivity?: Timestamp | Date; // Last interaction timestamp
+  ticketCount?: number; // Total tickets created (admin) or assigned (employee)
+  resolvedCount?: number; // Total tickets resolved (employee only)
 }
 
 /**
@@ -82,7 +83,10 @@ export interface UserProfile {
 /**
  * Ticket status lifecycle
  * - open: Newly created or assigned, awaiting resolution
- * - closed: Resolved by technician with resolution details
+ * - in_progress: Employee is actively working on the ticket
+ * - pending_parts: Waiting for parts to arrive
+ * - resolved: Ticket resolved with resolution details
+ * - closed: Ticket completely closed and archived
  */
 export type TicketStatus = "open" | "closed";
 
@@ -113,6 +117,12 @@ export interface Ticket {
   assignedAt?: Timestamp | Date | null;
   closedAt?: Timestamp | Date | null;
   updatedAt?: Timestamp | Date;
+  
+  // Denormalized User Data (for performance - reduces API calls)
+  createdByUserName?: string; // Name of admin who created ticket
+  createdByUserEmail?: string; // Email of admin who created ticket
+  assignedToUserName?: string | null; // Name of assigned technician
+  assignedToUserEmail?: string | null; // Email of assigned technician
   
   // Store Information
   storeId?: string;
@@ -175,6 +185,12 @@ export interface TicketResolution {
   productImageURL?: string | null;
   warrantyCardURL?: string | null;
   partConsumedImageURL?: string | null;
+  
+  // Denormalized Data (for performance)
+  resolvedByUserName?: string; // Name of technician who resolved
+  resolvedByUserEmail?: string; // Email of technician who resolved
+  ticketTitle?: string; // Brief ticket description (productName + brand)
+  ticketBrand?: string; // Brand from ticket
 }
 
 /**
@@ -218,6 +234,11 @@ export interface Notification {
   ticketId?: string;
   type: "ticket_assigned" | "ticket_resolved" | "ticket_updated" | "system";
   updatedAt?: Timestamp | Date | string;
+  
+  // Denormalized Data (for richer display without joins)
+  ticketTitle?: string; // Brief ticket description (productName + brand)
+  ticketBrand?: string; // Brand from ticket
+  assignedUserName?: string; // Name of technician assigned (for admin notifications)
 }
 
 // ==============================================================================

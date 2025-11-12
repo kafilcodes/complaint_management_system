@@ -76,6 +76,12 @@ async function handleUserSignedIn(
   setUser: (user: User | null) => void,
   setAuthToken: (token: string | null) => void
 ) {
+  console.log("========================================");
+  console.log("[AuthProvider] 🔐 AUTHENTICATION STARTED");
+  console.log("========================================");
+  console.log("[AuthProvider] Firebase User UID:", firebaseUser.uid);
+  console.log("[AuthProvider] Firebase User Email:", firebaseUser.email);
+  
   try {
     // Get the ID token first - this is critical for API requests
     const token = await firebaseUser.getIdToken();
@@ -86,13 +92,30 @@ async function handleUserSignedIn(
     const idTokenResult = await firebaseUser.getIdTokenResult();
     const role = idTokenResult.claims.role as string | undefined;
 
+    console.log("[AuthProvider] 🎫 Custom Claims from Token:");
+    console.log("  - role:", role);
+    console.log("  - All claims:", JSON.stringify(idTokenResult.claims, null, 2));
+    
     // Fetch user profile from Firestore
     const userDocRef = doc(db, "users", firebaseUser.uid);
+    console.log("[AuthProvider] 📄 Fetching Firestore document from path: users/" + firebaseUser.uid);
+    
     const userDocSnap = await getDoc(userDocRef);
 
     if (userDocSnap.exists()) {
       // User profile exists in Firestore
       const userData = userDocSnap.data();
+      
+      console.log("[AuthProvider] ✅ Firestore Document EXISTS!");
+      console.log("[AuthProvider] 📄 Raw Firestore userData:");
+      console.log(JSON.stringify(userData, null, 2));
+      console.log("[AuthProvider] � Specific Fields from Firestore:");
+      console.log("  - role:", userData.role);
+      console.log("  - department:", userData.department);
+      console.log("  - employeeId:", userData.employeeId);
+      console.log("  - email:", userData.email);
+      console.log("  - name:", userData.name);
+      console.log("  - status:", userData.status);
       
       const user: User = {
         id: firebaseUser.uid,
@@ -100,8 +123,10 @@ async function handleUserSignedIn(
         email: firebaseUser.email || userData.email,
         name: userData.name,
         phone: userData.phone,
-        photoURL: userData.photoURL, // Include profile photo URL
+        // Standardized to photoURL field (handle legacy profilePicture for backwards compatibility)
+        photoURL: userData.photoURL || userData.profilePicture || null,
         role: role || userData.role,
+        department: userData.department, // Include department field
         category: userData.category,
         storeId: userData.storeId,
         storeName: userData.storeName,
@@ -111,8 +136,17 @@ async function handleUserSignedIn(
         updatedAt: userData.updatedAt,
       };
 
+      console.log("[AuthProvider] 🏗️ Constructed User Object:");
+      console.log(JSON.stringify(user, null, 2));
+      console.log("[AuthProvider] ⚠️ CRITICAL - Final role value being set:", user.role);
+      console.log("[AuthProvider] ⚠️ Role source:", role ? "Custom Claims" : "Firestore userData");
+      
       setUser(user);
-      console.log("[AuthProvider] ✅ User profile loaded:", user.email);
+      console.log("[AuthProvider] ✅ User profile loaded and stored in Zustand");
+      console.log("[AuthProvider] 📧 User email:", user.email);
+      console.log("========================================");
+      console.log("[AuthProvider] 🎉 AUTHENTICATION COMPLETE");
+      console.log("========================================");
     } else {
       // User profile doesn't exist in Firestore (shouldn't happen normally)
       console.warn("User authenticated but no Firestore profile found:", firebaseUser.uid);
@@ -124,7 +158,7 @@ async function handleUserSignedIn(
         email: firebaseUser.email || "",
         name: firebaseUser.displayName || "Unknown User",
         phone: firebaseUser.phoneNumber || "",
-        role: role as any || "it_technician",
+        role: role as any || "employee",
         isActive: true,
         createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } as any,
       };

@@ -1,10 +1,6 @@
-import type { Metadata } from "next";
-import { WifiOff, RefreshCw } from "lucide-react";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Offline - No Internet Connection",
-  description: "You are currently offline. Please check your internet connection.",
-};
+import { WifiOff, RefreshCw } from "lucide-react";
 
 /**
  * Offline Fallback Page

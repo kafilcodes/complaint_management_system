@@ -42,7 +42,7 @@ const DEFAULT_ADMINS = [
     password: "ITAdmin@123",
     name: "IT Administrator",
     phone: "+1234567891",
-    role: "it_admin",
+    role: "admin",
   },
 ] as const;
 

@@ -70,8 +70,7 @@ export function useCreateTicket() {
     onSuccess: (newTicket) => {
       // Invalidate tickets list to refetch
       queryClient.invalidateQueries({ queryKey: queryKeys.tickets.lists() });
-      
-      toast.success("Ticket created successfully");
+      // Toast is shown in the create-ticket page with attachment count
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to create ticket");

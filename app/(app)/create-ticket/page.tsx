@@ -89,7 +89,7 @@ export default function CreateTicketPage() {
   const employees = allUsers.filter(
     (user) => 
       user.role !== "full_developer_admin" && 
-      user.role !== "it_admin" &&
+      user.role !== "admin" &&
       user.department !== "Administration"
   );
 

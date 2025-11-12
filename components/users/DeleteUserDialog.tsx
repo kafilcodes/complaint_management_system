@@ -39,7 +39,7 @@ export function DeleteUserDialog({
 
   // Fetch technicians for reassignment (only if user is a technician)
   const { data: technicians } = useUsers({
-    role: "it_technician",
+    role: "employee",
   });
 
   // Reset reassignment when dialog opens/closes
@@ -66,10 +66,10 @@ export function DeleteUserDialog({
   };
 
   const isTechnician =
-    userToDelete?.role === "it_technician" || userToDelete?.role === "it_admin";
+    userToDelete?.role === "employee" || userToDelete?.role === "admin";
 
   const isAdminUser =
-    userToDelete?.role === "it_admin" ||
+    userToDelete?.role === "admin" ||
     userToDelete?.role === "full_developer_admin" ||
     (userToDelete as any)?.department === "Administration";
 

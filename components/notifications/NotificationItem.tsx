@@ -4,13 +4,13 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+// Import ONLY the icons we actually use
 import { 
   Bell, 
   CheckCircle, 
   AlertCircle, 
   Info, 
-  Trash2,
-  ExternalLink 
+  Trash2 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMarkNotificationAsRead, useDeleteNotification } from "@/hooks/useRealtimeNotifications";
@@ -74,12 +74,10 @@ export function NotificationItem({ notification, showActions = true }: Notificat
         !notification.read && "bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900"
       )}
     >
-      {/* Icon */}
       <div className={cn("mt-1", iconColor)}>
         <Icon className="h-5 w-5" />
       </div>
 
-      {/* Content */}
       <div className="flex-1 min-w-0 space-y-1">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1">
@@ -98,18 +96,20 @@ export function NotificationItem({ notification, showActions = true }: Notificat
         <p className="text-sm text-muted-foreground line-clamp-2">
           {notification.message}
         </p>
-
-        {notification.link && (
-          <div className="flex items-center gap-1 text-xs text-primary">
-            <span>View details</span>
-            <ExternalLink className="h-3 w-3" />
+        
+        {/* Show denormalized ticket info if available */}
+        {notification.ticketTitle && (
+          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+            <Badge variant="outline" className="text-[10px]">
+              {notification.ticketBrand || "Ticket"}
+            </Badge>
+            <span className="truncate">{notification.ticketTitle}</span>
           </div>
         )}
       </div>
 
-      {/* Actions */}
       {showActions && (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
           {!notification.read && (
             <Button
               variant="ghost"
@@ -139,7 +139,12 @@ export function NotificationItem({ notification, showActions = true }: Notificat
 
   if (notification.link) {
     return (
-      <Link href={notification.link} className="block" onClick={handleMarkAsRead}>
+      <Link 
+        href={notification.link} 
+        className="block cursor-pointer transition-opacity hover:opacity-90" 
+        onClick={handleMarkAsRead}
+        prefetch={true}
+      >
         {content}
       </Link>
     );

@@ -37,7 +37,7 @@ const createUserSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  role: z.enum(["user", "it_technician", "it_admin", "full_developer_admin"]),
+  role: z.enum(["employee", "admin", "full_developer_admin"]),
   phone: z.string().optional(),
   mobile: z.string().optional(),
   address: z.string().optional(),
@@ -64,7 +64,7 @@ export function CreateUserDialog({
       name: "",
       email: "",
       password: "",
-      role: "user",
+      role: "employee",
       phone: "",
       mobile: "",
       address: "",
@@ -161,8 +161,8 @@ export function CreateUserDialog({
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="user">User</SelectItem>
-                      <SelectItem value="it_technician">Technician</SelectItem>
-                      <SelectItem value="it_admin">IT Admin</SelectItem>
+                      <SelectItem value="employee">Employee</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
                       <SelectItem value="full_developer_admin">
                         Full Admin
                       </SelectItem>

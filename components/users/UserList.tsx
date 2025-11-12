@@ -12,7 +12,6 @@ import {
   Filter,
   Shield,
   Wrench,
-  Store,
   User as UserIcon,
   ShieldCheck,
   Building2,
@@ -23,7 +22,7 @@ import { EditUserDialog } from "./EditUserDialog";
 import { DeleteUserDialog } from "./DeleteUserDialog";
 import { useUsers } from "@/hooks/useUsers";
 import { useDebounce } from "@/hooks/useDebounce";
-import { useStore } from "@/lib/store";
+import { useStore as useAppStore } from "@/lib/store";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,18 +76,14 @@ interface UserListProps {
 
 const roleLabels: Record<string, string> = {
   full_developer_admin: "Full Admin",
-  it_admin: "IT Admin",
-  it_technician: "Technician",
-  store_manager: "Store Manager",
-  store_employee: "Store Employee",
+  admin: "Admin",
+  employee: "Employee",
 };
 
 const roleColors: Record<string, string> = {
   full_developer_admin: "red",
-  it_admin: "purple",
-  it_technician: "blue",
-  store_manager: "green",
-  store_employee: "default",
+  admin: "purple",
+  employee: "blue",
 };
 
 // Helper to get role icon
@@ -96,12 +91,10 @@ const getRoleIcon = (role: string) => {
   switch (role) {
     case "full_developer_admin":
       return <ShieldCheck className="h-4 w-4" />;
-    case "it_admin":
+    case "admin":
       return <Shield className="h-4 w-4" />;
-    case "it_technician":
-      return <Wrench className="h-4 w-4" />;
-    case "store_manager":
-      return <Store className="h-4 w-4" />;
+    case "employee":
+      return <UserIcon className="h-4 w-4" />;
     default:
       return <UserIcon className="h-4 w-4" />;
   }
@@ -112,14 +105,10 @@ const getRoleDescription = (role: string): string => {
   switch (role) {
     case "full_developer_admin":
       return "Full system access with developer privileges";
-    case "it_admin":
-      return "IT department administrator";
-    case "it_technician":
-      return "Technical support specialist";
-    case "store_manager":
-      return "Store location manager";
-    case "store_employee":
-      return "Store staff member";
+    case "admin":
+      return "Administrator with ticket management access";
+    case "employee":
+      return "Employee (differentiated by department)";
     default:
       return "Standard user";
   }
@@ -168,7 +157,8 @@ export function UserList({ onEdit, onDelete }: UserListProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const currentUser = useStore((state) => state.user);
+  // Get current user for role checking
+  const currentUser = useAppStore((state) => state.user);
 
   // Debounce search term
   const debouncedSearch = useDebounce(search, 500);

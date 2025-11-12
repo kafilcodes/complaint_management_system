@@ -184,16 +184,51 @@ export function ResolutionDetails({ ticketId, resolvedBy }: ResolutionDetailsPro
 
         {/* Metadata */}
         <div className="grid grid-cols-2 gap-4 text-sm">
-          {resolvedBy && (
+          {(resolution.resolvedByUserName || resolvedBy) && (
             <div className="flex items-center gap-2 text-muted-foreground">
               <UserIcon className="h-4 w-4" />
-              <span>Resolved by: {resolvedBy}</span>
+              <span>
+                {/* Use denormalized user name if available, fallback to prop */}
+                Resolved by: {resolution.resolvedByUserName || resolvedBy}
+                {resolution.resolvedByUserEmail && (
+                  <span className="text-xs ml-1">({resolution.resolvedByUserEmail})</span>
+                )}
+              </span>
             </div>
           )}
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Calendar className="h-4 w-4" />
-            <span>{formatDateTime(resolution.resolvedAt)}</span>
-          </div>
+          {resolution.resolvedAt && (() => {
+            // DEFENSIVE GUARD: Check that resolvedAt is valid before formatting
+            if (!resolution.resolvedAt) return null;
+            
+            // Check if it's a Date object with a valid time
+            if (resolution.resolvedAt instanceof Date && isNaN(resolution.resolvedAt.getTime())) {
+              console.warn("[ResolutionDetails] Invalid resolvedAt date:", resolution.resolvedAt);
+              return null;
+            }
+            
+            // For Timestamp objects, check seconds validity
+            if (typeof resolution.resolvedAt === 'object' && 'seconds' in resolution.resolvedAt) {
+              const timestamp = resolution.resolvedAt as any;
+              if (!timestamp.seconds || timestamp.seconds < 0 || isNaN(timestamp.seconds)) {
+                console.warn("[ResolutionDetails] Invalid Timestamp seconds:", timestamp);
+                return null;
+              }
+            }
+            
+            try {
+              const dateStr = formatDateTime(resolution.resolvedAt);
+              if (dateStr === "N/A") return null;
+              return (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  <span>{dateStr}</span>
+                </div>
+              );
+            } catch (error) {
+              console.error("[ResolutionDetails] Error formatting resolvedAt date:", error);
+              return null;
+            }
+          })()}
         </div>
       </CardContent>
     </Card>

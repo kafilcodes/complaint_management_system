@@ -19,7 +19,15 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, Grid, List as ListIcon, Plus, Clock, Loader2, Package, CheckCircle, XCircle } from "lucide-react";
+import { 
+  Search, 
+  Filter, 
+  Grid, 
+  List as ListIcon, 
+  Plus, 
+  Clock, 
+  CheckCircle 
+} from "lucide-react";
 import type { Ticket } from "@/lib/types";
 import { TICKET_STATUSES, getLabelByValue } from "@/lib/configuration";
 import { useBrandList } from "@/hooks/useConfig";
@@ -176,10 +184,7 @@ export function TicketList({
               <SelectItem key={status.value} value={status.value}>
                 <div className="flex items-center gap-2">
                   {status.value === "open" && <Clock className="h-4 w-4" />}
-                  {status.value === "in_progress" && <Loader2 className="h-4 w-4" />}
-                  {status.value === "pending_parts" && <Package className="h-4 w-4" />}
-                  {status.value === "resolved" && <CheckCircle className="h-4 w-4" />}
-                  {status.value === "closed" && <XCircle className="h-4 w-4" />}
+                  {status.value === "closed" && <CheckCircle className="h-4 w-4" />}
                   {status.label}
                 </div>
               </SelectItem>

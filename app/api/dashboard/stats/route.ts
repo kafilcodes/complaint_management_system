@@ -35,36 +35,81 @@ export interface DashboardStats {
  * GET /api/dashboard/stats
  * Get dashboard statistics
  * 
- * Returns all tickets (no authentication required)
+ * @note PUBLIC ROUTE - This is an internal-only app with no auth required
+ * Query params: ?userId=xxx&role=xxx
  */
 export async function GET(request: NextRequest) {
   try {
+    // Get user info from query params (since this is now a public route)
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
+    const userRole = searchParams.get("role");
+    
+    console.log("========================================");
+    console.log("[Dashboard API] 📊 FETCHING DASHBOARD STATS");
+    console.log("========================================");
+    console.log("[Dashboard API] Request Params:");
+    console.log("  - userId:", userId);
+    console.log("  - role:", userRole);
+    
+    // Determine if user is employee (show only assigned tickets)
+    const isEmployee = userRole === "employee";
+    const isAdmin = userRole === "admin" || userRole === "full_developer_admin";
+    
+    console.log("[Dashboard API] Role Checks:");
+    console.log("  - isEmployee:", isEmployee);
+    console.log("  - isAdmin:", isAdmin);
+    
     // Get current date boundaries
     const now = new Date();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 
-    // Base queries - show all tickets
-    const allTicketsQuery = adminDb.collection("tickets");
-    const recentTicketsQuery = adminDb
-      .collection("tickets")
+    // Build base query based on role
+    let allTicketsQuery: any = adminDb.collection("tickets");
+    let recentTicketsQuery: any = adminDb.collection("tickets");
+    
+    // For employees, filter by assigned tickets
+    if (isEmployee && userId) {
+      console.log("[Dashboard API] 🔍 FILTERING for employee:", userId);
+      allTicketsQuery = allTicketsQuery.where("assignedTo", "==", userId);
+      recentTicketsQuery = recentTicketsQuery.where("assignedTo", "==", userId);
+    } else {
+      console.log("[Dashboard API] 📋 Fetching ALL tickets (admin/other role)");
+    }
+    
+    // Add ordering and limit for recent tickets
+    recentTicketsQuery = recentTicketsQuery
       .orderBy("createdAt", "desc")
       .limit(5);
 
     // Fetch all tickets (for counts)
     const allTicketsSnapshot = await allTicketsQuery.get();
-    const allTickets = allTicketsSnapshot.docs.map((doc) => ({
+    const allTickets = allTicketsSnapshot.docs.map((doc: any) => ({
       id: doc.id,
       ...doc.data(),
     }));
 
-    // Count by status
+    console.log("[Dashboard API] 📦 Query Results:");
+    console.log("  - Total tickets fetched:", allTickets.length);
+    if (isEmployee && allTickets.length > 0) {
+      console.log("  - Sample ticket assignedTo:", allTickets[0].assignedTo);
+      console.log("  - Request userId:", userId);
+      console.log("  - Match:", allTickets[0].assignedTo === userId);
+    }
+
+    // Count by status (simplified to open/closed only)
     const openTickets = allTickets.filter((t: any) => t.status === "open").length;
     const closedTickets = allTickets.filter((t: any) => t.status === "closed").length;
+    
+    console.log("[Dashboard API] 📊 Stats:");
+    console.log("  - Open tickets:", openTickets);
+    console.log("  - Closed tickets:", closedTickets);
+    console.log("========================================");
 
     // Fetch recent tickets
     const recentTicketsSnapshot = await recentTicketsQuery.get();
-    const recentTickets = recentTicketsSnapshot.docs.map((doc) => {
+    const recentTickets = recentTicketsSnapshot.docs.map((doc: any) => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -79,7 +124,10 @@ export async function GET(request: NextRequest) {
     // Calculate trends (last 7 days)
     const recentNewTickets = allTickets.filter((t: any) => {
       const createdAt = t.createdAt?.toDate?.() || new Date(0);
-      return createdAt >= sevenDaysAgo;
+      // For employees, count when assigned to them
+      const assignedAt = t.assignedAt?.toDate?.();
+      const dateToCheck = isEmployee ? (assignedAt || createdAt) : createdAt;
+      return dateToCheck >= sevenDaysAgo;
     }).length;
 
     const recentResolvedTickets = allTickets.filter((t: any) => {
@@ -90,7 +138,9 @@ export async function GET(request: NextRequest) {
     // Previous 7 days (for comparison)
     const previousNewTickets = allTickets.filter((t: any) => {
       const createdAt = t.createdAt?.toDate?.() || new Date(0);
-      return createdAt >= fourteenDaysAgo && createdAt < sevenDaysAgo;
+      const assignedAt = t.assignedAt?.toDate?.();
+      const dateToCheck = isEmployee ? (assignedAt || createdAt) : createdAt;
+      return dateToCheck >= fourteenDaysAgo && dateToCheck < sevenDaysAgo;
     }).length;
 
     const previousResolvedTickets = allTickets.filter((t: any) => {

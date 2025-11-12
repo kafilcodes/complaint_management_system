@@ -65,20 +65,57 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
     return null;
   }
 
+  // Debug: Log current user and role
+  console.log("========================================");
+  console.log("[AppSidebar] 🎨 SIDEBAR RENDERING");
+  console.log("========================================");
+  console.log("[AppSidebar] Current User from Zustand:");
+  console.log(JSON.stringify(currentUser, null, 2));
+  console.log("[AppSidebar] � Extracted Fields:");
+  console.log("  - id:", currentUser.id);
+  console.log("  - email:", currentUser.email);
+  console.log("  - role:", currentUser.role);
+  console.log("  - department:", currentUser.department);
+  console.log("[AppSidebar] ⚠️ CRITICAL - Role for nav filtering:", currentUser.role);
+
   // Get visible navigation items based on user role
   const visibleNavItems = React.useMemo(
-    () => getVisibleNavItems(currentUser.role),
+    () => {
+      console.log("[AppSidebar] 📋 Filtering navigation items for role:", currentUser.role);
+      const items = getVisibleNavItems(currentUser.role);
+      console.log("[AppSidebar] ✅ Visible nav items:", items.map(i => i.label));
+      console.log("[AppSidebar] ❌ Hidden nav items:", NAV_ITEMS.filter(nav => !items.includes(nav)).map(i => i.label));
+      console.log("========================================");
+      return items;
+    },
     [currentUser.role]
   );
 
   /**
    * Handle logout
-   * Clears auth session and redirects to login
+   * Clears auth session, cache, and redirects to login
    */
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
+      // Clear Firebase auth session
       await signOut(auth);
+      
+      // Clear Zustand store (auth state) - import store directly
+      const { useStore } = await import("@/lib/store");
+      useStore.getState().clearAuth();
+      
+      // Clear React Query cache
+      const { QueryClient } = await import("@tanstack/react-query");
+      const queryClient = new QueryClient();
+      queryClient.clear();
+      
+      // Clear local storage
+      localStorage.clear();
+      
+      // Clear session storage
+      sessionStorage.clear();
+      
       toast.success("Logged out successfully");
       router.push("/login");
     } catch (error) {
@@ -106,10 +143,8 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
   const roleDisplay = React.useMemo(() => {
     const roleMap: Record<string, string> = {
       full_developer_admin: "Developer Admin",
-      it_admin: "IT Admin",
-      it_technician: "Technician",
-      store_manager: "Store Manager",
-      store_employee: "Employee",
+      admin: "Admin",
+      employee: "Employee",
     };
     return roleMap[currentUser.role] || currentUser.role;
   }, [currentUser.role]);
@@ -118,7 +153,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
    * Determine if user is admin
    */
   const isAdmin = React.useMemo(() => {
-    return currentUser.role === "full_developer_admin" || currentUser.role === "it_admin";
+    return currentUser.role === "full_developer_admin" || currentUser.role === "admin";
   }, [currentUser.role]);
 
   return (
@@ -169,10 +204,10 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                   asChild
                   isActive={isActive}
                   tooltip={item.label}
-                  className="h-11 "
+                  className="h-12"
                 >
                   <Link href={item.href} className="flex items-center gap-3">
-                    <Icon className="h-6 w-6 flex-shrink-0" />
+                    <Icon className="h-5 w-5 flex-shrink-0 group-data-[collapsible=icon]:h-6 group-data-[collapsible=icon]:w-6" />
                     <span className="text-base">{item.label}</span>
                   </Link>
                 </SidebarMenuButton>

@@ -89,9 +89,33 @@ export const useStore = create<AppStore>()(
       authToken: null, // Firebase ID token
       isAuthLoading: true, // Start as true until Firebase initializes
       
-      setUser: (user) => set({ user }),
+      setUser: (user) => {
+        console.log("========================================");
+        console.log("[Store] � STORE UPDATE - setUser Called");
+        console.log("========================================");
+        console.log("[Store] User Object Received:");
+        console.log(JSON.stringify(user, null, 2));
+        console.log("[Store] � Extracted Fields:");
+        console.log("  - id:", user?.id);
+        console.log("  - email:", user?.email);
+        console.log("  - name:", user?.name);
+        console.log("  - role:", user?.role);
+        console.log("  - department:", user?.department);
+        console.log("  - employeeId:", (user as any)?.employeeId);
+        console.log("[Store] ⚠️ CRITICAL - Role being stored:", user?.role);
+        console.log("[Store] ⚠️ Role type:", typeof user?.role);
+        console.log("========================================");
+        set({ user });
+        console.log("[Store] ✅ User stored in Zustand state");
+        console.log("========================================");
+      },
       
-      setAuthToken: (token) => set({ authToken: token }),
+      setAuthToken: (token) => {
+        console.log("[Store] 🔑 setAuthToken called");
+        console.log("[Store] Token:", token ? `${token.substring(0, 20)}... (length: ${token.length})` : "NULL");
+        set({ authToken: token });
+        console.log("[Store] ✅ Auth token stored in Zustand");
+      },
       
       setAuthLoading: (loading) => set({ isAuthLoading: loading }),
       

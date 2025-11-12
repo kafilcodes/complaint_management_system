@@ -69,10 +69,10 @@ export async function hasAnyRole(roles: UserRole[]): Promise<boolean> {
 }
 
 /**
- * Check if the current user is an admin (IT Admin or Full Developer Admin)
+ * Check if the current user is an admin (Admin or Full Developer Admin)
  */
 export async function isAdmin(): Promise<boolean> {
-  return hasAnyRole(["it_admin", "full_developer_admin"]);
+  return hasAnyRole(["admin", "full_developer_admin"]);
 }
 
 /**
@@ -137,10 +137,14 @@ export async function verifyAuth(request?: Request | { headers: Headers }): Prom
       uid: decodedToken.uid,
       email: decodedToken.email || "",
       name: decodedToken.name || "",
-      role: (decodedToken.role as UserRole) || "store_employee",
+      phone: decodedToken.phone as string,
+      photoURL: decodedToken.photoURL as string,
+      role: (decodedToken.role as UserRole) || "employee",
+      department: decodedToken.department as string,
       storeId: decodedToken.storeId as string,
       storeName: decodedToken.storeName as string,
       brand: decodedToken.brand as string,
+      category: decodedToken.category as string,
       isActive: true,
       createdAt: new Date() as any,
       updatedAt: new Date() as any,
@@ -213,7 +217,7 @@ export async function requireAnyRole(
  * Throws an error if user is not an admin
  */
 export async function requireAdmin(request?: Request): Promise<User> {
-  return requireAnyRole(["it_admin", "full_developer_admin"], request);
+  return requireAnyRole(["admin", "full_developer_admin"], request);
 }
 
 /**
@@ -251,12 +255,12 @@ export function getUserInitials(user: User | null): string {
  */
 export function canModifyTicket(user: User, ticketCreatorId: string): boolean {
   // Admins can modify any ticket
-  if (user.role === "it_admin" || user.role === "full_developer_admin") {
+  if (user.role === "admin" || user.role === "full_developer_admin") {
     return true;
   }
 
-  // Technicians can modify assigned tickets (checked elsewhere)
-  if (user.role === "it_technician") {
+  // Employees can modify assigned tickets (checked elsewhere)
+  if (user.role === "employee") {
     return false; // Must check assignedTo separately
   }
 
@@ -272,17 +276,16 @@ export function canViewTicket(user: User, ticket: {
   storeId?: string;
   assignedTo?: string;
 }): boolean {
-  // Admins and technicians can view all tickets
+  // Admins can view all tickets
   if (
-    user.role === "it_admin" ||
-    user.role === "full_developer_admin" ||
-    user.role === "it_technician"
+    user.role === "admin" ||
+    user.role === "full_developer_admin"
   ) {
     return true;
   }
 
-  // Store managers can view tickets from their store
-  if (user.role === "store_manager" && ticket.storeId === user.storeId) {
+  // Employees can view assigned tickets
+  if (user.role === "employee" && ticket.assignedTo === user.id) {
     return true;
   }
 
