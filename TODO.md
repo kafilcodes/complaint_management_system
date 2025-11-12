@@ -20,7 +20,7 @@
   ```
 
 - [ ] **Test Basic Flow**
-  - [ ] Login with admin@servicefirst.com
+  - [ ] Login with admin@MParekh.com
   - [ ] Navigate to Create Ticket
   - [ ] Fill out and submit the form
   - [ ] View ticket in Tickets page

@@ -1,6 +1,6 @@
 # Scripts Directory
 
-This directory contains utility scripts for managing the ServiceFirst Complaint Management System.
+This directory contains utility scripts for managing the MParekh Complaint Management System.
 
 ## Available Scripts
 
@@ -22,11 +22,11 @@ npm run seed:users
 
 **Accounts created:**
 1. Developer Admin: `admin@gmail.com` / `admin@99999`
-2. System Admin: `admin@servicefirst.com` / `admin@12345`
-3. Employee (John): `john.employee@servicefirst.com` / `employee@123`
-4. Employee (Sarah): `sarah.employee@servicefirst.com` / `employee@123`
-5. Employee (Mike): `mike.employee@servicefirst.com` / `employee@123`
-6. Employee (Lisa): `lisa.employee@servicefirst.com` / `employee@123`
+2. System Admin: `admin@MParekh.com` / `admin@12345`
+3. Employee (John): `john.employee@MParekh.com` / `employee@123`
+4. Employee (Sarah): `sarah.employee@MParekh.com` / `employee@123`
+5. Employee (Mike): `mike.employee@MParekh.com` / `employee@123`
+6. Employee (Lisa): `lisa.employee@MParekh.com` / `employee@123`
 
 **Note:** The script checks for existing users and won't create duplicates.
 
@@ -103,7 +103,7 @@ To add more test users, edit `seed-users.ts`:
 const SEED_USERS = [
   // ... existing users
   {
-    email: "new.user@servicefirst.com",
+    email: "new.user@MParekh.com",
     password: "password123",
     name: "New User",
     role: "employee" as const,

@@ -31,14 +31,14 @@ const db = getFirestore();
  */
 const DEFAULT_ADMINS = [
   {
-    email: "admin@servicefirst.com",
+    email: "admin@MParekh.com",
     password: "Admin@123456",
     name: "System Administrator",
     phone: "+1234567890",
     role: "full_developer_admin",
   },
   {
-    email: "it.admin@servicefirst.com",
+    email: "it.admin@MParekh.com",
     password: "ITAdmin@123",
     name: "IT Administrator",
     phone: "+1234567891",

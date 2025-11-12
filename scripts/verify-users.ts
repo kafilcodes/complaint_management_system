@@ -23,11 +23,11 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
 const EXPECTED_USERS = [
   { email: "admin@gmail.com", role: "full_developer_admin", name: "Developer Admin" },
-  { email: "admin@servicefirst.com", role: "admin", name: "System Administrator" },
-  { email: "john.employee@servicefirst.com", role: "employee", name: "John Smith" },
-  { email: "sarah.employee@servicefirst.com", role: "employee", name: "Sarah Johnson" },
-  { email: "mike.employee@servicefirst.com", role: "employee", name: "Mike Davis" },
-  { email: "lisa.employee@servicefirst.com", role: "employee", name: "Lisa Martinez" },
+  { email: "admin@MParekh.com", role: "admin", name: "System Administrator" },
+  { email: "john.employee@MParekh.com", role: "employee", name: "John Smith" },
+  { email: "sarah.employee@MParekh.com", role: "employee", name: "Sarah Johnson" },
+  { email: "mike.employee@MParekh.com", role: "employee", name: "Mike Davis" },
+  { email: "lisa.employee@MParekh.com", role: "employee", name: "Lisa Martinez" },
 ];
 
 // ==============================================================================

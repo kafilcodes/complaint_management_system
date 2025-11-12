@@ -122,12 +122,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 src="/logo.png"
                 width={100}
                 height={100}
-                alt="ServiceFirst Logo"
+                alt="MParekh Logo"
                 className="h-12 w-12 m-0 p-0"
                 priority
               />
               <h1 className="text-lg font-semibold">
-                {process.env.NEXT_PUBLIC_APP_NAME || "ServiceFirst"}
+                {process.env.NEXT_PUBLIC_APP_NAME || "MParekh"}
               </h1>
             </div>
 

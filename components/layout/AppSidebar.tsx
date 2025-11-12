@@ -125,7 +125,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
           <div className="relative h-16 w-16 flex-shrink-0 group-data-[collapsible=icon]:h-16 group-data-[collapsible=icon]:w-16">
             <Image
               src="/logo.png"
-              alt="ServiceFirst Logo"
+              alt="MParekh Logo"
               fill
               sizes="100px"
               className="object-contain"
@@ -136,7 +136,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
           {/* App Name (hidden when collapsed) */}
           <div className="flex flex-1 flex-col text-left leading-tight group-data-[collapsible=icon]:hidden">
             <span className="truncate font-semibold text-base">
-              {process.env.NEXT_PUBLIC_APP_NAME || "ServiceFirst"}
+              {process.env.NEXT_PUBLIC_APP_NAME || "MParekh"}
             </span>
             <span className="truncate text-sm text-muted-foreground">
               Management System

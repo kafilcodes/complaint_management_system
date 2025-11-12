@@ -55,7 +55,7 @@ const ticketFormSchema = z.object({
   issueDescription: z.string().min(10, "Issue description must be at least 10 characters"),
   comments: z.string().optional(),
   link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  assignedTo: z.string().min(1, "Please assign this ticket to an employee"),
+  assignedTo: z.string().optional(),
 }).refine((data) => {
   // If brand is "Other", customBrand must be provided
   if (data.brand === "Other" && (!data.customBrand || data.customBrand.trim() === "")) {
@@ -495,7 +495,7 @@ export default function CreateTicketPage() {
                 name="assignedTo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Assign to Employee <span className="text-destructive">*</span></FormLabel>
+                    <FormLabel>Assign to Employee (Optional)</FormLabel>
                     <FormControl>
                       <Combobox
                         options={employeeOptions}
@@ -539,7 +539,7 @@ export default function CreateTicketPage() {
                       />
                     </FormControl>
                     <FormDescription>
-                      Select an employee to assign this ticket to
+                      Optionally assign this ticket to an employee
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

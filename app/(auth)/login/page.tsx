@@ -181,7 +181,7 @@ export default function LoginPage() {
             <div className="relative h-24 w-24 md:h-32 md:w-32">
               <Image
                 src="/logo.png"
-                alt="ServiceFirst Logo"
+                alt="MParekh Logo"
                 fill
                 sizes="(max-width: 768px) 96px, 128px"
                 className="object-contain"
@@ -189,7 +189,7 @@ export default function LoginPage() {
               />
             </div>
             <h1 className="text-2xl md:text-3xl font-bold text-center">
-              {process.env.NEXT_PUBLIC_APP_NAME || "ServiceFirst"}
+              {process.env.NEXT_PUBLIC_APP_NAME || "MParekh"}
             </h1>
           </div>
 

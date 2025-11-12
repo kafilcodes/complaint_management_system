@@ -41,7 +41,7 @@ export function DownloadReportButton({ stats, tickets }: DownloadReportButtonPro
   // Prepare report data
   const reportData = useMemo<TicketReportData>(() => {
     // Get app name from environment or default
-    const appName = process.env.NEXT_PUBLIC_APP_NAME || "ServiceFirst";
+    const appName = process.env.NEXT_PUBLIC_APP_NAME || "MParekh";
     
     // Get current month and year
     const now = new Date();

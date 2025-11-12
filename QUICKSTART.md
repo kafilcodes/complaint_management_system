@@ -51,13 +51,13 @@ curl -X POST http://localhost:3000/api/auth/seed-admins \
 ```
 
 This creates two accounts:
-- **Full Admin**: `admin@servicefirst.com` / `Admin@123456`
-- **IT Admin**: `it.admin@servicefirst.com` / `ITAdmin@123`
+- **Full Admin**: `admin@MParekh.com` / `Admin@123456`
+- **IT Admin**: `it.admin@MParekh.com` / `ITAdmin@123`
 
 ### Step 3: Login and Test
 
 1. Go to http://localhost:3000
-2. Login with: `admin@servicefirst.com` / `Admin@123456`
+2. Login with: `admin@MParekh.com` / `Admin@123456`
 3. Click "Create Ticket" button
 4. Fill out the form and submit
 5. View your ticket in the Tickets page!
@@ -66,7 +66,7 @@ This creates two accounts:
 
 ## 🎯 What You Can Do Right Now
 
-### As Admin (admin@servicefirst.com)
+### As Admin (admin@MParekh.com)
 - ✅ View dashboard
 - ✅ Create new tickets
 - ✅ View all tickets (list/grid)

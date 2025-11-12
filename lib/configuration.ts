@@ -6,7 +6,7 @@
  */
 
 export const APP_CONFIG = {
-  name: "ServiceFirst",
+  name: "MParekh",
   description: "Internal Complaint Management System",
   version: "1.0.0",
 } as const;

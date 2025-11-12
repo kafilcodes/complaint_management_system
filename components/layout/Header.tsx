@@ -72,7 +72,7 @@ export function Header() {
           <div className="relative h-8 w-8 md:h-10 md:w-10 flex-shrink-0">
             <Image
               src="/logo.png"
-              alt="ServiceFirst Logo"
+              alt="MParekh Logo"
               fill
               sizes="(max-width: 768px) 32px, 40px"
               className="object-contain"
@@ -80,7 +80,7 @@ export function Header() {
             />
           </div>
           <h1 className="text-lg font-semibold tracking-tight md:text-xl">
-            {process.env.NEXT_PUBLIC_APP_NAME || "ServiceFirst"}
+            {process.env.NEXT_PUBLIC_APP_NAME || "MParekh"}
           </h1>
         </div>
 

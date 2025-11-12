@@ -36,7 +36,7 @@ const SEED_USERS = [
     employeeId: "DEV001",
   },
   {
-    email: "admin@servicefirst.com",
+    email: "admin@MParekh.com",
     password: "admin@12345",
     name: "System Administrator",
     role: "admin" as const,
@@ -45,7 +45,7 @@ const SEED_USERS = [
     employeeId: "ADM001",
   },
   {
-    email: "john.employee@servicefirst.com",
+    email: "john.employee@MParekh.com",
     password: "employee@123",
     name: "John Smith",
     role: "employee" as const,
@@ -54,7 +54,7 @@ const SEED_USERS = [
     employeeId: "EMP001",
   },
   {
-    email: "sarah.employee@servicefirst.com",
+    email: "sarah.employee@MParekh.com",
     password: "employee@123",
     name: "Sarah Johnson",
     role: "employee" as const,
@@ -63,7 +63,7 @@ const SEED_USERS = [
     employeeId: "EMP002",
   },
   {
-    email: "mike.employee@servicefirst.com",
+    email: "mike.employee@MParekh.com",
     password: "employee@123",
     name: "Mike Davis",
     role: "employee" as const,
@@ -72,7 +72,7 @@ const SEED_USERS = [
     employeeId: "EMP003",
   },
   {
-    email: "lisa.employee@servicefirst.com",
+    email: "lisa.employee@MParekh.com",
     password: "employee@123",
     name: "Lisa Martinez",
     role: "employee" as const,

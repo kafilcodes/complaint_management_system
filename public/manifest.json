@@ -1,6 +1,6 @@
 {
-  "name": "ServiceFirst - Complaint Management System",
-  "short_name": "ServiceFirst",
+  "name": "MParekh - Complaint Management System",
+  "short_name": "MParekh",
   "description": "Internal complaint management and service ticket tracking system",
   "start_url": "/",
   "display": "standalone",
