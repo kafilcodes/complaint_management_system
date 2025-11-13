@@ -11,8 +11,8 @@ const withPWA = withPWAInit({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
   register: true,
-  cacheOnFrontEndNav: true,
-  aggressiveFrontEndNavCaching: true,
+  cacheOnFrontEndNav: false, // Disabled aggressive caching for development
+  aggressiveFrontEndNavCaching: false, // Disabled to allow CSS/style changes to reflect immediately
   reloadOnOnline: true,
   fallbacks: {
     document: "/offline",
@@ -101,24 +101,26 @@ const withPWA = withPWAInit({
       },
       {
         urlPattern: /\.(?:js)$/i,
-        handler: "StaleWhileRevalidate",
+        handler: "NetworkFirst",
         options: {
           cacheName: "static-js-assets",
           expiration: {
             maxEntries: 48,
-            maxAgeSeconds: 24 * 60 * 60, // 24 hours
+            maxAgeSeconds: 2 * 60 * 60, // 2 hours - reduced for development flexibility
           },
+          networkTimeoutSeconds: 3,
         },
       },
       {
         urlPattern: /\.(?:css|less)$/i,
-        handler: "StaleWhileRevalidate",
+        handler: "NetworkFirst",
         options: {
           cacheName: "static-style-assets",
           expiration: {
             maxEntries: 32,
-            maxAgeSeconds: 24 * 60 * 60, // 24 hours
+            maxAgeSeconds: 1 * 60 * 60, // 1 hour - reduced for development flexibility
           },
+          networkTimeoutSeconds: 3,
         },
       },
       {
@@ -140,7 +142,7 @@ const withPWA = withPWAInit({
           cacheName: "apis",
           expiration: {
             maxEntries: 16,
-            maxAgeSeconds: 24 * 60 * 60, // 24 hours
+            maxAgeSeconds: 5 * 60, // 5 minutes - fresh data for production app
           },
           networkTimeoutSeconds: 10,
         },
@@ -152,7 +154,7 @@ const withPWA = withPWAInit({
           cacheName: "others",
           expiration: {
             maxEntries: 32,
-            maxAgeSeconds: 24 * 60 * 60, // 24 hours
+            maxAgeSeconds: 1 * 60 * 60, // 1 hour - reduced default caching
           },
           networkTimeoutSeconds: 10,
         },
@@ -249,6 +251,27 @@ const nextConfig: NextConfig = {
             value: "public, max-age=31536000, immutable",
           },
         ],
+      },
+    ];
+  },
+
+  /* Redirects for route changes (tickets -> complaints) */
+  async redirects() {
+    return [
+      {
+        source: "/tickets",
+        destination: "/complaints",
+        permanent: true,
+      },
+      {
+        source: "/tickets/:id",
+        destination: "/complaints/:id",
+        permanent: true,
+      },
+      {
+        source: "/create-ticket",
+        destination: "/create-complaint",
+        permanent: true,
       },
     ];
   },

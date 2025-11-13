@@ -96,7 +96,7 @@ export function Header() {
               priority
             />
           </div>
-          <h1 className="text-lg font-semibold tracking-tight md:text-xl">
+          <h1 className="text-xs font-semibold tracking-tight md:text-xs">
             {process.env.NEXT_PUBLIC_APP_NAME || "MParekh"}
           </h1>
         </div>

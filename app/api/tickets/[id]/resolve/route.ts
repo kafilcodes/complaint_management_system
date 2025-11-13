@@ -104,7 +104,7 @@ export async function POST(
       timestamp: now as any, // Firebase Admin Timestamp
       userId: user.id,
       userName: user.name,
-      message: `Ticket resolved by ${user.name}`,
+      message: `Complaint resolved by ${user.name}`,
       details: {
         serviceRating: data.serviceRating,
         productSerial: data.productSerial,
@@ -127,7 +127,7 @@ export async function POST(
         read: false,
         title: "Ticket Resolved",
         message: `Your ticket has been resolved by ${user.name}`,
-        link: `/tickets/${id}`,
+        link: `/complaints/${id}`,
         ticketId: id,
         type: "ticket_resolved",
         // Denormalized data

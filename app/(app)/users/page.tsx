@@ -9,7 +9,8 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import type { Metadata } from "next";
 import { UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,11 +18,25 @@ import { UserList } from "@/components/users/UserList";
 import { CreateUserDialog } from "@/components/users/CreateUserDialog";
 import { EditUserDialog } from "@/components/users/EditUserDialog";
 import { DeleteUserDialog } from "@/components/users/DeleteUserDialog";
+import { useStore } from "@/lib/store";
+import { toast } from "sonner";
 
 export default function UsersPage() {
+  const router = useRouter();
+  const currentUser = useStore((state) => state.user);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editUserId, setEditUserId] = useState<string | null>(null);
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
+  
+  // Protected route check - only full_developer_admin can access
+  useEffect(() => {
+    if (currentUser && currentUser.role !== "full_developer_admin") {
+      toast.error("Access Denied", {
+        description: "Only developers can access user management",
+      });
+      router.replace("/dashboard");
+    }
+  }, [currentUser, router]);
 
   const handleEdit = (userId: string) => {
     setEditUserId(userId);

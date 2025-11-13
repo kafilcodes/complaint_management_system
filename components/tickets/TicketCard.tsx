@@ -11,6 +11,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Clock, 
   User, 
@@ -23,11 +24,13 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  UserCheck,
 } from "lucide-react";
 import type { Ticket } from "@/lib/types";
 import { formatDateTime, getRelativeTime } from "@/firebase/firestore-helpers";
 import { TICKET_STATUSES, BRANDS, getLabelByValue, getColorByValue } from "@/lib/configuration";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/hooks/use-users";
 
 interface TicketCardProps {
   ticket: Ticket;
@@ -44,6 +47,14 @@ export function TicketCard({
 }: TicketCardProps) {
   const statusColor = getColorByValue(TICKET_STATUSES, ticket.status);
   const brandLabel = getLabelByValue(BRANDS, ticket.brand);
+  
+  // Fetch assigned employee data if ticket is assigned
+  const { data: assignedEmployee } = useUser(ticket.assignedTo || null);
+
+  // Helper to get user initials
+  const getInitials = (name: string) => {
+    return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  };
 
   // Map status to icons
   const getStatusIcon = (status: string) => {
@@ -60,7 +71,7 @@ export function TicketCard({
   };
 
   return (
-    <Link href={`/tickets/${ticket.id}`} className="block group">
+    <Link href={`/complaints/${ticket.id}`} className="block group">
       <Card className="hover:shadow-lg transition-all hover:border-primary/50 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 h-full">
         <CardHeader className="pb-2 sm:pb-3 p-4 sm:p-6">
           <div className="flex items-start justify-between gap-2 sm:gap-4">
@@ -113,17 +124,24 @@ export function TicketCard({
         </div>
 
         {/* Metadata */}
-        <div className="flex items-center gap-2 sm:gap-4 text-[10px] sm:text-xs text-muted-foreground pt-1.5 sm:pt-2">
+        <div className="flex items-center justify-between gap-2 sm:gap-3 text-[10px] sm:text-xs text-muted-foreground pt-1.5 sm:pt-2">
           <div className="flex items-center gap-1">
             <Calendar className="h-3 w-3" />
             <span>{getRelativeTime(ticket.createdAt)}</span>
           </div>
-          {ticket.assignedTo && (
-            <div className="flex items-center gap-1">
-              <User className="h-3 w-3" />
-              <span>
-                {/* Use denormalized user name if available, fallback to "Assigned" */}
-                {ticket.assignedToUserName ? `Assigned to ${ticket.assignedToUserName}` : "Assigned"}
+          {ticket.assignedTo && assignedEmployee && (
+            <div className="flex items-center gap-1.5 sm:gap-2 text-primary">
+              <Avatar className="h-5 w-5 sm:h-6 sm:w-6">
+                {(assignedEmployee as any).photoURL && (
+                  <AvatarImage src={(assignedEmployee as any).photoURL} alt={assignedEmployee.name} />
+                )}
+                <AvatarFallback className="bg-primary/10 text-primary text-[8px] sm:text-[10px] font-semibold">
+                  {getInitials(assignedEmployee.name)}
+                </AvatarFallback>
+              </Avatar>
+              <UserCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+              <span className="truncate max-w-[100px] sm:max-w-[150px]">
+                {assignedEmployee.name}
               </span>
             </div>
           )}

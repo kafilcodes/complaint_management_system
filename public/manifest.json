@@ -161,7 +161,7 @@
       "name": "Create Ticket",
       "short_name": "New Ticket",
       "description": "Create a new service ticket",
-      "url": "/create-ticket",
+      "url": "/create-complaint",
       "icons": [
         {
           "src": "/icons/shortcut-new-ticket.png",
@@ -174,7 +174,7 @@
       "name": "View Tickets",
       "short_name": "Tickets",
       "description": "View all service tickets",
-      "url": "/tickets",
+      "url": "/complaints",
       "icons": [
         {
           "src": "/icons/shortcut-tickets.png",

@@ -66,13 +66,39 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   /**
    * Handle logout
-   * Signs out the user and redirects to login page
+   * Signs out the user, clears all caches, and redirects to login page
    */
   const handleLogout = async () => {
     try {
+      // Clear Firebase auth session
       await signOut(auth);
+      
+      // Clear Zustand store
+      const { useStore } = await import("@/lib/store");
+      useStore.getState().clearAuth();
+      
+      // Clear React Query cache
+      const { QueryClient } = await import("@tanstack/react-query");
+      const queryClient = new QueryClient();
+      queryClient.clear();
+      
+      // Clear local storage
+      localStorage.clear();
+      
+      // Clear session storage
+      sessionStorage.clear();
+      
+      // Clear service worker caches
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(
+          cacheNames.map(cacheName => caches.delete(cacheName))
+        );
+      }
+      
       toast.success("Logged out successfully");
       router.push("/login");
+      router.refresh(); // Force refresh to clear any cached navigation state
     } catch (error) {
       console.error("Logout error:", error);
       toast.error("Failed to logout. Please try again.");

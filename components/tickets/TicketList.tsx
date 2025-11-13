@@ -244,9 +244,9 @@ export function TicketList({
           cta={
             tickets.length === 0 ? (
               <Button asChild>
-                <Link href="/create-ticket">
+                <Link href="/create-complaint">
                   <Plus className="h-4 w-4 mr-2" />
-                  Create Your First Ticket
+                  Create Your First Complaint
                 </Link>
               </Button>
             ) : undefined

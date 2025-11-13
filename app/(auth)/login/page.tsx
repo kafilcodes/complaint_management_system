@@ -188,9 +188,12 @@ export default function LoginPage() {
                 priority
               />
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-center">
+            <h1 className="text-xl md:text-2xl font-bold text-center mt-3">
               {process.env.NEXT_PUBLIC_APP_NAME || "MParekh"}
             </h1>
+            <p className="text-center text-xs md:text-sm text-muted-foreground mt-1">
+              Jagdalpur (Bastar), Chhattisgarh
+            </p>
           </div>
 
           {/* Mobile Graphic (visible only on mobile) - Reduced by ~35% */}
@@ -309,6 +312,30 @@ export default function LoginPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Footer - About Link */}
+          <div className="mt-6 flex items-center justify-start">
+            <a
+              href="/about"
+              className="inline-flex items-center gap-2 text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-accent/50"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-4 w-4 sm:h-5 sm:w-5"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 16v-4" />
+                <path d="M12 8h.01" />
+              </svg>
+              <span className="font-medium">About Us</span>
+            </a>
+          </div>
         </div>
       </div>
     </div>

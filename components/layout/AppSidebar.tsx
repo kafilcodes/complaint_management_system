@@ -178,10 +178,10 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
           
           {/* App Name (hidden when collapsed) */}
           <div className="flex flex-1 flex-col text-left leading-tight group-data-[collapsible=icon]:hidden">
-            <span className="truncate font-semibold text-base">
+            <span className="truncate font-semibold text-base text-sm ">
               {process.env.NEXT_PUBLIC_APP_NAME || "MParekh"}
             </span>
-            <span className="truncate text-sm text-muted-foreground">
+            <span className="truncate text-xs text-muted-foreground">
               Management System
             </span>
           </div>

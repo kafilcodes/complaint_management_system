@@ -54,15 +54,15 @@ export const NAV_ITEMS: NavItem[] = [
     icon: LayoutDashboard,
   },
   {
-    label: "Tickets",
-    href: "/tickets",
+    label: "Complaints",
+    href: "/complaints",
     icon: Ticket,
   },
   {
-    label: "Create Ticket",
-    href: "/create-ticket",
+    label: "Create Complaint",
+    href: "/create-complaint",
     icon: Plus,
-    // Only admins can create tickets, not employees
+    // Only admins can create complaints, not employees
     excludedRoles: ["employee"],
   },
   {

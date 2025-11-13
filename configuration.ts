@@ -8,24 +8,23 @@
  * All static dropdowns, lists, and settings should be defined here.
  */
 
-// Brands for the "Create Ticket" form dropdown
+// Brands for the "Create Complaint" form dropdown
 export const TICKET_BRANDS: string[] = [
   "Anchor",
   "Polycop",
   "Pigeon",
-  "Hindwer",
+  "Hindware",
   "Remi",
-  "Khatan",
-  "Blowhod",
-  "Tandam (vishal maga mart)",
-  "Reliance Res",
+  "Khaitan",
+  "Blowhood",
+  "Tandam (Vishal Mega Mart)",
+  "Reliance",
   "Butterfly",
-  "Infrared marking (ivas)",
+  "Infrared Marking (IVAS)",
   "Philips",
-  "Suryfalm",
-  "Sunflam",
+  "Sunflame",
   "Ottomate",
-  "U cock",
+  "U-Cook",
 ];
 
 // Categories for Technicians

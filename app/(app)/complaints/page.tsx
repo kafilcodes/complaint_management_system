@@ -1,10 +1,10 @@
 /**
- * TICKETS PAGE
+ * COMPLAINTS PAGE
  * 
- * Displays a list of all tickets (admin) or assigned tickets (technician).
+ * Displays a list of all complaints (admin) or assigned complaints (technician).
  * Now using real-time Firestore onSnapshot listeners for instant updates.
  * 
- * @module app/(app)/tickets/page
+ * @module app/(app)/complaints/page
  */
 
 "use client";
@@ -124,17 +124,17 @@ export default function TicketsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Tickets</h1>
+          <h1 className="text-3xl font-bold">Complaints</h1>
           <p className="text-muted-foreground mt-2">
             {userIsEmployee 
-              ? "View tickets assigned to you" 
-              : "View and manage all service tickets"}
+              ? "View complaints assigned to you" 
+              : "View and manage all service complaints"}
           </p>
         </div>
         {userIsAdmin && (
-          <Button onClick={() => router.push("/create-ticket")}>
+          <Button onClick={() => router.push("/create-complaint")}>
             <Plus className="h-4 w-4 mr-2" />
-            Create Ticket
+            Create Complaint
           </Button>
         )}
       </div>

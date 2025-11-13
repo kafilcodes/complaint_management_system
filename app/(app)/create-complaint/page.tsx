@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,18 +43,23 @@ import { db } from "@/firebase/client";
 
 // Form validation schema
 const ticketFormSchema = z.object({
-  customerName: z.string().min(2, "Customer name must be at least 2 characters"),
-  customerPhone: z.string().min(10, "Phone number must be at least 10 digits"),
-  address: z.string().min(5, "Address is required"),
-  pincode: z.string().min(5, "Pincode must be at least 5 characters"),
-  productName: z.string().min(2, "Product name is required"),
-  productModel: z.string().optional(),
+  customerName: z.string().min(2, "Customer name must be at least 2 characters").max(100, "Name must be 100 characters or less"),
+  customerPhone: z.string()
+    .length(10, "Phone number must be exactly 10 digits")
+    .regex(/^[6-9]\d{9}$/, "Must be a valid 10-digit Indian mobile number"),
+  address: z.string().min(5, "Address is required").max(500, "Address must be 500 characters or less"),
+  pincode: z.string()
+    .min(6, "Pincode must be 6 digits")
+    .max(6, "Pincode must be 6 digits")
+    .regex(/^\d{6}$/, "Pincode must contain only digits"),
+  productName: z.string().min(2, "Product name is required").max(200, "Product name must be 200 characters or less"),
+  productModel: z.string().max(100, "Model must be 100 characters or less").optional(),
   purchaseDate: z.string().min(1, "Purchase date is required"),
   brand: z.string().min(1, "Brand is required"),
-  customBrand: z.string().optional(),
-  issueDescription: z.string().min(10, "Issue description must be at least 10 characters"),
-  comments: z.string().optional(),
-  link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  customBrand: z.string().max(100, "Brand name must be 100 characters or less").optional(),
+  issueDescription: z.string().min(10, "Issue description must be at least 10 characters").max(2000, "Description must be 2000 characters or less"),
+  comments: z.string().max(1000, "Comments must be 1000 characters or less").optional(),
+  link: z.string().url("Must be a valid URL").max(500, "URL must be 500 characters or less").optional().or(z.literal("")),
   assignedTo: z.string().optional(),
 }).refine((data) => {
   // If brand is "Other", customBrand must be provided
@@ -73,6 +78,16 @@ export default function CreateTicketPage() {
   const router = useRouter();
   const currentUser = useStore((state) => state.user);
   const createTicket = useCreateTicket();
+  
+  // Protected route check - only admins can access
+  useEffect(() => {
+    if (currentUser && currentUser.role === "employee") {
+      toast.error("Access Denied", {
+        description: "Only administrators can create complaints",
+      });
+      router.replace("/dashboard");
+    }
+  }, [currentUser, router]);
   
   // File attachments state
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -207,15 +222,15 @@ export default function CreateTicketPage() {
           
           console.log(`✅ Uploaded ${uploadedMetadata.length} attachments for ticket ${newTicketId}`);
         } catch (updateError: any) {
-          console.error("Error updating ticket with attachments:", updateError);
-          toast.warning("Ticket created but failed to attach files", {
+          console.error("Error updating complaint with attachments:", updateError);
+          toast.warning("Complaint created but failed to attach files", {
             description: "You can try adding attachments later",
           });
         }
       }
       
-      // Step 5: Success - navigate to tickets page
-      toast.success("Ticket created successfully", {
+      // Step 5: Success - navigate to complaints page
+      toast.success("Complaint created successfully", {
         description: uploadedMetadata.length > 0 
           ? `With ${uploadedMetadata.length} attachment(s)` 
           : undefined,
@@ -226,11 +241,11 @@ export default function CreateTicketPage() {
       setAttachments([]);
       attachmentUpload.reset();
       
-      router.push("/tickets");
+      router.push("/complaints");
       
     } catch (error: any) {
-      console.error("Error creating ticket:", error);
-      toast.error("Failed to create ticket", {
+      console.error("Error creating complaint:", error);
+      toast.error("Failed to create complaint", {
         description: error.message || "Please try again",
       });
     } finally {
@@ -255,9 +270,9 @@ export default function CreateTicketPage() {
           <div className="flex items-center gap-4">
             
         <div>
-          <h1 className="text-3xl font-bold">Create New Ticket</h1>
+          <h1 className="text-3xl font-bold">Create New Complaint</h1>
           <p className="text-muted-foreground mt-2">
-            Fill in the details to create a new service ticket
+            Fill in the details to create a new service complaint
           </p>
         </div>
       </div>
@@ -267,8 +282,8 @@ export default function CreateTicketPage() {
           {/* Customer Information */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
+              <CardTitle className="flex items-center gap-2 ">
+                <User className="h-5 w-5 " />
                 Customer Information
               </CardTitle>
             </CardHeader>
@@ -299,7 +314,20 @@ export default function CreateTicketPage() {
                     <FormControl>
                       <div className="relative">
                         <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground peer-focus:text-primary transition-colors" />
-                        <Input placeholder="+1234567890" maxLength={20} className="pl-10 peer" {...field} />
+                        <Input 
+                          type="tel"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          placeholder="9876543210" 
+                          maxLength={10} 
+                          className="pl-10 peer" 
+                          {...field}
+                          onChange={(e) => {
+                            // Allow only numbers
+                            const value = e.target.value.replace(/\D/g, '');
+                            field.onChange(value);
+                          }}
+                        />
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -338,7 +366,20 @@ export default function CreateTicketPage() {
                     <FormControl>
                       <div className="relative">
                         <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground peer-focus:text-primary transition-colors" />
-                        <Input placeholder="12345" maxLength={10} className="pl-10 peer" {...field} />
+                        <Input 
+                          type="tel"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          placeholder="494001" 
+                          maxLength={6} 
+                          className="pl-10 peer" 
+                          {...field}
+                          onChange={(e) => {
+                            // Allow only numbers
+                            const value = e.target.value.replace(/\D/g, '');
+                            field.onChange(value);
+                          }}
+                        />
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -675,7 +716,7 @@ export default function CreateTicketPage() {
               {(createTicket.isPending || isSubmitting || attachmentUpload.isUploading) && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              {attachmentUpload.isUploading ? "Uploading..." : isSubmitting ? "Creating..." : "Create Ticket"}
+              {attachmentUpload.isUploading ? "Uploading..." : isSubmitting ? "Creating..." : "Create Complaint"}
             </Button>
           </div>
         </form>

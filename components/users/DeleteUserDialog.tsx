@@ -54,7 +54,7 @@ export function DeleteUserDialog({
       deleteUser.mutate(
         {
           userId,
-          reassignTo: reassignTo || undefined,
+          reassignTo: (reassignTo && reassignTo !== "__UNASSIGNED__") ? reassignTo : undefined,
         },
         {
           onSuccess: () => {
@@ -131,7 +131,7 @@ export function DeleteUserDialog({
                       <SelectValue placeholder="Leave unassigned" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Leave unassigned</SelectItem>
+                      <SelectItem value="__UNASSIGNED__">Leave unassigned</SelectItem>
                       {availableTechnicians.map((tech) => (
                         <SelectItem key={tech.id} value={tech.id}>
                           {tech.name} ({tech.email})

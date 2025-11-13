@@ -70,7 +70,8 @@ export function useUsers(filters?: {
       const data: UsersResponse = await response.json();
       return data.data;
     },
-    staleTime: 60000, // 1 minute
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 }
 
@@ -120,7 +121,9 @@ export function useCreateUser() {
       return result.data;
     },
     onSuccess: (data) => {
+      // Invalidate and refetch users list immediately
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.refetchQueries({ queryKey: ["users"] });
       toast.success("User created successfully", {
         description: `${data.name} (${data.email}) has been created`,
       });

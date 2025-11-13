@@ -61,13 +61,12 @@ const profileFormSchema = z.object({
   // Required fields - mobile, address, aadhar
   mobile: z
     .string()
-    .min(10, "Mobile number is required")
-    .max(10, "Mobile number must be 10 digits")
+    .length(10, "Mobile number must be exactly 10 digits")
     .regex(/^[6-9]\d{9}$/, "Must be a valid 10-digit Indian mobile number"),
   address: z
     .string()
     .min(5, "Address is required (minimum 5 characters)")
-    .max(200, "Address must be 200 characters or less"),
+    .max(500, "Address must be 500 characters or less"),
   aadhar: z
     .string()
     .length(12, "Aadhar number must be exactly 12 digits")
@@ -477,10 +476,17 @@ export default function ProfilePage() {
                       </FormLabel>
                       <FormControl>
                         <IconInput 
+                          type="tel"
+                          inputMode="numeric"
                           icon={Phone}
                           placeholder="9876543210"
                           maxLength={10}
-                          {...field} 
+                          {...field}
+                          onChange={(e) => {
+                            // Allow only numbers
+                            const value = e.target.value.replace(/\D/g, '');
+                            field.onChange(value);
+                          }}
                         />
                       </FormControl>
                       <FormDescription>
@@ -501,10 +507,17 @@ export default function ProfilePage() {
                       </FormLabel>
                       <FormControl>
                         <IconInput 
+                          type="tel"
+                          inputMode="numeric"
                           icon={PhoneCall}
                           placeholder="8765432109"
                           maxLength={10}
-                          {...field} 
+                          {...field}
+                          onChange={(e) => {
+                            // Allow only numbers
+                            const value = e.target.value.replace(/\D/g, '');
+                            field.onChange(value);
+                          }}
                         />
                       </FormControl>
                       <FormDescription>
@@ -549,10 +562,17 @@ export default function ProfilePage() {
                     </FormLabel>
                     <FormControl>
                       <IconInput 
+                        type="tel"
+                        inputMode="numeric"
                         icon={CreditCard}
                         placeholder="123456789012"
                         maxLength={12}
-                        {...field} 
+                        {...field}
+                        onChange={(e) => {
+                          // Allow only numbers
+                          const value = e.target.value.replace(/\D/g, '');
+                          field.onChange(value);
+                        }}
                       />
                     </FormControl>
                     <FormDescription>

@@ -243,7 +243,7 @@ export async function POST(request: NextRequest) {
         read: false,
         title: "New Ticket Assigned",
         message: `You have been assigned a new ticket: ${data.productName}`,
-        link: `/tickets/${ticketRef.id}`,
+        link: `/complaints/${ticketRef.id}`,
         ticketId: ticketRef.id,
         type: "ticket_assigned",
         // Denormalized data

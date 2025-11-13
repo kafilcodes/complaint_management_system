@@ -1,6 +1,10 @@
+"use client";
+
 import type { Metadata } from "next";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Mail,
   Phone,
@@ -9,32 +13,8 @@ import {
   Users,
   TrendingUp,
   Clock,
+  ArrowLeft,
 } from "lucide-react";
-
-/**
- * About Page Metadata for SEO
- */
-export const metadata: Metadata = {
-  title: "About Us - Complaint Management System",
-  description:
-    "Learn about MParekh Complaint Management System - a comprehensive solution for efficient ticket tracking, assignment management, and customer service excellence in Jagdalpur, Bastar District.",
-  keywords: [
-    "about mparekh",
-    "complaint management",
-    "customer service",
-    "ticket tracking",
-    "jagdalpur",
-    "bastar district",
-    "chhattisgarh",
-    "service management",
-  ],
-  openGraph: {
-    title: "About MParekh Complaint Management System",
-    description:
-      "Streamline complaint resolution and improve customer satisfaction with our comprehensive management system",
-    type: "website",
-  },
-};
 
 /**
  * About Page Component
@@ -45,10 +25,26 @@ export const metadata: Metadata = {
  * - SEO-optimized content
  * - Modern minimal layout
  * - Accessible contact information
+ * - Back navigation button
  */
 export default function AboutPage() {
+  const router = useRouter();
+  
   return (
     <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+      {/* Back Button */}
+      <div className="mb-6 sm:mb-8">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => router.back()}
+          className="gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </Button>
+      </div>
+      
       {/* Hero Section */}
       <section className="mb-8 sm:mb-12 lg:mb-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
@@ -61,7 +57,7 @@ export default function AboutPage() {
               Streamlining complaint resolution and improving customer satisfaction through innovative technology
             </p>
             <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-              MParekh Complaint Management System is a comprehensive solution designed to help
+              {process.env.NEXT_PUBLIC_APP_NAME || "MParekh"} Complaint Management System is a comprehensive solution designed to help
               businesses efficiently manage and resolve customer complaints with powerful features
               and real-time tracking.
             </p>
@@ -98,7 +94,7 @@ export default function AboutPage() {
               Team Management
             </h3>
             <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-              Assign tickets to technicians and track team performance efficiently
+              Assign complaints to technicians and track team performance efficiently
             </p>
           </Card>
 
@@ -137,7 +133,7 @@ export default function AboutPage() {
               Real-Time Updates
             </h3>
             <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-              Monitor ticket status changes and resolutions as they happen
+              Monitor complaint status changes and resolutions as they happen
             </p>
           </Card>
         </div>

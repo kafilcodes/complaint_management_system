@@ -224,7 +224,7 @@ export async function PUT(
         read: false,
         title: "Ticket Assigned to You",
         message: `You have been assigned ticket: ${existingTicket.productName}`,
-        link: `/tickets/${id}`,
+        link: `/complaints/${id}`,
         ticketId: id,
         type: "ticket_assigned",
         // Denormalized data

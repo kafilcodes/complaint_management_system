@@ -41,7 +41,7 @@ function TicketRow({ ticket, getStatusIcon }: { ticket: RecentTicket; getStatusI
 
   return (
     <Link
-      href={`/tickets/${ticket.id}`}
+      href={`/complaints/${ticket.id}`}
       className="block group"
     >
       <div className="flex items-center gap-3 p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-muted/50 transition-all">
@@ -137,13 +137,13 @@ export function RecentTickets({ tickets, isLoading }: RecentTicketsProps) {
         <CardContent>
           <EmptyState
             imageUrl="/create_tickets.svg"
-            title="No Recent Tickets"
-            description="Create a new ticket to see it appear here. Track and manage all your service requests in one place."
+            title="No Recent Complaints"
+            description="Create a new complaint to see it appear here. Track and manage all your service requests in one place."
             cta={
               <Button asChild>
-                <Link href="/create-ticket">
+                <Link href="/create-complaint">
                   <Plus className="h-4 w-4 mr-2" />
-                  Create Ticket
+                  Create Complaint
                 </Link>
               </Button>
             }
@@ -160,10 +160,10 @@ export function RecentTickets({ tickets, isLoading }: RecentTicketsProps) {
           <div className="rounded-full bg-primary/10 p-2">
             <Clock className="h-4 w-4 text-primary" />
           </div>
-          <CardTitle className="text-lg font-semibold">Recent Tickets</CardTitle>
+          <CardTitle className="text-lg font-semibold">Recent Complaints</CardTitle>
         </div>
         <Button variant="ghost" size="sm" asChild className="text-primary hover:text-primary/80">
-          <Link href="/tickets" className="flex items-center gap-1.5">
+          <Link href="/complaints" className="flex items-center gap-1.5">
             View all
             <ArrowRight className="h-4 w-4" />
           </Link>

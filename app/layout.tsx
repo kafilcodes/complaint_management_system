@@ -40,26 +40,30 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
   ),
   title: {
-    default: process.env.NEXT_PUBLIC_APP_NAME || "MParekh - Complaint Management System",
-    template: `%s | ${process.env.NEXT_PUBLIC_APP_NAME || "MParekh CMS"}`,
+    default: `${process.env.NEXT_PUBLIC_APP_NAME || "M/s M Parekh Enterprises"} - Complaint Management System`,
+    template: `%s | ${process.env.NEXT_PUBLIC_APP_NAME || "M/s M Parekh Enterprises"}`,
   },
   description:
-    "A production-grade Progressive Web Application for managing customer complaints, service tickets, and technician workflows in real-time. Streamline your support operations with MParekh.",
+    "M/s M Parekh Enterprises - A production-grade Progressive Web Application for managing customer complaints and service workflows in real-time. Located in Jagdalpur, Bastar, Chhattisgarh. Streamline your support operations efficiently.",
   keywords: [
+    "M/s M Parekh Enterprises",
+    "MParekh Enterprises",
     "complaint management",
-    "service tickets",
-    "technician management",
-    "customer support",
+    "Jagdalpur",
+    "Bastar",
+    "Chhattisgarh",
+    "customer complaints",
+    "service management",
     "PWA",
-    "ticket tracking",
+    "complaint tracking",
     "customer service software",
     "help desk",
-    "IT support",
-    "service management",
+    "support system",
+    "business management",
   ],
-  authors: [{ name: "MParekh Enterprises", url: "mailto:mparekhenterprises@gmail.com" }],
-  creator: "MParekh Enterprises",
-  publisher: "MParekh Enterprises",
+  authors: [{ name: "M/s M Parekh Enterprises", url: "mailto:mparekhenterprises@gmail.com" }],
+  creator: "M/s M Parekh Enterprises",
+  publisher: "M/s M Parekh Enterprises",
   robots: {
     index: true,
     follow: true,
@@ -75,16 +79,16 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-    title: process.env.NEXT_PUBLIC_APP_NAME || "MParekh - Complaint Management System",
+    title: `${process.env.NEXT_PUBLIC_APP_NAME || "M/s M Parekh Enterprises"} - Complaint Management System`,
     description:
-      "A production-grade PWA for managing customer complaints and service tickets with real-time tracking and analytics",
-    siteName: process.env.NEXT_PUBLIC_APP_NAME || "MParekh CMS",
+      "M/s M Parekh Enterprises - A production-grade PWA for managing customer complaints with real-time tracking. Located in Jagdalpur, Bastar, Chhattisgarh",
+    siteName: process.env.NEXT_PUBLIC_APP_NAME || "M/s M Parekh Enterprises",
   },
   twitter: {
     card: "summary_large_image",
-    title: process.env.NEXT_PUBLIC_APP_NAME || "MParekh - Complaint Management System",
+    title: `${process.env.NEXT_PUBLIC_APP_NAME || "M/s M Parekh Enterprises"} - Complaint Management`,
     description:
-      "Streamline complaint resolution and improve customer satisfaction with our comprehensive management system",
+      "Streamline complaint resolution and improve customer satisfaction with M/s M Parekh Enterprises comprehensive management system",
   },
   icons: {
     icon: [
@@ -102,7 +106,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: process.env.NEXT_PUBLIC_APP_NAME || "MParekh CMS",
+    title: process.env.NEXT_PUBLIC_APP_NAME || "M/s M Parekh Enterprises",
     startupImage: [
       {
         url: "/ios/180.png",

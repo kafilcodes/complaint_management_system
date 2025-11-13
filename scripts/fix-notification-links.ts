@@ -66,7 +66,7 @@ async function fixNotificationLinks() {
       }
 
       // Add link field
-      const link = `/tickets/${data.ticketId}`;
+      const link = `/complaints/${data.ticketId}`;
       batch.update(doc.ref, { link });
       
       console.log(`✅ Fixed notification ${doc.id} - Added link: ${link}`);

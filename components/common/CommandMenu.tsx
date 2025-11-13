@@ -80,8 +80,17 @@ export function CommandMenu() {
       // Clear session storage
       sessionStorage.clear();
       
+      // Clear service worker caches
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(
+          cacheNames.map(cacheName => caches.delete(cacheName))
+        );
+      }
+      
       toast.success("Logged out successfully");
       router.push("/login");
+      router.refresh(); // Force refresh to clear any cached navigation state
     } catch (error) {
       toast.error("Failed to logout");
     }
@@ -98,9 +107,9 @@ export function CommandMenu() {
             <LayoutDashboard className="mr-2 h-4 w-4" />
             <span>Dashboard</span>
           </CommandItem>
-          <CommandItem onSelect={() => runCommand(() => router.push("/tickets"))}>
+          <CommandItem onSelect={() => runCommand(() => router.push("/complaints"))}>
             <FileText className="mr-2 h-4 w-4" />
-            <span>Tickets</span>
+            <span>Complaints</span>
           </CommandItem>
           {(user?.role === "admin" || user?.role === "full_developer_admin") && (
             <CommandItem onSelect={() => runCommand(() => router.push("/users"))}>
@@ -122,9 +131,9 @@ export function CommandMenu() {
 
         <CommandGroup heading="Actions">
           {(user?.role === "admin" || user?.role === "full_developer_admin") && (
-            <CommandItem onSelect={() => runCommand(() => router.push("/create-ticket"))}>
+            <CommandItem onSelect={() => runCommand(() => router.push("/create-complaint"))}>
               <Plus className="mr-2 h-4 w-4" />
-              <span>Create New Ticket</span>
+              <span>Create New Complaint</span>
             </CommandItem>
           )}
         </CommandGroup>
