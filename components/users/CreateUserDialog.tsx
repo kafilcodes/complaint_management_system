@@ -131,6 +131,23 @@ export function CreateUserDialog({
     return () => subscription.unsubscribe();
   }, [form]);
 
+  // Watch role field to automatically set department for admin roles
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === "role") {
+        const role = value.role;
+        // If admin or full_developer_admin is selected, set department to "Administration"
+        if (role === "admin" || role === "full_developer_admin") {
+          form.setValue("department", "Administration", { 
+            shouldValidate: true,
+            shouldDirty: true 
+          });
+        }
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
+
   const onSubmit = async (data: CreateUserFormData) => {
     await createUser.mutateAsync(data);
     form.reset();
@@ -236,7 +253,6 @@ export function CreateUserDialog({
               )}
             />
 
-            {/* Role & Department */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -282,33 +298,43 @@ export function CreateUserDialog({
               <FormField
                 control={form.control}
                 name="department"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Department <span className="text-destructive">*</span></FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value || ""}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <Building2 className="mr-2 h-4 w-4" />
-                          <SelectValue placeholder="Select department" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {TECHNICIAN_CATEGORIES.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            <div className="flex items-center gap-2">
-                              
-                              <span>{category}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const currentRole = form.watch("role");
+                  const isAdminRole = currentRole === "admin" || currentRole === "full_developer_admin";
+                  
+                  return (
+                    <FormItem>
+                      <FormLabel>Department <span className="text-destructive">*</span></FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || ""}
+                        disabled={isAdminRole}
+                      >
+                        <FormControl>
+                          <SelectTrigger className={isAdminRole ? "bg-muted cursor-not-allowed" : ""}>
+                            <Building2 className="mr-2 h-4 w-4" />
+                            <SelectValue placeholder="Select department" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {TECHNICIAN_CATEGORIES.filter(category => category !== "Administration").map((category) => (
+                            <SelectItem key={category} value={category}>
+                              <div className="flex items-center gap-2">
+                                <span>{category}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {isAdminRole && (
+                        <FormDescription className="text-xs">
+                          Admin roles are automatically assigned to Administration department
+                        </FormDescription>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
             </div>
 

@@ -6,7 +6,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { TicketCard } from "./TicketCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,6 +33,7 @@ import { TICKET_STATUSES, getLabelByValue } from "@/lib/configuration";
 import { useBrandList } from "@/hooks/useConfig";
 import { useUsers } from "@/hooks/use-users";
 import { EmptyState } from "@/components/common/EmptyState";
+import { useTicketFilterStore } from "@/lib/ticket-filter-store";
 
 interface TicketListProps {
   tickets: Ticket[];
@@ -50,9 +51,24 @@ export function TicketList({
   onResolve,
 }: TicketListProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const globalStatusFilter = useTicketFilterStore((state) => state.statusFilter);
+  const resetFilters = useTicketFilterStore((state) => state.resetFilters);
+  const [statusFilter, setStatusFilter] = useState<string>(globalStatusFilter);
   const [brandFilter, setBrandFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  // Sync with global filter store on mount and when it changes
+  useEffect(() => {
+    console.log("[TicketList] 🎯 Syncing status filter from global store:", globalStatusFilter);
+    setStatusFilter(globalStatusFilter);
+  }, [globalStatusFilter]);
+
+  // Reset global filter when component unmounts
+  useEffect(() => {
+    return () => {
+      resetFilters();
+    };
+  }, [resetFilters]);
 
   // Fetch brands from Firestore with 24-hour cache
   const { data: brands = [], isLoading: brandsLoading } = useBrandList();

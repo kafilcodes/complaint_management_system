@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { TicketList } from "@/components/tickets/TicketList";
 import { useTicketList, useMyTicketList } from "@/hooks/useTicketData";
 import { useStore } from "@/lib/store";
+import { useTicketFilterStore } from "@/lib/ticket-filter-store";
 import { 
   isAdmin, 
   isEmployee, 
@@ -28,7 +29,8 @@ import type { TicketStatus } from "@/lib/types";
 export default function TicketsPage() {
   const router = useRouter();
   const user = useStore((state) => state.user);
-  const [statusFilter, setStatusFilter] = useState<TicketStatus | undefined>();
+  const globalStatusFilter = useTicketFilterStore((state) => state.statusFilter);
+  const resetFilters = useTicketFilterStore((state) => state.resetFilters);
 
   // Debug: Log user object to verify role
   useEffect(() => {
@@ -76,9 +78,9 @@ export default function TicketsPage() {
   
   console.log("[TicketsPage] 📊 Calling useTicketList with enabled:", shouldFetchAllTickets);
   console.log("[TicketsPage] 📊 Calling useMyTicketList for employee");
+  console.log("[TicketsPage] 📊 Global status filter:", globalStatusFilter);
   
   const { data: allTickets = [], isLoading: isLoadingAll } = useTicketList({
-    status: statusFilter,
     enabled: shouldFetchAllTickets, // Only fetch all tickets for admins
   });
   

@@ -27,8 +27,9 @@ export const TICKET_BRANDS: string[] = [
   "U-Cook",
 ];
 
-// Categories for Technicians
+// Categories for Technicians (including Administration for admin roles)
 export const TECHNICIAN_CATEGORIES: string[] = [
+  "Administration",
   "IT Support",
   "Desktop Support",
   "Technical Support",

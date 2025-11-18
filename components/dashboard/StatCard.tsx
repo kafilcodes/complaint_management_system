@@ -15,6 +15,7 @@ interface StatCardProps {
     label?: string;
   };
   className?: string;
+  onClick?: () => void;
 }
 
 export function StatCard({
@@ -24,6 +25,7 @@ export function StatCard({
   icon: Icon,
   trend,
   className,
+  onClick,
 }: StatCardProps) {
   const getTrendIcon = () => {
     if (!trend) return null;
@@ -42,7 +44,14 @@ export function StatCard({
   const TrendIcon = getTrendIcon();
 
   return (
-    <Card className={cn("transition-shadow hover:shadow-lg", className)}>
+    <Card 
+      className={cn(
+        "transition-shadow hover:shadow-lg", 
+        onClick && "cursor-pointer hover:border-primary/50 active:scale-[0.98] transition-transform",
+        className
+      )}
+      onClick={onClick}
+    >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}

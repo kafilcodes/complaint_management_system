@@ -10,11 +10,13 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useDashboardStats } from "@/hooks/use-dashboard";
 import { useTicketList, useMyTicketList } from "@/hooks/useTicketData";
 import { useUsers } from "@/hooks/useUsers";
 import { useStore } from "@/lib/store";
+import { useTicketFilterStore } from "@/lib/ticket-filter-store";
 import { 
   isAdmin, 
   isEmployee, 
@@ -93,8 +95,16 @@ const DownloadReportButton = dynamic(
 );
 
 export default function DashboardPage() {
+  const router = useRouter();
   const user = useStore((state) => state.user);
   const { data, isLoading } = useDashboardStats();
+  const setStatusFilter = useTicketFilterStore((state) => state.setStatusFilter);
+  
+  // Handler for navigating to complaints page with status filter
+  const handleNavigateWithFilter = (status: string) => {
+    setStatusFilter(status);
+    router.push("/complaints");
+  };
   
   // Debug: Log user and role
   useEffect(() => {
@@ -224,6 +234,7 @@ export default function DashboardPage() {
             icon={AlertCircle}
             description="Currently active"
             className="border-orange-200 dark:border-orange-900"
+            onClick={() => handleNavigateWithFilter("open")}
           />
 
           {/* Closed Tickets */}
@@ -233,6 +244,7 @@ export default function DashboardPage() {
             icon={CheckCircle}
             description="Successfully completed"
             className="border-green-200 dark:border-green-900"
+            onClick={() => handleNavigateWithFilter("closed")}
           />
 
           {/* New Tickets Trend */}
