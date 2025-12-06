@@ -180,6 +180,7 @@ export interface TicketResolution {
   productSerial: string;
   serviceRating: number; // 1-5 stars
   feedbackText?: string | null;
+  otp?: string | null; // Optional OTP (6 digits)
   
   // Attachments (Firebase Storage URLs)
   productImageURL?: string | null;

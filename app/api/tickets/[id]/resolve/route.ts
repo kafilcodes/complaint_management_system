@@ -74,6 +74,7 @@ export async function POST(
       productSerial: data.productSerial,
       serviceRating: data.serviceRating,
       feedbackText: data.feedbackText || null,
+      otp: data.otp || null,
       productImageURL: data.productImageURL || null,
       warrantyCardURL: data.warrantyCardURL || null,
       partConsumedImageURL: data.partConsumedImageURL || null,

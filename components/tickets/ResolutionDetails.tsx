@@ -112,6 +112,19 @@ export function ResolutionDetails({ ticketId, resolvedBy }: ResolutionDetailsPro
           </>
         )}
 
+        {/* OTP */}
+        {resolution.otp && (
+          <>
+            <Separator />
+            <div>
+              <p className="text-sm font-medium mb-1">OTP</p>
+              <p className="text-sm font-mono bg-muted px-3 py-2 rounded-md">
+                {resolution.otp}
+              </p>
+            </div>
+          </>
+        )}
+
         {/* Images */}
         {(resolution.productImageURL ||
           resolution.warrantyCardURL ||

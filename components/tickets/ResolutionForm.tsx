@@ -34,6 +34,13 @@ const resolutionFormSchema = z.object({
   productSerial: z.string().min(3, "Product serial number is required"),
   serviceRating: z.number().min(1).max(5),
   feedbackText: z.string().optional(),
+  otp: z.string()
+    .optional()
+    .refine(
+      (val) => !val || (val.length >= 3 && val.length <= 6 && /^\d{3,6}$/.test(val)),
+      "OTP must be 3-6 digits"
+    )
+    .or(z.literal("")),
   productImage: z.custom<File>().optional(),
   warrantyCard: z.custom<File>().optional(),
   partConsumedImage: z.custom<File>().optional(),
@@ -60,6 +67,7 @@ export function ResolutionForm({ ticketId, onSubmit, isSubmitting = false }: Res
       productSerial: "",
       serviceRating: 0,
       feedbackText: "",
+      otp: "",
     },
   });
 
@@ -174,6 +182,34 @@ export function ResolutionForm({ ticketId, onSubmit, isSubmitting = false }: Res
                   </FormControl>
                   <FormDescription>
                     Provide details about the resolution
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* OTP Field */}
+            <FormField
+              control={form.control}
+              name="otp"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>OTP (Optional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="Enter OTP (3-6 digits)"
+                      maxLength={6}
+                      {...field}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '');
+                        field.onChange(value);
+                      }}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Optional OTP for verification (3-6 digits, numbers only)
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

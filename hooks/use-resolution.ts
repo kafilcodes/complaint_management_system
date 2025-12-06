@@ -9,6 +9,7 @@ interface Resolution {
   productSerial: string;
   serviceRating: number;
   feedbackText: string | null;
+  otp: string | null;
   productImageURL: string | null;
   warrantyCardURL: string | null;
   partConsumedImageURL: string | null;
@@ -26,6 +27,7 @@ interface ResolveTicketData {
   productSerial: string;
   serviceRating: number;
   feedbackText?: string;
+  otp?: string;
   productImage?: File;
   warrantyCard?: File;
   partConsumedImage?: File;
@@ -109,6 +111,7 @@ export function useResolveTicket() {
         productSerial: data.productSerial,
         serviceRating: data.serviceRating,
         feedbackText: data.feedbackText || null,
+        otp: data.otp || null,
         productImageURL: imageURLs.productImageURL || null,
         warrantyCardURL: imageURLs.warrantyCardURL || null,
         partConsumedImageURL: imageURLs.partConsumedImageURL || null,

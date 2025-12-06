@@ -201,6 +201,7 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
           productSerial: data.productSerial,
           serviceRating: data.serviceRating,
           feedbackText: data.feedbackText,
+          otp: data.otp,
           productImage: data.productImage,
           warrantyCard: data.warrantyCard,
           partConsumedImage: data.partConsumedImage,
